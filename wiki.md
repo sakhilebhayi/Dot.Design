@@ -1,6 +1,6 @@
 ---
 title: Dot.Design — Platform Wiki
-version: 0.3.0
+version: 0.3.1
 status: active
 owners: [Design Platform Lead]
 platform-id: dot-design
@@ -116,6 +116,7 @@ In the meantime, the concrete, low-risk starting point is publishing operational
 
 | Version | Date | Author | Change |
 |---|---|---|---|
+| 0.3.1 | 2026-08-01 | Design Platform Lead | First full UI/branding/tests/docs pass on top of the 0.3.0 scaffold. Real logo wired into favicons, sidebar brand mark, and auth-card logo (replacing the generic Jetstream placeholder mark). Token-set and component views rebuilt with card layouts, real color/spacing/type swatches per token, and proper empty states (previously plain index/show tables). Added a class-based light/dark theme toggle to the main app shell (previously permanently dark, no toggle). Added a Design System sidebar nav section (token sets / components were previously unreachable from navigation except by direct URL). Added Feature tests for dashboard load and token-set/component index+show. Fixed `composer.json`/`package.json` `name` fields (were still the generic `laravel/laravel` template default) and removed a stray leftover `public/dot_design.png` (duplicate of the now-wired `public/images/logo.png`) and an empty placeholder `favicon.ico`. Verified the §3.1 token/component tables remain global/unscoped and confirmed there is no missing ownership check to fix on the canvas-tool side, since no per-ID project/canvas/asset controllers exist yet (only the scoped dashboard closure) — that gap tracked in the Roadmap, not introduced or found here. Does not touch the §1.1 framing question. |
 | 0.3.0 | 2026-08-01 | Design Platform Lead | Landed the design-token/component-library MVP scaffold (§3.1) alongside the existing canvas/AI tool: `token_sets`, `design_tokens`, `components`, `token_consumption_records` tables and models, plain-controller CRUD under `/design-system/*`, and a seeder with a starter palette/spacing/type scale plus three example components. Global/shared tenancy (no `user_id`/`team_id`), matching the reasoning that a design system is one shared catalog, not per-tenant data. Comprehension-observation telemetry, domain events, and any cross-platform distribution mechanism explicitly deferred — see updated Roadmap. Does not resolve the §1.1 framing question; both framings now have real code in this repo. |
 | 0.2.0 | 2026-08-01 | Design Platform Lead | Initial wiki, derived from the actual Laravel codebase (models, migrations, routes, docs). Flagged the framing mismatch with Dot.Brain's `platforms/dot-design.md` (enterprise design system vs. implemented canvas/AI creation tool) as the top open question. |
 

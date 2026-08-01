@@ -15,7 +15,9 @@ class TokenSetController extends Controller
 {
     public function index(): View
     {
-        $tokenSets = TokenSet::withCount(['tokens', 'consumptionRecords'])->latest()->get();
+        // Eager-load tokens too (not just the count) so the index view can render
+        // color swatches per token set without an N+1 query per row.
+        $tokenSets = TokenSet::withCount(['tokens', 'consumptionRecords'])->with('tokens')->latest()->get();
 
         return view('design-system.token-sets.index', compact('tokenSets'));
     }

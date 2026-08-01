@@ -1,9 +1,9 @@
 {
     "$schema": "https://getcomposer.org/schema.json",
-    "name": "laravel/laravel",
+    "name": "dot/design",
     "type": "project",
-    "description": "The skeleton application for the Laravel framework.",
-    "keywords": ["laravel", "framework"],
+    "description": "Dot.Design — the Dot Ecosystem's canvas-first AI design tool and design-token/component-library scaffold.",
+    "keywords": ["laravel", "dot-ecosystem", "design"],
     "license": "MIT",
     "require": {
         "php": "^8.3",
