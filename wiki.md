@@ -1,6 +1,6 @@
 ---
 title: Dot.Design — Platform Wiki
-version: 0.2.0
+version: 0.3.0
 status: active
 owners: [Design Platform Lead]
 platform-id: dot-design
@@ -19,7 +19,9 @@ Purpose: this is Dot.Design's own knowledge home — owned and maintained by the
 
 Dot.Design is the ecosystem's **visual creation platform** — a canvas-first design editor paired with generative AI, aimed at producing on-brand graphics, social posts, and marketing collateral without requiring professional design skill. Think "Canva for the Dot ecosystem," not a component library: users open a project, drop text/shapes/images/icons onto a canvas, optionally ask AI to generate imagery or suggest a starting layout, and export the result.
 
-**Status:** early but real. The repository is a working Laravel 12 application — auth, teams, ecosystem SSO, and the core data model are scaffolded and migrated. The canvas editor UI itself (the Livewire components that actually render drag-and-drop editing) has not been built yet; the backend and domain schema exist ahead of the interactive front end. Treat the architecture sections below as implemented; treat anything under §6 (Roadmap) as not yet built.
+**As of 0.3.0, this repository holds two coexisting domains, not one.** Alongside the canvas/AI creation tool described above, an MVP scaffold for the second domain Dot.Brain's `platforms/dot-design.md` describes — the design-token/component-library system — now also lives here (see §3.1). The two domains are intentionally separate: different tables, different models, no shared foreign keys, no shared tenancy rule. This does not yet resolve the framing question in §1.1 (is this one product or two, and should the token/component responsibility live here at all) — it just means both framings now have real code, which should make that conversation easier to have.
+
+**Status:** early but real. The repository is a working Laravel 12 application — auth, teams, ecosystem SSO, and the core data model are scaffolded and migrated. The canvas editor UI itself (the Livewire components that actually render drag-and-drop editing) has not been built yet; the backend and domain schema exist ahead of the interactive front end. The token/component-library domain is an even earlier MVP scaffold: data model, basic CRUD, and seed data exist; no event emission, no cross-platform distribution API, no comprehension telemetry. Treat the architecture sections below as implemented; treat anything under §6 (Roadmap) as not yet built.
 
 ### 1.1 A note on framing vs. Dot.Brain's ingested view
 
@@ -55,6 +57,21 @@ The schema (`database/migrations/2026_06_27_000001_create_design_tables.php`) is
 
 Relationships: `DesignProject hasMany DesignCanvas` (ordered by `page_number`), `DesignProject hasMany AiGenerationLog`, `DesignAsset` and `AiGenerationLog` both `belongsTo User`. Teams come from Jetstream (`Team`, `TeamInvitation`, `Membership`) — multi-tenant by team, not yet enforced at the design-entity level (design projects are keyed to `user_id`, not `team_id`, today).
 
+### 3.1 Design-token / component-library domain (MVP scaffold, added 0.3.0)
+
+A second, deliberately separate domain — the schema is `database/migrations/2026_08_01_000001_create_design_system_tables.php`. Four tables, all live:
+
+| Entity | Table | Natural key | Notes |
+|---|---|---|---|
+| Token set | `token_sets` | id | A versioned group of tokens that version together (e.g. "Core Palette"), carries its own `version` integer |
+| Design token | `design_tokens` | id (per `token_set_id` + `slug`) | Color/type/spacing/motion; `belongsTo` a `TokenSet`, own `version` integer |
+| Component | `components` | id | Reusable UI component definition; `is_brain_surface` boolean flags Brain-surface components (Why block, confidence badge, intent label) as a category, not separate certification infrastructure — no comprehension gate is implemented |
+| Token consumption record | `token_consumption_records` | id (per `token_set_id` + `platform_id`) | Which ecosystem platform consumes which token set, pinned to which version — a plain tracking table, seeded with all ~21 `brain.platforms.md` registry platforms pinned to version 0 as placeholders |
+
+Tenancy decision: these four tables carry **no** `user_id` or `team_id` — they are global/shared, unlike §3's per-user canvas-tool tables. Rationale: a design system is the same catalog every platform (and every team) consumes; per-tenant tokens would defeat the point of a shared system. Basic CRUD is plain resource controllers under `App\Http\Controllers\{TokenSetController,DesignTokenController,ComponentController,TokenConsumptionRecordController}`, routed under `/design-system/*` (see `routes/web.php`) behind the same `auth:sanctum` group as the dashboard — matching this repo's existing convention (no Livewire components exist anywhere in the codebase yet, so plain controllers were chosen over introducing a new pattern). `database/seeders/DesignSystemSeeder.php` seeds a starter color palette, spacing scale, and type scale, plus three example components (Button, Card, Confidence Badge).
+
+**Explicitly out of scope for this MVP pass** (matches Dot.Brain's platform doc §2-3 minus what would require live infrastructure): no `ComprehensionObservation` table or telemetry pipeline (needs real telemetry infra that doesn't exist — tracked as a roadmap item, not stubbed as empty tables), no domain events (`design.token.breaking_change` etc. remain unimplemented, same as §5), no Knowledge Pack publishing integration, no cross-platform distribution API — other platforms cannot actually fetch tokens from this repo yet, only Dot.Design's own data model tracks who's *supposed* to be consuming what.
+
 ## 4. Ecosystem SSO
 
 Dot.Design authenticates via a shared-token handoff rather than its own login flow for ecosystem users: `App\Http\Controllers\Auth\EcosystemAuthController::handle()` accepts a Sanctum personal-access token minted elsewhere in the ecosystem, checks it carries the `ecosystem:read` ability and isn't expired, logs the underlying user in, deletes the one-time token, and redirects to the dashboard. This is the pattern other Dot platforms should expect when linking users into Dot.Design without a separate signup.
@@ -86,6 +103,8 @@ Ordered roughly by what blocks what:
 - [ ] Export pipeline (PNG/JPEG/SVG/PDF) — referenced in README as a feature, not present in code yet
 - [ ] Brand kit and template library models — mentioned in README's domain-model list but have no migrations or models yet
 - [ ] Resolve the framing question in §1.1 with Dot.Brain before building anything resembling a token/component-certification system
+- [ ] Token/component domain (§3.1): comprehension-observation telemetry — needs real instrumentation (aggregate reads with n ≥ 50 floors per Dot.Brain's contract) before any table or model is worth scaffolding; deliberately skipped in the 0.3.0 MVP pass
+- [ ] Token/component domain (§3.1): domain events (`design.token.breaking_change`, `design.component.certified`, `design.consumption.drift_detected`), the comprehension gate/certification pipeline, and any actual cross-platform token-distribution API — none exist yet, only the local data model and CRUD
 
 ## 7. Connecting to Dot.Brain
 
@@ -97,10 +116,12 @@ In the meantime, the concrete, low-risk starting point is publishing operational
 
 | Version | Date | Author | Change |
 |---|---|---|---|
+| 0.3.0 | 2026-08-01 | Design Platform Lead | Landed the design-token/component-library MVP scaffold (§3.1) alongside the existing canvas/AI tool: `token_sets`, `design_tokens`, `components`, `token_consumption_records` tables and models, plain-controller CRUD under `/design-system/*`, and a seeder with a starter palette/spacing/type scale plus three example components. Global/shared tenancy (no `user_id`/`team_id`), matching the reasoning that a design system is one shared catalog, not per-tenant data. Comprehension-observation telemetry, domain events, and any cross-platform distribution mechanism explicitly deferred — see updated Roadmap. Does not resolve the §1.1 framing question; both framings now have real code in this repo. |
 | 0.2.0 | 2026-08-01 | Design Platform Lead | Initial wiki, derived from the actual Laravel codebase (models, migrations, routes, docs). Flagged the framing mismatch with Dot.Brain's `platforms/dot-design.md` (enterprise design system vs. implemented canvas/AI creation tool) as the top open question. |
 
 ## Open Questions
 
-- Framing reconciliation with Dot.Brain (§1.1, §7): is Dot.Design one product or two? Owner: Design Platform Lead → Dot.Brain steward.
-- Tenancy: should design projects/canvases/assets move from `user_id` to `team_id` scoping now that Jetstream teams exist, before more code is built on top of the current shape?
+- Framing reconciliation with Dot.Brain (§1.1, §7): is Dot.Design one product or two? The 0.3.0 scaffold makes this more concrete but does not settle it — should the token/component domain stay in this repo long-term, or does it belong in a separate platform? Owner: Design Platform Lead → Dot.Brain steward.
+- Tenancy: should design projects/canvases/assets move from `user_id` to `team_id` scoping now that Jetstream teams exist, before more code is built on top of the current shape? (Note: this question does not apply to the new §3.1 tables, which are deliberately global/shared by design.)
 - AI provider cost/abuse controls: `AiGenerationLog` records four possible providers but there's no rate limiting or moderation implemented yet (both are speced in `docs/AI-INTEGRATION.md` §5/§8) — needed before any public AI generation endpoint ships.
+- Token/component domain (§3.1): who actually owns writes to `token_sets`/`components` once other platforms are meant to consume them — is this an internal admin-only surface, or does it need its own auth/permission model before any platform relies on it?
