@@ -21,7 +21,13 @@ class ComponentController extends Controller
 
     public function show(Component $component): View
     {
-        return view('design-system.components.show', compact('component'));
+        // Note: the view variable is deliberately NOT named `component` — Blade
+        // reserves `$component` inside `<x-app-layout>` (and any other
+        // anonymous/class component) for the component instance itself, so a
+        // same-named view variable is shadowed for the entire component body
+        // and any `$component->...` access inside it resolves against
+        // App\View\Components\AppLayout instead of this model.
+        return view('design-system.components.show', ['designComponent' => $component]);
     }
 
     public function store(Request $request): RedirectResponse
