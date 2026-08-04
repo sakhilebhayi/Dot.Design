@@ -19,29 +19,29 @@ Route::middleware([
     'verified',
 ])->group(function () {
     Route::get('/dashboard', function () {
-        $userId = auth()->id();
+        // DesignProject/DesignAsset/AiGenerationLog all apply HasUserScope
+        // (see app/Models/Concerns/HasUserScope.php), so every query below
+        // is already scoped to the authenticated user at the model level --
+        // the explicit where('user_id', ...) calls this closure used to
+        // carry are redundant and were removed. DesignCanvas has no user_id
+        // column of its own, so whereHas('project') still needs to touch
+        // the project relation, but that relation query is itself scoped
+        // by DesignProject's own global scope.
+        $totalProjects  = \App\Models\DesignProject::count();
+        $recentProjects = \App\Models\DesignProject::where('created_at', '>=', now()->subDays(30))->count();
+        $totalCanvases  = \App\Models\DesignCanvas::whereHas('project')->count();
+        $totalAssets    = \App\Models\DesignAsset::count();
+        $aiGenerations  = \App\Models\AiGenerationLog::count();
 
-        $totalProjects  = \App\Models\DesignProject::where('user_id', $userId)->count();
-        $recentProjects = \App\Models\DesignProject::where('user_id', $userId)
-            ->where('created_at', '>=', now()->subDays(30))->count();
-        $totalCanvases  = \App\Models\DesignCanvas::whereHas(
-            'project', fn ($q) => $q->where('user_id', $userId)
-        )->count();
-        $totalAssets    = \App\Models\DesignAsset::where('user_id', $userId)->count();
-        $aiGenerations  = \App\Models\AiGenerationLog::where('user_id', $userId)->count();
-
-        $projects = \App\Models\DesignProject::where('user_id', $userId)
-            ->withCount(['canvases'])
+        $projects = \App\Models\DesignProject::withCount(['canvases'])
             ->latest()
             ->get();
 
-        $recentAssets = \App\Models\DesignAsset::where('user_id', $userId)
-            ->latest()
+        $recentAssets = \App\Models\DesignAsset::latest()
             ->limit(8)
             ->get();
 
-        $generationsByProvider = \App\Models\AiGenerationLog::where('user_id', $userId)
-            ->selectRaw('provider, count(*) as total')
+        $generationsByProvider = \App\Models\AiGenerationLog::selectRaw('provider, count(*) as total')
             ->groupBy('provider')
             ->pluck('total', 'provider');
 
