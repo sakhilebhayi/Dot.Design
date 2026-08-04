@@ -194,10 +194,16 @@
                 @if (Laravel\Jetstream\Jetstream::hasTeamFeatures())
                     <div class="user-menu-divider"></div>
                     <div class="user-menu-label">{{ __('Manage Team') }}</div>
-                    <a href="{{ route('teams.show', Auth::user()->currentTeam->id) }}" class="user-menu-item">
-                        <span class="material-symbols-rounded">groups</span>
-                        {{ __('Team Settings') }}
-                    </a>
+                    {{-- Auth::user()->currentTeam can genuinely be null (see the guard note in
+                         resources/views/navigation-menu.blade.php) -- only link to team settings
+                         when a team actually resolved; don't hide "Create New Team" behind it,
+                         since that's precisely the escape hatch a teamless user needs. --}}
+                    @if (Auth::user()->currentTeam)
+                        <a href="{{ route('teams.show', Auth::user()->currentTeam->id) }}" class="user-menu-item">
+                            <span class="material-symbols-rounded">groups</span>
+                            {{ __('Team Settings') }}
+                        </a>
+                    @endif
                     @can('create', Laravel\Jetstream\Jetstream::newTeamModel())
                         <a href="{{ route('teams.create') }}" class="user-menu-item">
                             <span class="material-symbols-rounded">add_circle</span>
@@ -213,8 +219,11 @@
                                 @method('PUT')
                                 @csrf
                                 <input type="hidden" name="team_id" value="{{ $team->id }}">
-                                <button type="submit" class="user-menu-item {{ Auth::user()->isCurrentTeam($team) ? 'current' : '' }}">
-                                    <span class="material-symbols-rounded">{{ Auth::user()->isCurrentTeam($team) ? 'check_circle' : 'radio_button_unchecked' }}</span>
+                                {{-- Auth::user()->isCurrentTeam($team) dereferences currentTeam->id
+                                     internally with no null check, so compare against the
+                                     null-safe id directly instead of calling it. --}}
+                                <button type="submit" class="user-menu-item {{ $team->id === Auth::user()->currentTeam?->id ? 'current' : '' }}">
+                                    <span class="material-symbols-rounded">{{ $team->id === Auth::user()->currentTeam?->id ? 'check_circle' : 'radio_button_unchecked' }}</span>
                                     {{ $team->name }}
                                 </button>
                             </form>

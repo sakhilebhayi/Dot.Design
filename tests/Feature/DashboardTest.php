@@ -31,6 +31,24 @@ class DashboardTest extends TestCase
         $response->assertSee('Design Studio Dashboard');
     }
 
+    public function test_authenticated_user_with_no_team_can_still_view_the_dashboard(): void
+    {
+        // Regression test: a User record with no owned personal team and no
+        // current_team_id (e.g. a row provisioned outside this platform's own
+        // registration flow, or one left behind after Team::purge() nulled
+        // current_team_id and no personal team exists to self-heal into --
+        // see HasTeams::currentTeam()) used to 500 on every authenticated
+        // page, because resources/views/layouts/app.blade.php and
+        // resources/views/navigation-menu.blade.php dereferenced
+        // Auth::user()->currentTeam->id / ->name with no null guard.
+        $user = User::factory()->create(['current_team_id' => null]);
+
+        $response = $this->actingAs($user)->get('/dashboard');
+
+        $response->assertOk();
+        $response->assertSee('Design Studio Dashboard');
+    }
+
     public function test_dashboard_reflects_the_authenticated_users_own_data_only(): void
     {
         $user = User::factory()->withPersonalTeam()->create();
