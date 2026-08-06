@@ -136,16 +136,20 @@
 
         <!-- Hero -->
         <section class="relative pt-32 pb-16 sm:pb-24 px-5 sm:px-8 overflow-hidden">
-            <div class="max-w-[1400px] mx-auto">
+            <!-- Photo: colorful 3D generative-art shapes, by Hirzul Maulana (@ijoelpitulikur), unsplash.com/photos/colorful-3d-shapes-arranged-in-a-fun-design-Qjau9gKeJSQ -->
+            <div class="absolute inset-0 bg-cover bg-center" style="background-image: url('https://images.unsplash.com/photo-1751644332113-2004a1b143f1?q=80&w=2400&auto=format&fit=crop');"></div>
+            <div class="absolute inset-0" style="background: linear-gradient(100deg, rgba(34,31,43,0.92) 0%, rgba(34,31,43,0.80) 32%, rgba(34,31,43,0.45) 55%, rgba(34,31,43,0.18) 75%, rgba(34,31,43,0.02) 92%);"></div>
+            <div class="absolute inset-0" style="background: linear-gradient(180deg, rgba(34,31,43,0) 0%, rgba(34,31,43,0.10) 55%, rgba(34,31,43,0.35) 80%, #faf9f5 100%);"></div>
+            <div class="relative z-10 max-w-[1400px] mx-auto">
                 <div class="grid lg:grid-cols-[1.05fr_0.95fr] gap-14 lg:gap-10 items-center">
                     <div class="reveal" data-reveal>
                         <p class="font-mono text-xs tracking-[0.18em] uppercase text-[var(--gold)] mb-6">
                             Visual creation platform
                         </p>
-                        <h1 class="font-display font-semibold text-4xl sm:text-5xl lg:text-6xl leading-[1.06] tracking-tight text-[var(--ink)] mb-6">
+                        <h1 class="font-display font-semibold text-4xl sm:text-5xl lg:text-6xl leading-[1.06] tracking-tight text-[var(--paper)] mb-6">
                             One canvas.<br>Every asset your<br>team ships.
                         </h1>
-                        <p class="text-lg text-[var(--ink-soft)] leading-relaxed max-w-xl mb-10">
+                        <p class="text-lg text-[var(--paper)] leading-relaxed max-w-xl mb-10">
                             Dot.Design is where projects turn into graphics, social posts, and marketing collateral — a page-based canvas editor with generative AI on tap, backed by the same token and component library the rest of the Dot Ecosystem's interfaces are built from.
                         </p>
 
@@ -154,7 +158,7 @@
                                 <a href="{{ route('register') }}" class="press px-7 py-3.5 bg-[var(--ink)] hover:bg-[var(--periwinkle)] text-white font-display font-semibold rounded-full transition-colors">
                                     Create account
                                 </a>
-                                <a href="#canvas" class="press flex items-center gap-2 px-7 py-3.5 text-[var(--ink)] font-medium rounded-full border border-[var(--line)] hover:border-[var(--periwinkle-soft)] transition-colors">
+                                <a href="#canvas" class="press flex items-center gap-2 px-7 py-3.5 text-[var(--paper)] font-medium rounded-full border border-[rgba(250,249,245,0.35)] hover:border-[var(--periwinkle-soft)] transition-colors">
                                     See what it does
                                 </a>
                             </div>
