@@ -6,12 +6,23 @@ use App\Http\Controllers\DesignTokenController;
 use App\Http\Controllers\TokenConsumptionRecordController;
 use App\Http\Controllers\TokenSetController;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Str;
+use Laravel\Jetstream\Jetstream;
 
 
 Route::get('/auth/ecosystem', [EcosystemAuthController::class, 'handle'])->name('ecosystem.auth');
 Route::get('/', function () {
     return view('welcome');
 });
+
+// Cookie Policy — Jetstream's termsAndPrivacyPolicy feature covers terms.show/policy.show
+// natively. There's no Jetstream equivalent for a Cookie Policy, so this one is wired by hand,
+// following the exact same Markdown-source convention.
+Route::get('/cookies', function () {
+    return view('cookies', [
+        'cookies' => Str::markdown(file_get_contents(Jetstream::localizedMarkdownPath('cookies.md'))),
+    ]);
+})->name('cookies');
 
 Route::middleware([
     'auth:sanctum',
