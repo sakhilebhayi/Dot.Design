@@ -5,10 +5,13 @@ use App\Http\Controllers\ComponentController;
 use App\Http\Controllers\DesignTokenController;
 use App\Http\Controllers\TokenConsumptionRecordController;
 use App\Http\Controllers\TokenSetController;
+use App\Models\AiGenerationLog;
+use App\Models\DesignAsset;
+use App\Models\DesignCanvas;
+use App\Models\DesignProject;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Str;
 use Laravel\Jetstream\Jetstream;
-
 
 Route::get('/auth/ecosystem', [EcosystemAuthController::class, 'handle'])->name('ecosystem.auth');
 Route::get('/', function () {
@@ -38,21 +41,21 @@ Route::middleware([
         // column of its own, so whereHas('project') still needs to touch
         // the project relation, but that relation query is itself scoped
         // by DesignProject's own global scope.
-        $totalProjects  = \App\Models\DesignProject::count();
-        $recentProjects = \App\Models\DesignProject::where('created_at', '>=', now()->subDays(30))->count();
-        $totalCanvases  = \App\Models\DesignCanvas::whereHas('project')->count();
-        $totalAssets    = \App\Models\DesignAsset::count();
-        $aiGenerations  = \App\Models\AiGenerationLog::count();
+        $totalProjects = DesignProject::count();
+        $recentProjects = DesignProject::where('created_at', '>=', now()->subDays(30))->count();
+        $totalCanvases = DesignCanvas::whereHas('project')->count();
+        $totalAssets = DesignAsset::count();
+        $aiGenerations = AiGenerationLog::count();
 
-        $projects = \App\Models\DesignProject::withCount(['canvases'])
+        $projects = DesignProject::withCount(['canvases'])
             ->latest()
             ->get();
 
-        $recentAssets = \App\Models\DesignAsset::latest()
+        $recentAssets = DesignAsset::latest()
             ->limit(8)
             ->get();
 
-        $generationsByProvider = \App\Models\AiGenerationLog::selectRaw('provider, count(*) as total')
+        $generationsByProvider = AiGenerationLog::selectRaw('provider, count(*) as total')
             ->groupBy('provider')
             ->pluck('total', 'provider');
 
