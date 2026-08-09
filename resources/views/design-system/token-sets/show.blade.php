@@ -73,6 +73,7 @@
                             <th style="padding:0.6rem 0.75rem;color:var(--text-dim);font-weight:600;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.06em;">Platform</th>
                             <th style="padding:0.6rem 0.75rem;color:var(--text-dim);font-weight:600;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.06em;">Pinned version</th>
                             <th style="padding:0.6rem 0.75rem;color:var(--text-dim);font-weight:600;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.06em;">Last synced</th>
+                            <th style="padding:0.6rem 0.75rem;color:var(--text-dim);font-weight:600;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.06em;">Status</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -81,6 +82,13 @@
                                 <td style="padding:0.6rem 0.75rem;color:var(--text);">{{ $record->platform_id }}</td>
                                 <td style="padding:0.6rem 0.75rem;">v{{ $record->pinned_version }}</td>
                                 <td style="padding:0.6rem 0.75rem;color:var(--text-dim);">{{ $record->last_synced_at?->diffForHumans() ?? 'never synced' }}</td>
+                                <td style="padding:0.6rem 0.75rem;">
+                                    @if(in_array($record->platform_id, $driftedPlatforms))
+                                        <span class="dot-badge" style="background:rgba(239,68,68,0.12);color:#ef4444;">Drifted</span>
+                                    @else
+                                        <span class="dot-badge" style="background:rgba(34,197,94,0.12);color:#22c55e;">Up to date</span>
+                                    @endif
+                                </td>
                             </tr>
                         @endforeach
                     </tbody>

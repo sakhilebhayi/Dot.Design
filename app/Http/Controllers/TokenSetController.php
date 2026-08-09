@@ -26,7 +26,12 @@ class TokenSetController extends Controller
     {
         $tokenSet->load(['tokens', 'consumptionRecords']);
 
-        return view('design-system.token-sets.show', compact('tokenSet'));
+        $driftedPlatforms = $tokenSet->driftNotices()
+            ->whereNull('cleared_at')
+            ->pluck('platform_id')
+            ->all();
+
+        return view('design-system.token-sets.show', compact('tokenSet', 'driftedPlatforms'));
     }
 
     public function store(Request $request): RedirectResponse

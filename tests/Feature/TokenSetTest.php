@@ -81,4 +81,50 @@ class TokenSetTest extends TestCase
         $response->assertRedirect();
         $this->assertDatabaseHas('token_sets', ['slug' => 'spacing-scale']);
     }
+
+    public function test_show_page_flags_a_platform_with_an_active_drift_notice(): void
+    {
+        $user = User::factory()->withPersonalTeam()->create();
+
+        $tokenSet = TokenSet::create([
+            'name' => 'Core Palette',
+            'slug' => 'core-palette-drift',
+            'version' => 3,
+        ]);
+        $tokenSet->consumptionRecords()->create([
+            'platform_id' => 'dot.auction',
+            'pinned_version' => 1,
+        ]);
+        $tokenSet->driftNotices()->create([
+            'platform_id' => 'dot.auction',
+            'pinned_version' => 1,
+            'current_version' => 3,
+            'detected_at' => now(),
+        ]);
+
+        $response = $this->actingAs($user)->get(route('design-system.token-sets.show', $tokenSet));
+
+        $response->assertOk();
+        $response->assertSee('Drifted');
+    }
+
+    public function test_show_page_does_not_flag_a_platform_with_no_drift_notice(): void
+    {
+        $user = User::factory()->withPersonalTeam()->create();
+
+        $tokenSet = TokenSet::create([
+            'name' => 'Core Palette',
+            'slug' => 'core-palette-no-drift',
+            'version' => 1,
+        ]);
+        $tokenSet->consumptionRecords()->create([
+            'platform_id' => 'dot.billing',
+            'pinned_version' => 1,
+        ]);
+
+        $response = $this->actingAs($user)->get(route('design-system.token-sets.show', $tokenSet));
+
+        $response->assertOk();
+        $response->assertDontSee('Drifted');
+    }
 }

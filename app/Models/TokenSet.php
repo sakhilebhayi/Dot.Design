@@ -22,4 +22,9 @@ class TokenSet extends Model
     {
         return $this->hasMany(TokenConsumptionRecord::class);
     }
+
+    public function driftNotices(): HasMany
+    {
+        return $this->hasMany(TokenDriftNotice::class);
+    }
 }
