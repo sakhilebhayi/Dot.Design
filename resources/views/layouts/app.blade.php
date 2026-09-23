@@ -110,7 +110,19 @@
         @keyframes skeleton-loading { 0% { background-position:100% 50%; } 100% { background-position:0 50%; } }
     </style>
     @livewireStyles
-    <script defer src="https://unpkg.com/alpinejs@3.10.2/dist/cdn.min.js"></script>
+    {{--
+        Livewire 3's @livewireScripts (in <body> below) already bundles and
+        auto-starts Alpine -- a manual Alpine CDN <script> tag here used to
+        load a SECOND, independent Alpine instance alongside it. Existing
+        usages (the theme toggle, user-menu dropdown) were small enough that
+        the resulting "Detected multiple instances of Alpine running" race
+        never visibly broke anything, but it silently corrupts x-data scope
+        for anything non-trivial: the canvas editor's x-for/x-model/:href
+        bindings were intermittently failing (x-currentIfEl errors,
+        "exportUrlTemplate is not defined") depending on which instance won
+        the race. Removed rather than kept both, per Alpine/Livewire's own
+        guidance to never load Alpine yourself when Livewire is present.
+    --}}
 </head>
 <body x-data="{ theme: localStorage.getItem('dot-design-theme') || 'dark' }" x-init="$watch('theme', value => { document.documentElement.classList.toggle('light', value === 'light'); localStorage.setItem('dot-design-theme', value); })">
     <x-banner />
@@ -135,6 +147,12 @@
             <a href="{{ route('dashboard') }}" class="nav-item {{ request()->routeIs('dashboard') ? 'active' : '' }}">
                 <span class="material-symbols-rounded nav-icon">dashboard</span>
                 Dashboard
+            </a>
+
+            <div class="nav-section-label">Design Studio</div>
+            <a href="{{ route('design.projects.index') }}" class="nav-item {{ request()->routeIs('design.projects.*') ? 'active' : '' }}">
+                <span class="material-symbols-rounded nav-icon">brush</span>
+                Projects
             </a>
 
             <div class="nav-section-label">Design System</div>
