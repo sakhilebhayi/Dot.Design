@@ -11,15 +11,15 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 /**
- * Dot.Design has no per-ID routes/controllers for DesignProject, DesignAsset,
- * or AiGenerationLog today (see wiki.md §6 Roadmap and the 0.3.2 changelog
- * entry) -- so there is no Policy or $this->authorize() call anywhere in the
- * request path for these models to accidentally rely on. These tests prove
- * the HasUserScope global scope (app/Models/Concerns/HasUserScope.php)
- * itself -- not a controller-level check -- is what keeps one user's rows
- * from leaking to another, the same way Dot.Finance's
- * test_scope_alone_blocks_cross_user_access_even_without_a_policy_check
- * proves it for HasUserScope there.
+ * Per-ID routes/controllers for DesignProject/DesignAsset now exist (see
+ * DesignProjectController, DesignAssetController, and their Policies) --
+ * but these tests still matter as defense-in-depth: they prove the
+ * HasUserScope global scope (app/Models/Concerns/HasUserScope.php) itself,
+ * independent of any Policy or $this->authorize() call, is what keeps one
+ * user's rows from leaking to another via a raw model query, the same way
+ * Dot.Finance's test_scope_alone_blocks_cross_user_access_even_without_a_policy_check
+ * proves it for HasUserScope there. See DesignProjectManagementTest and
+ * DesignAssetManagementTest for the route/Policy-level coverage.
  */
 class UserScopeAuthorizationTest extends TestCase
 {

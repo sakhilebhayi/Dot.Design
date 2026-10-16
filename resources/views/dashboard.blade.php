@@ -14,12 +14,18 @@
                 {{ now()->format('l, F j, Y') }} &mdash; Welcome back, {{ Auth::user()->name }}
             </p>
         </div>
-        <a href="#"
+        <a href="{{ route('design.projects.create') }}"
            style="display:inline-flex;align-items:center;gap:0.45rem;padding:0.65rem 1.35rem;border-radius:9999px;background:linear-gradient(135deg,#d946ef,#a21caf);font-family:'Syne',sans-serif;font-size:0.82rem;font-weight:700;color:#fff;text-decoration:none;box-shadow:0 6px 18px rgba(217,70,239,0.3);">
             <span class="material-symbols-rounded" style="font-size:18px;">add_circle</span>
             New Project
         </a>
     </div>
+
+    @if (session('status'))
+    <div style="margin-bottom:1.5rem;padding:0.75rem 1rem;border-radius:0.6rem;background:rgba(74,222,128,0.12);border:1px solid rgba(74,222,128,0.3);color:#4ade80;font-size:0.82rem;">
+        {{ session('status') }}
+    </div>
+    @endif
 
     {{-- ------------------------------------------------------------------ --}}
     {{-- KPI Cards                                                           --}}
@@ -96,14 +102,14 @@
             <h2 style="font-family:'Syne',sans-serif;font-size:1rem;font-weight:700;color:#f4f4f5;margin:0;">
                 Your Projects
             </h2>
-            <a href="#" style="font-size:0.75rem;color:#d946ef;text-decoration:none;font-weight:600;">View all &rarr;</a>
+            <a href="{{ route('design.projects.index') }}" style="font-size:0.75rem;color:#d946ef;text-decoration:none;font-weight:600;">View all &rarr;</a>
         </div>
 
         @if($projects->isEmpty())
         <div style="background:#141416;border:1px dashed rgba(67,70,86,0.4);border-radius:14px;padding:3rem;text-align:center;">
             <span class="material-symbols-rounded" style="font-size:40px;color:#71717a;display:block;margin-bottom:0.75rem;">folder_open</span>
             <p style="color:#71717a;font-size:0.85rem;margin:0 0 1rem;">No projects yet. Create your first design project.</p>
-            <a href="#" style="display:inline-flex;align-items:center;gap:0.4rem;padding:0.55rem 1.1rem;background:rgba(217,70,239,0.15);border:1px solid rgba(217,70,239,0.3);border-radius:9999px;font-size:0.78rem;font-weight:600;color:#f0abfc;text-decoration:none;">
+            <a href="{{ route('design.projects.create') }}" style="display:inline-flex;align-items:center;gap:0.4rem;padding:0.55rem 1.1rem;background:rgba(217,70,239,0.15);border:1px solid rgba(217,70,239,0.3);border-radius:9999px;font-size:0.78rem;font-weight:600;color:#f0abfc;text-decoration:none;">
                 <span class="material-symbols-rounded" style="font-size:16px;">add_circle</span>
                 New Project
             </a>
@@ -152,7 +158,7 @@
                     </div>
                 </div>
 
-                <a href="#"
+                <a href="{{ route('design.projects.show', $project) }}"
                    style="display:flex;align-items:center;justify-content:center;gap:0.4rem;padding:0.55rem;border-radius:8px;background:rgba(217,70,239,0.1);border:1px solid rgba(217,70,239,0.2);font-size:0.78rem;font-weight:600;color:#f0abfc;text-decoration:none;transition:background 0.2s;"
                    onmouseover="this.style.background='rgba(217,70,239,0.2)'"
                    onmouseout="this.style.background='rgba(217,70,239,0.1)'">

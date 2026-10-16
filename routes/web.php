@@ -1,7 +1,12 @@
 <?php
 
+use App\Http\Controllers\AiGenerationController;
 use App\Http\Controllers\Auth\EcosystemAuthController;
 use App\Http\Controllers\ComponentController;
+use App\Http\Controllers\DesignAssetController;
+use App\Http\Controllers\DesignCanvasController;
+use App\Http\Controllers\DesignCanvasExportController;
+use App\Http\Controllers\DesignProjectController;
 use App\Http\Controllers\DesignTokenController;
 use App\Http\Controllers\TokenConsumptionRecordController;
 use App\Http\Controllers\TokenSetController;
@@ -65,6 +70,30 @@ Route::middleware([
             'generationsByProvider'
         ));
     })->name('dashboard');
+
+    // Canvas / AI-creation tool domain -- previously had no per-ID routes at
+    // all (see wiki.md §"0.3.2"'s note on this). Route-namespaced separately
+    // from design-system/* below, matching the two-domains split documented
+    // throughout wiki.md §1.
+    //
+    // "create" must be registered before the "{project}" resource-style
+    // routes, otherwise it's swallowed by {project}'s implicit route-model
+    // binding.
+    Route::prefix('design')->name('design.')->group(function () {
+        Route::get('projects', [DesignProjectController::class, 'index'])->name('projects.index');
+        Route::get('projects/create', [DesignProjectController::class, 'create'])->name('projects.create');
+        Route::post('projects', [DesignProjectController::class, 'store'])->name('projects.store');
+        Route::get('projects/{project}', [DesignProjectController::class, 'show'])->name('projects.show');
+        Route::delete('projects/{project}', [DesignProjectController::class, 'destroy'])->name('projects.destroy');
+
+        Route::post('projects/{project}/canvases', [DesignCanvasController::class, 'store'])->name('projects.canvases.store');
+        Route::put('projects/{project}/canvases/{canvas}', [DesignCanvasController::class, 'update'])->name('projects.canvases.update');
+        Route::get('projects/{project}/canvases/{canvas}/export.svg', [DesignCanvasExportController::class, 'svg'])->name('projects.canvases.export.svg');
+
+        Route::post('projects/{project}/ai-generations', [AiGenerationController::class, 'store'])->name('projects.ai-generations.store');
+
+        Route::delete('assets/{asset}', [DesignAssetController::class, 'destroy'])->name('assets.destroy');
+    });
 
     // Design-token / component-library domain (MVP scaffold).
     // Deliberately global/shared — not scoped to the current user or team.
