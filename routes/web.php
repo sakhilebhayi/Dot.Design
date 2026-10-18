@@ -18,7 +18,9 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Str;
 use Laravel\Jetstream\Jetstream;
 
-Route::get('/auth/ecosystem', [EcosystemAuthController::class, 'handle'])->name('ecosystem.auth');
+Route::get('/auth/ecosystem', [EcosystemAuthController::class, 'handle'])
+    ->middleware('throttle:10,1')
+    ->name('ecosystem.auth');
 Route::get('/', function () {
     return view('welcome');
 });
@@ -89,36 +91,54 @@ Route::middleware([
         Route::post('projects/{project}/canvases', [DesignCanvasController::class, 'store'])->name('projects.canvases.store');
         Route::put('projects/{project}/canvases/{canvas}', [DesignCanvasController::class, 'update'])->name('projects.canvases.update');
         Route::get('projects/{project}/canvases/{canvas}/export.svg', [DesignCanvasExportController::class, 'svg'])->name('projects.canvases.export.svg');
+        Route::get('projects/{project}/canvases/{canvas}/export.png', [DesignCanvasExportController::class, 'png'])->name('projects.canvases.export.png');
 
         Route::post('projects/{project}/ai-generations', [AiGenerationController::class, 'store'])->name('projects.ai-generations.store');
 
+        Route::post('assets', [DesignAssetController::class, 'store'])
+            ->middleware('throttle:design-uploads')
+            ->name('assets.store');
+        Route::get('assets/{asset}/file', [DesignAssetController::class, 'file'])->name('assets.file');
         Route::delete('assets/{asset}', [DesignAssetController::class, 'destroy'])->name('assets.destroy');
     });
 
     // Design-token / component-library domain (MVP scaffold).
-    // Deliberately global/shared — not scoped to the current user or team.
+    // Deliberately global/shared -- not scoped to the current user or team.
     // See database/migrations/2026_08_01_000001_create_design_system_tables.php
     // for the tenancy rationale.
+    //
+    // Because the catalog is shared by every user (and by the platforms that
+    // consume it), reads are open to any authenticated user but every write
+    // requires a platform operator (users.is_platform_operator).
     Route::prefix('design-system')->name('design-system.')->group(function () {
         Route::resource('token-sets', TokenSetController::class)
             ->parameters(['token-sets' => 'tokenSet'])
-            ->only(['index', 'show', 'store', 'update', 'destroy']);
-
-        Route::post('token-sets/{tokenSet}/tokens', [DesignTokenController::class, 'store'])
-            ->name('token-sets.tokens.store');
-        Route::put('token-sets/{tokenSet}/tokens/{token}', [DesignTokenController::class, 'update'])
-            ->name('token-sets.tokens.update');
-        Route::delete('token-sets/{tokenSet}/tokens/{token}', [DesignTokenController::class, 'destroy'])
-            ->name('token-sets.tokens.destroy');
-
-        Route::post('token-sets/{tokenSet}/consumers', [TokenConsumptionRecordController::class, 'store'])
-            ->name('token-sets.consumers.store');
-        Route::put('token-sets/{tokenSet}/consumers/{record}', [TokenConsumptionRecordController::class, 'update'])
-            ->name('token-sets.consumers.update');
-        Route::delete('token-sets/{tokenSet}/consumers/{record}', [TokenConsumptionRecordController::class, 'destroy'])
-            ->name('token-sets.consumers.destroy');
+            ->only(['index', 'show']);
 
         Route::resource('components', ComponentController::class)
-            ->only(['index', 'show', 'store', 'update', 'destroy']);
+            ->only(['index', 'show']);
+
+        Route::middleware('operator')->group(function () {
+            Route::resource('token-sets', TokenSetController::class)
+                ->parameters(['token-sets' => 'tokenSet'])
+                ->only(['store', 'update', 'destroy']);
+
+            Route::post('token-sets/{tokenSet}/tokens', [DesignTokenController::class, 'store'])
+                ->name('token-sets.tokens.store');
+            Route::put('token-sets/{tokenSet}/tokens/{token}', [DesignTokenController::class, 'update'])
+                ->name('token-sets.tokens.update');
+            Route::delete('token-sets/{tokenSet}/tokens/{token}', [DesignTokenController::class, 'destroy'])
+                ->name('token-sets.tokens.destroy');
+
+            Route::post('token-sets/{tokenSet}/consumers', [TokenConsumptionRecordController::class, 'store'])
+                ->name('token-sets.consumers.store');
+            Route::put('token-sets/{tokenSet}/consumers/{record}', [TokenConsumptionRecordController::class, 'update'])
+                ->name('token-sets.consumers.update');
+            Route::delete('token-sets/{tokenSet}/consumers/{record}', [TokenConsumptionRecordController::class, 'destroy'])
+                ->name('token-sets.consumers.destroy');
+
+            Route::resource('components', ComponentController::class)
+                ->only(['store', 'update', 'destroy']);
+        });
     });
 });

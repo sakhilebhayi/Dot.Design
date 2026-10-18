@@ -10,5 +10,11 @@ readonly class AiImageResult
         public int $tokensUsed,
         public string $provider,
         public ?string $revisedPrompt = null,
+        // True when the image is a stand-in, not the output of a real AI
+        // provider. The UI uses this to avoid claiming an image was generated.
+        public bool $isPlaceholder = false,
     ) {}
+
+    /** The label shown wherever placeholder output is surfaced. */
+    public const PLACEHOLDER_LABEL = 'Placeholder (no AI provider connected)';
 }

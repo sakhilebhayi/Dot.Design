@@ -69,7 +69,9 @@ class TokenSetTest extends TestCase
 
     public function test_a_token_set_can_be_created_and_shows_up_in_the_index(): void
     {
-        $user = User::factory()->withPersonalTeam()->create();
+        // Catalog writes are limited to platform operators (see
+        // DesignSystemAuthorizationTest for the non-operator 403s).
+        $user = User::factory()->withPersonalTeam()->create(['is_platform_operator' => true]);
 
         $response = $this->actingAs($user)->post(route('design-system.token-sets.store'), [
             'name' => 'Spacing Scale',

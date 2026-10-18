@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\DesignProject;
 use App\Services\Ai\AiImageGenerationService;
+use App\Services\Ai\AiImageResult;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Throwable;
@@ -24,7 +25,7 @@ class AiGenerationController extends Controller
         ]);
 
         try {
-            $service->generate($request->user(), $validated['prompt'], $project->id);
+            $log = $service->generate($request->user(), $validated['prompt'], $project->id);
         } catch (Throwable $e) {
             report($e);
 
@@ -32,6 +33,12 @@ class AiGenerationController extends Controller
                 ->with('error', 'AI generation failed. Please try again.');
         }
 
-        return redirect()->route('design.projects.show', $project)->with('status', 'Image generated.');
+        // The mock driver returns a stock placeholder URL, not a generated
+        // image -- say so instead of "Image generated.".
+        $message = $log->provider === 'mock'
+            ? AiImageResult::PLACEHOLDER_LABEL.'. No real image was generated.'
+            : 'Image generated.';
+
+        return redirect()->route('design.projects.show', $project)->with('status', $message);
     }
 }

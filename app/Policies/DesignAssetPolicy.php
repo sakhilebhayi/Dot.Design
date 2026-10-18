@@ -10,6 +10,11 @@ class DesignAssetPolicy
 {
     use HandlesAuthorization;
 
+    public function view(User $user, DesignAsset $asset): bool
+    {
+        return $user->id === $asset->user_id;
+    }
+
     public function delete(User $user, DesignAsset $asset): bool
     {
         return $user->id === $asset->user_id;

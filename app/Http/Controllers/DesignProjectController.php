@@ -52,7 +52,7 @@ class DesignProjectController extends Controller
 
         // Every project starts with one editable page -- the editor
         // (show()) assumes a project always has at least one canvas.
-        $project->canvases()->create(['page_number' => 1, 'elements' => []]);
+        $project->addPage();
 
         event(new DesignProjectCreated($project));
 
@@ -65,10 +65,26 @@ class DesignProjectController extends Controller
 
         $project->load('canvases');
 
-        $recentAssets = DesignAsset::latest()->limit(12)->get();
+        // This project's own assets plus the user's library (assets with no
+        // project). The per-user global scope still applies to the whole
+        // group, so nothing here can reach another user's rows.
+        $assets = DesignAsset::where(fn ($query) => $query
+            ->where('design_project_id', $project->id)
+            ->orWhereNull('design_project_id'))
+            ->latest('id')->limit(100)->get();
+        $assetUsage = DesignAsset::usageFor($project->user_id);
+
+        // The editor draws an image element from its asset's details. Include
+        // every asset the project's pages reference, even one filed under a
+        // different project (so not in the panel above), plus the panel's own.
+        $referenced = $project->canvases
+            ->flatMap(fn ($canvas) => collect($canvas->elements)->where('type', 'image')->pluck('asset_id'))
+            ->filter()->unique()->values();
+        $assetIndex = DesignAsset::whereIn('id', $referenced)->get()->concat($assets)
+            ->unique('id')->mapWithKeys(fn ($asset) => [$asset->id => $asset->toEditorArray()]);
         $generations = AiGenerationLog::where('design_project_id', $project->id)->latest()->limit(10)->get();
 
-        return view('design.projects.show', compact('project', 'recentAssets', 'generations'));
+        return view('design.projects.show', compact('project', 'assets', 'assetUsage', 'assetIndex', 'generations'));
     }
 
     public function destroy(DesignProject $project): RedirectResponse

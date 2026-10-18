@@ -14,7 +14,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  */
 class DesignCanvas extends Model
 {
-    protected $fillable = ['design_project_id', 'page_number', 'elements', 'background_color', 'background_image'];
+    protected $fillable = ['design_project_id', 'page_number', 'elements', 'background_color', 'background_image', 'revision'];
 
     protected $casts = ['elements' => 'array'];
 

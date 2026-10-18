@@ -47,6 +47,7 @@ class AiImageGenerationService
 
         $asset = DesignAsset::create([
             'user_id' => $user->id,
+            'design_project_id' => $projectId,
             'name' => Str::limit($prompt, 60, ''),
             'type' => 'image',
             'file_path' => $result->url,
@@ -55,6 +56,7 @@ class AiImageGenerationService
             'meta' => [
                 'ai_generation_log_id' => $log->id,
                 'prompt' => $prompt,
+                'placeholder' => $result->isPlaceholder,
             ],
         ]);
 
