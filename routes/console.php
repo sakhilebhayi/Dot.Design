@@ -15,3 +15,7 @@ Artisan::command('inspire', function () {
 Schedule::command(ScanTokenDrift::class)
     ->daily()
     ->withoutOverlapping();
+
+// One signed, aggregate-only snapshot a day for Dot.Analytics. Does nothing until the url, secret and
+// company uuid are all configured; an Analytics outage only ever affects the queued job.
+Schedule::command('design:publish-metrics')->dailyAt('00:10')->timezone('UTC')->withoutOverlapping();
