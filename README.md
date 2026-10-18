@@ -24,12 +24,12 @@ Dot.Design is the visual-creation platform in the Dot Ecosystem — a canvas-fir
 
 **This repository currently holds two coexisting domains** (see `wiki.md` for the full detail and the open framing question this raises with Dot.Brain):
 
-1. **Canvas / AI creation tool** — `DesignProject`, `DesignCanvas`, `DesignAsset`, `AiGenerationLog`. Per-user data. The interactive canvas editor UI itself is not yet built; the backend/data model exist ahead of the front end.
+1. **Canvas / AI creation tool** — `DesignProject`, `DesignCanvas`, `DesignAsset`, `AiGenerationLog`. Per-user data. 
 2. **Design-token / component-library scaffold** (`/design-system/*`) — `TokenSet`, `DesignToken`, `Component`, `TokenConsumptionRecord`. Deliberately global/shared (no per-user or per-team scoping), since a design system is one catalog every platform consumes.
 
 ## Core Features
 
-- Canvas editor domain — drag-and-drop text, shapes, images, and icons (data model in place; interactive editor UI not yet built)
+- Canvas editor — text, rectangles and uploaded images with move/resize/rotate, z-order, duplicate, undo/redo, zoom, snapping, autosave with conflict detection (icons are not implemented); see [The canvas editor](#the-canvas-editor)
 - AI image generation logging from text prompts, multi-provider (`AiGenerationLog.provider`: Anthropic, OpenAI, Stability, Replicate)
 - Asset library — real image uploads (JPG/PNG/WebP, private storage, per-user quota) plus labelled AI placeholders; see [Uploads](#uploads)
 - Design-token / component catalog — versioned color/type/spacing/motion tokens, reusable component definitions, and a tracking table of which ecosystem platform consumes which token-set version
@@ -89,6 +89,26 @@ A canvas page holds `text`, `rectangle` and `image` elements. Every element can 
 
 JPEG and PDF export do not exist.
 
+## The canvas editor
+
+The editor is Alpine.js with no extra framework. Its logic is split so the part that can be tested is: `public/js/design-editor/geometry.js` (resize and rotate maths, snapping, zoom, z-order, duplicate) and `history.js` (undo/redo) are pure functions with a Node test suite (`npm run test:js`, needs Node 20 or newer, no dependencies); `editor.js` is the Alpine glue. They are plain classic scripts rather than built bundles, so there is no build step and they load before Livewire starts Alpine.
+
+| | |
+|---|---|
+| Move | Drag. Snaps to the page edges and centre with a visible guide (hold Alt to turn snapping off). |
+| Resize | Eight handles on the selected element; Shift keeps the aspect ratio (corner handles). Works on rotated elements: the opposite side stays put. |
+| Rotate | The dot above the selection; Shift snaps to 15 degrees. |
+| Arrange | Bring to front / forward / backward / send to back (`Ctrl/Cmd+]`, `]`, `[`, `Ctrl/Cmd+[`), duplicate (`Ctrl/Cmd+D`), delete (`Del`). |
+| Nudge | Arrow keys, 1 px; Shift for 10 px. |
+| Undo / redo | `Ctrl/Cmd+Z`, `Ctrl/Cmd+Shift+Z` (or `Ctrl+Y`). In memory only: up to 100 steps per page, gone on reload. Typing and arrow-key bursts count as one step. |
+| Zoom | 25% to 400%: buttons, `Ctrl`+wheel (also trackpad pinch), Fit. Starts fitted. |
+| Text | Tap twice on a text element, or use the Text field in Properties. X, Y, size, rotation and opacity can also be typed. |
+| Touch | Everything above runs on pointer events, so mouse, pen and touch share one code path. |
+
+**Saving.** Edits autosave after 500 ms. The header shows `Unsaved changes…`, `Saving…`, `Saved` or `Not saved`; a failure also puts a banner on screen that stays until a save succeeds (network errors retry every 8 seconds, or press Retry), and leaving the page with unsaved work asks first. Every save carries the page's `revision`; the server only writes if it still matches and bumps it in the same statement. A stale save returns **409** and the editor stops saving, saying the page changed elsewhere, and offers "Reload their version" or an explicit "Overwrite with mine". Nothing is overwritten silently.
+
+**Not supported:** multi-select, grouping, copy/paste between pages, live collaboration (two people editing see a conflict, not each other's cursors), and the app shell (`layouts/app.blade.php`) has no phone layout, so on a phone the 260 px sidebar leaves little room; the editor itself stacks its panels below 1100 px and is usable on tablets.
+
 ## Domain Models
 
 **Canvas / AI tool:**
@@ -125,7 +145,7 @@ git clone <this-repo-url> Dot.Design
 cd Dot.Design
 cp .env.example .env
 composer install
-npm install && npm run build
+npm install && npm run build   # Vite assets; the editor scripts need no build
 php artisan key:generate
 php artisan migrate
 php artisan db:seed
@@ -141,3 +161,8 @@ php artisan serve
 ## License
 
 MIT
+
+## Tooling notes
+
+- **Tailwind is still loaded from the CDN** by `layouts/app.blade.php`, not from the Vite build. Vite and Tailwind are configured (`npm run build` works), but moving the app layout over is not a mechanical swap: the layout loads the CDN with `preflight: false` and `darkMode: 'class'`, while `resources/css/app.css` pulls in Tailwind's full base layer and `tailwind.config.js` adds `@tailwindcss/forms`, which would restyle every unstyled input; `package.json` also lists `@tailwindcss/vite` v4 next to `tailwindcss` v3. Doing it properly needs a visual pass over every page, so it was left as is. Only the guest, welcome and error pages use the Vite bundle.
+- `npm run test:js` runs the editor's Node tests; `./vendor/bin/phpunit` runs the PHP suite.

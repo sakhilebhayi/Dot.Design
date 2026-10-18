@@ -1,5 +1,7 @@
 # Canvas Editor
 
+> **Status note.** This document is the original design proposal (Fabric.js + Livewire). The editor that exists is plain Alpine.js with pure, unit-tested helpers in `public/js/design-editor/`, and `elements` is a small JSON array of `text`, `rectangle` and `image` objects, not Fabric JSON. See README "The canvas editor" and "Image elements and export" for what is real. Sections below describe the proposal, not the code.
+
 > Technical and feature specification for the Dot.Design canvas editor. Implement each section as a standalone Livewire component or Alpine.js module.
 
 ---

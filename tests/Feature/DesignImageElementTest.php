@@ -50,7 +50,7 @@ class DesignImageElementTest extends TestCase
     {
         return $this->actingAs($user)->putJson(
             route('design.projects.canvases.update', [$project, $canvas]),
-            ['elements' => $elements]
+            ['revision' => $canvas->fresh()->revision, 'elements' => $elements]
         );
     }
 

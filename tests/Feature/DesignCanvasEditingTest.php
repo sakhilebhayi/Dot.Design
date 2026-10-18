@@ -51,6 +51,7 @@ class DesignCanvasEditingTest extends TestCase
         $response = $this->actingAs($user)->putJson(
             route('design.projects.canvases.update', [$project, $canvas]),
             [
+                'revision' => 1,
                 'elements' => [
                     ['id' => 'a1', 'type' => 'text', 'x' => 10, 'y' => 20, 'width' => 200, 'height' => 40, 'text' => 'Hello', 'fontSize' => 24, 'color' => '#111111'],
                     ['id' => 'a2', 'type' => 'rectangle', 'x' => 0, 'y' => 0, 'width' => 100, 'height' => 100, 'fill' => '#ec4899'],
@@ -75,7 +76,7 @@ class DesignCanvasEditingTest extends TestCase
 
         $response = $this->actingAs($user)->putJson(
             route('design.projects.canvases.update', [$project, $canvas]),
-            ['elements' => [['type' => 'video', 'x' => 0, 'y' => 0]]]
+            ['revision' => 1, 'elements' => [['type' => 'video', 'x' => 0, 'y' => 0]]]
         );
 
         $response->assertStatus(422);
@@ -97,7 +98,7 @@ class DesignCanvasEditingTest extends TestCase
 
         $response = $this->actingAs($intruder)->putJson(
             route('design.projects.canvases.update', [$intruderProject, $canvas]),
-            ['elements' => []]
+            ['revision' => 1, 'elements' => []]
         );
 
         $response->assertNotFound();

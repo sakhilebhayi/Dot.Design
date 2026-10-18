@@ -56,6 +56,7 @@ class UpdateDesignCanvasRequest extends FormRequest
         $hex = ['nullable', 'string', 'regex:/^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/'];
 
         return [
+            'revision' => ['required', 'integer', 'min:1'],
             'elements' => ['present', 'array'],
             'elements.*' => ['array'],
             'elements.*.id' => ['nullable', 'string', 'max:64'],
