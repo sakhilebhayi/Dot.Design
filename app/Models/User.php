@@ -66,6 +66,9 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            // Not in $fillable on purpose: operator status is granted
+            // out-of-band (tinker / seeder), never through a request.
+            'is_platform_operator' => 'boolean',
         ];
     }
 }

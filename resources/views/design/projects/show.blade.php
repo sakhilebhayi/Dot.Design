@@ -203,6 +203,9 @@
                     <span class="material-symbols-rounded" style="font-size:16px;color:#22c55e;">auto_awesome</span>
                     <span style="font-family:'Syne',sans-serif;font-size:0.82rem;font-weight:700;color:var(--text);">Generate with AI</span>
                 </div>
+                @if(config('ai_image.driver') === 'mock')
+                <p style="font-size:0.68rem;color:var(--text-muted);margin:0 0 0.6rem;">{{ \App\Services\Ai\AiImageResult::PLACEHOLDER_LABEL }}. Results are stock placeholder images, not generated art.</p>
+                @endif
                 <form method="POST" action="{{ route('design.projects.ai-generations.store', $project) }}" style="display:flex;flex-direction:column;gap:0.5rem;">
                     @csrf
                     <textarea name="prompt" required maxlength="1000" rows="3" class="dot-input" placeholder="Describe the image you want...">{{ old('prompt') }}</textarea>
@@ -217,7 +220,7 @@
                     @foreach($generations as $generation)
                     <div style="display:flex;align-items:center;gap:0.5rem;padding:0.4rem 0.5rem;border-radius:6px;background:rgba(127,127,127,0.06);">
                         <img src="{{ $generation->result_url }}" alt="" style="width:28px;height:28px;border-radius:4px;object-fit:cover;flex-shrink:0;" />
-                        <span style="font-size:0.68rem;color:var(--text-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ $generation->prompt }}</span>
+                        <span style="font-size:0.68rem;color:var(--text-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ $generation->prompt }}@if($generation->provider === 'mock') <em style="font-style:normal;opacity:0.7;">&middot; {{ \App\Services\Ai\AiImageResult::PLACEHOLDER_LABEL }}</em>@endif</span>
                     </div>
                     @endforeach
                 </div>
@@ -228,12 +231,12 @@
             <div class="dot-card" style="padding:1rem;">
                 <div style="font-size:0.68rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-dim);margin-bottom:0.6rem;">Your Assets</div>
                 @if($recentAssets->isEmpty())
-                <p style="font-size:0.72rem;color:var(--text-faint);margin:0;">No assets yet. Generated images will appear here.</p>
+                <p style="font-size:0.72rem;color:var(--text-faint);margin:0;">No assets yet. Direct uploads are not available; AI placeholders will appear here.</p>
                 @else
                 <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:0.4rem;">
                     @foreach($recentAssets as $asset)
                     <div style="position:relative;border-radius:6px;overflow:hidden;background:rgba(127,127,127,0.06);aspect-ratio:1;">
-                        <img src="{{ $asset->file_path }}" alt="{{ $asset->name }}" style="width:100%;height:100%;object-fit:cover;" />
+                        <img src="{{ $asset->file_path }}" alt="{{ $asset->name }}" @if(! empty($asset->meta['placeholder'])) title="{{ \App\Services\Ai\AiImageResult::PLACEHOLDER_LABEL }}" @endif style="width:100%;height:100%;object-fit:cover;" />
                         <form method="POST" action="{{ route('design.assets.destroy', $asset) }}" style="position:absolute;top:2px;right:2px;" onsubmit="return confirm('Delete this asset?');">
                             @csrf
                             @method('DELETE')

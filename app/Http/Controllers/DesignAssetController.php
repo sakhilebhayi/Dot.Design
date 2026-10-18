@@ -16,7 +16,15 @@ class DesignAssetController extends Controller
         $assetName = $asset->name;
         $userId = $asset->user_id;
 
+        // Delete the row first, then the file: the shared-file check ignores
+        // this row, and a failed file delete must not resurrect the record.
         $asset->delete();
+
+        try {
+            $asset->deleteStoredFile();
+        } catch (\Throwable $e) {
+            report($e);
+        }
 
         event(new AssetDeleted($assetId, $assetName, $userId));
 

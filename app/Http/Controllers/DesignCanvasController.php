@@ -23,8 +23,7 @@ class DesignCanvasController extends Controller
     {
         $this->authorize('update', $project);
 
-        $nextPage = (int) $project->canvases()->max('page_number') + 1;
-        $canvas = $project->canvases()->create(['page_number' => $nextPage, 'elements' => []]);
+        $canvas = $project->addPage();
 
         return redirect()->route('design.projects.show', $project)
             ->with('status', 'Page added.')

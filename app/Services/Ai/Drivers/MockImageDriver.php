@@ -29,6 +29,7 @@ class MockImageDriver implements AiImageDriver
             tokensUsed: max(20, str_word_count($prompt) * 4),
             provider: 'mock',
             revisedPrompt: $prompt,
+            isPlaceholder: true,
         );
     }
 }

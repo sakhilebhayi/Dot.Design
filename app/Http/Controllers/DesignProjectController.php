@@ -52,7 +52,7 @@ class DesignProjectController extends Controller
 
         // Every project starts with one editable page -- the editor
         // (show()) assumes a project always has at least one canvas.
-        $project->canvases()->create(['page_number' => 1, 'elements' => []]);
+        $project->addPage();
 
         event(new DesignProjectCreated($project));
 

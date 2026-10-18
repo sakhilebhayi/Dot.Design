@@ -13,7 +13,13 @@ class EcosystemAuthController extends Controller
 {
     public function handle(Request $request): RedirectResponse
     {
-        $accessToken = PersonalAccessToken::findToken($request->query('token'));
+        $plainToken = $request->query('token');
+
+        // A missing, empty or non-string (e.g. token[]=x) value is a plain
+        // 403, never a 500.
+        abort_unless(is_string($plainToken) && $plainToken !== '', 403);
+
+        $accessToken = PersonalAccessToken::findToken($plainToken);
 
         abort_if(
             ! $accessToken
@@ -22,11 +28,15 @@ class EcosystemAuthController extends Controller
             403
         );
 
-        /** @var User $user */
         $user = $accessToken->tokenable;
+
+        // Single use, even when the owner no longer exists.
         $accessToken->delete();
 
+        abort_unless($user instanceof User, 403);
+
         Auth::login($user);
+        $request->session()->regenerate();
 
         return redirect()->route('dashboard');
     }

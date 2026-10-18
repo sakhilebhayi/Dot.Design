@@ -179,13 +179,12 @@
             <h2 style="font-family:'Syne',sans-serif;font-size:1rem;font-weight:700;color:#f4f4f5;margin:0;">
                 Recent Assets
             </h2>
-            <a href="#" style="font-size:0.75rem;color:#d946ef;text-decoration:none;font-weight:600;">View all &rarr;</a>
         </div>
 
         @if($recentAssets->isEmpty())
         <div style="background:#141416;border:1px dashed rgba(67,70,86,0.4);border-radius:14px;padding:2rem;text-align:center;">
             <span class="material-symbols-rounded" style="font-size:36px;color:#71717a;display:block;margin-bottom:0.5rem;">photo_library</span>
-            <p style="color:#71717a;font-size:0.82rem;margin:0;">No assets uploaded yet.</p>
+            <p style="color:#71717a;font-size:0.82rem;margin:0;">No assets yet. Direct uploads are not available.</p>
         </div>
         @else
         <div style="display:flex;gap:0.85rem;overflow-x:auto;padding-bottom:0.5rem;scrollbar-width:thin;scrollbar-color:rgba(67,70,86,0.4) transparent;">
@@ -234,7 +233,6 @@
             <h2 style="font-family:'Syne',sans-serif;font-size:1rem;font-weight:700;color:#f4f4f5;margin:0;">
                 AI Generation Activity
             </h2>
-            <a href="#" style="font-size:0.75rem;color:#d946ef;text-decoration:none;font-weight:600;">View log &rarr;</a>
         </div>
 
         <div style="background:#141416;border:1px solid rgba(255,255,255,0.07);border-radius:14px;padding:1.5rem;">
@@ -269,7 +267,7 @@
                     </div>
                     <div>
                         <div style="font-family:'Syne',sans-serif;font-size:1.1rem;font-weight:800;color:{{ $pc['color'] }};line-height:1;">{{ $count }}</div>
-                        <div style="font-size:0.62rem;color:#71717a;text-transform:capitalize;margin-top:0.1rem;">{{ $provider }}</div>
+                        <div style="font-size:0.62rem;color:#71717a;margin-top:0.1rem;{{ $provider === 'mock' ? '' : 'text-transform:capitalize;' }}">{{ $provider === 'mock' ? \App\Services\Ai\AiImageResult::PLACEHOLDER_LABEL : $provider }}</div>
                     </div>
                 </div>
                 @endforeach

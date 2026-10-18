@@ -55,6 +55,7 @@ class AiImageGenerationService
             'meta' => [
                 'ai_generation_log_id' => $log->id,
                 'prompt' => $prompt,
+                'placeholder' => $result->isPlaceholder,
             ],
         ]);
 
