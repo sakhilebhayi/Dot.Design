@@ -1,7 +1,7 @@
 <x-app-layout>
 <x-slot name="header">Token Sets</x-slot>
 
-<div style="padding:2rem 2.5rem;max-width:1400px;">
+<div class="page">
 
     <div style="margin-bottom:2rem;">
         <h1 style="font-family:'Syne',sans-serif;font-size:1.6rem;font-weight:800;color:var(--text);margin:0 0 0.25rem;">
@@ -18,7 +18,7 @@
             <p style="color:var(--text-dim);font-size:0.85rem;margin:0;">No token sets yet.</p>
         </div>
     @else
-        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1rem;">
+        <div class="card-grid" style="--card-min:280px;">
             @foreach ($tokenSets as $tokenSet)
                 @php
                     $swatchTokens = $tokenSet->tokens->where('category', 'color')->take(6);

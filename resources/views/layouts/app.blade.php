@@ -23,6 +23,33 @@
             if (saved === 'light') document.documentElement.classList.add('light');
         })();
     </script>
+    <script>
+        // Shell state: theme + the mobile drawer. Defined before Alpine starts (Livewire
+        // boots Alpine at the end of <body>). The drawer only exists below 860px; at or
+        // above it the sidebar is permanent and this state is ignored.
+        function dotShell() {
+            return {
+                theme: (function () { try { return localStorage.getItem('dot-design-theme') || 'dark'; } catch (e) { return 'dark'; } })(),
+                navOpen: false,
+                init() {
+                    var wide = window.matchMedia('(min-width: 860px)');
+                    var onChange = (e) => { if (e.matches) this.closeNav(false); };
+                    if (wide.addEventListener) wide.addEventListener('change', onChange); else wide.addListener(onChange);
+                },
+                openNav() {
+                    this.navOpen = true;
+                    this.$nextTick(() => { var c = document.getElementById('shell-drawer-close'); if (c) c.focus(); });
+                },
+                closeNav(restoreFocus) {
+                    if (! this.navOpen) return;
+                    this.navOpen = false;
+                    if (restoreFocus !== false) {
+                        this.$nextTick(() => { var b = document.getElementById('shell-menu-button'); if (b) b.focus(); });
+                    }
+                },
+            };
+        }
+    </script>
     <style>
         :root {
             --accent: #ec4899; --accent-rgb: 236,72,153;
@@ -30,6 +57,7 @@
             --text: #f4f4f5; --text-muted: #a1a1aa; --text-dim: #71717a; --text-faint: #3f3f46;
             --border: rgba(255,255,255,0.07); --border-strong: rgba(255,255,255,0.11);
             --topbar-bg: rgba(9,9,11,0.85);
+            --topbar-h: 54px; --sidebar-w: 260px;
         }
         html.light {
             --bg: #f7f7f8; --bg-raised: #ffffff; --bg-card: #ffffff; --bg-input: rgba(0,0,0,0.03);
@@ -43,7 +71,7 @@
         [x-cloak] { display:none!important; }
 
         /* Sidebar */
-        .sidebar { position:fixed; left:0; top:0; width:260px; height:100vh; background:var(--bg-raised); border-right:1px solid var(--border); display:flex; flex-direction:column; z-index:40; overflow:hidden; }
+        .sidebar { position:fixed; left:0; top:0; width:var(--sidebar-w); height:100vh; height:100dvh; background:var(--bg-raised); border-right:1px solid var(--border); display:flex; flex-direction:column; z-index:40; overflow:hidden; }
         .sidebar::before { content:''; position:absolute; top:-80px; left:-80px; width:320px; height:320px; background:radial-gradient(circle, rgba(236,72,153,0.1) 0%, transparent 65%); pointer-events:none; }
 
         .sidebar-brand { padding:20px 18px 14px; display:flex; align-items:center; gap:11px; flex-shrink:0; }
@@ -71,8 +99,10 @@
         .user-team { font-size:10px; color:var(--text-dim); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 
         /* Topbar */
-        .topbar { position:fixed; top:0; left:260px; right:0; height:54px; background:var(--topbar-bg); backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px); border-bottom:1px solid var(--border); display:flex; align-items:center; padding:0 22px; z-index:30; gap:12px; }
-        .topbar-title { font-family:'Syne',sans-serif; font-size:14px; font-weight:700; color:var(--text); flex:1; }
+        .topbar { position:fixed; top:0; left:var(--sidebar-w); right:0; height:var(--topbar-h); background:var(--topbar-bg); backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px); border-bottom:1px solid var(--border); display:flex; align-items:center; padding:0 22px; z-index:30; gap:12px; }
+        .topbar-title { font-family:'Syne',sans-serif; font-size:14px; font-weight:700; color:var(--text); flex:1; min-width:0; }
+        .topbar-title { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+        .topbar-title > * { margin:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
         .topbar-team { font-size:11px; color:var(--text-dim); background:rgba(127,127,127,0.08); border:1px solid var(--border); border-radius:6px; padding:3px 8px; font-weight:500; white-space:nowrap; }
         .topbar-btn { width:30px; height:30px; border-radius:7px; border:1px solid var(--border); background:var(--bg-input); display:flex; align-items:center; justify-content:center; color:var(--text-dim); cursor:pointer; transition:background .13s,color .13s; text-decoration:none; flex-shrink:0; }
         .topbar-btn:hover { background:rgba(127,127,127,0.12); color:var(--text-muted); }
@@ -89,7 +119,7 @@
         .user-menu-divider { height:1px; background:var(--border); margin:5px 4px; }
 
         /* Content */
-        .content-wrap { margin-left:260px; padding-top:54px; min-height:100vh; }
+        .content-wrap { margin-left:var(--sidebar-w); padding-top:var(--topbar-h); min-height:100vh; min-width:0; }
 
         /* Shared UI tokens */
         .dot-card { background:var(--bg-card); border:1px solid var(--border); border-radius:12px; }
@@ -108,6 +138,75 @@
         select.dot-input option { background:var(--bg-card); color:var(--text); }
         .skeleton { background:linear-gradient(90deg, var(--bg-input) 25%, var(--border) 37%, var(--bg-input) 63%); background-size:400% 100%; animation:skeleton-loading 1.4s ease infinite; border-radius:8px; }
         @keyframes skeleton-loading { 0% { background-position:100% 50%; } 100% { background-position:0 50%; } }
+
+        /* ------------------------------------------------------------------
+           Responsive shell. One breakpoint: below 860px the sidebar becomes an
+           off-canvas drawer opened from the top bar (see dotShell() in the head).
+           Use max-width:859.98px / min-width:860px consistently.
+           Hooks: #shell-menu-button, #shell-drawer, #shell-backdrop, .topbar,
+           .table-scroll (wrap any wide table), .page (non-editor page body).
+           ------------------------------------------------------------------ */
+        .shell-menu-button, .shell-drawer-close, .shell-backdrop { display:none; }
+
+        /* Page body for the non-editor pages (the editor keeps its own .ed-root padding). */
+        .page { padding:2rem 2.5rem; max-width:1400px; }
+        .page--narrow { max-width:640px; }
+        .page-head { display:flex; align-items:center; justify-content:space-between; gap:0.75rem 1rem; flex-wrap:wrap; margin-bottom:2rem; }
+        .page-head > div { min-width:0; }
+        .page h1 { overflow-wrap:anywhere; }
+        .card-grid { display:grid; gap:1rem; grid-template-columns:repeat(auto-fill, minmax(min(var(--card-min, 260px), 100%), 1fr)); }
+        .kpi-grid { display:grid; gap:1rem; grid-template-columns:repeat(auto-fit, minmax(10rem, 1fr)); margin-bottom:2.25rem; }
+        .form-grid-3 { display:grid; gap:1rem; grid-template-columns:repeat(3, minmax(0, 1fr)); }
+        .table-scroll { overflow-x:auto; max-width:100%; -webkit-overflow-scrolling:touch; }
+        .table-scroll > table { min-width:34rem; }
+        .table-scroll:focus-visible { outline:2px solid #ec4899; outline-offset:2px; }
+
+        @media (max-width: 859.98px) {
+            :root { --topbar-h: 56px; }
+
+            /* Drawer: closed = invisible + unfocusable (visibility), not just moved off-screen. */
+            .sidebar { width:min(280px, 86vw); transform:translateX(-100%); visibility:hidden; transition:transform .22s ease, visibility 0s linear .22s; z-index:50; box-shadow:none; overscroll-behavior:contain; }
+            .sidebar.is-open { transform:none; visibility:visible; transition:transform .22s ease, visibility 0s; box-shadow:0 0 40px rgba(0,0,0,0.5); }
+            .shell-backdrop { display:block; position:fixed; inset:0; z-index:45; background:rgba(0,0,0,0.6); opacity:0; visibility:hidden; transition:opacity .22s ease, visibility 0s linear .22s; }
+            .shell-backdrop.is-open { opacity:1; visibility:visible; transition:opacity .22s ease, visibility 0s; }
+            body.shell-locked { overflow:hidden; }
+
+            .topbar { left:0; padding:0 12px; gap:8px; }
+            .content-wrap { margin-left:0; }
+
+            .shell-menu-button { display:inline-flex; align-items:center; gap:6px; min-height:44px; padding:0 12px 0 8px; border-radius:8px; border:1px solid var(--border); background:var(--bg-input); color:var(--text); font-family:'Inter',sans-serif; font-size:13px; font-weight:600; cursor:pointer; flex-shrink:0; }
+            .shell-menu-button .material-symbols-rounded { font-size:22px; }
+            .shell-drawer-close { display:inline-flex; align-items:center; justify-content:center; width:44px; height:44px; margin-left:auto; border-radius:8px; border:1px solid var(--border); background:var(--bg-input); color:var(--text-muted); cursor:pointer; flex-shrink:0; }
+            .shell-menu-button:focus-visible, .shell-drawer-close:focus-visible, .nav-item:focus-visible, .topbar-btn:focus-visible { outline:2px solid #ec4899; outline-offset:2px; }
+
+            .sidebar-brand { padding-right:12px; }
+            .nav-item { min-height:44px; padding:10px 12px; }
+            .nav-item:hover { transform:none; }
+
+            .topbar-btn { width:44px; height:44px; border-radius:8px; }
+            .topbar-btn .material-symbols-rounded { font-size:20px; }
+            .user-menu-panel { top:calc(100% + 6px); width:min(260px, calc(100vw - 24px)); max-height:calc(100dvh - var(--topbar-h) - 12px); overflow-y:auto; }
+            .user-menu-item { min-height:44px; }
+
+            .page { padding:1.5rem 1.25rem 2rem; }
+            .page .dot-btn { min-height:44px; justify-content:center; }
+            .page .dot-input { min-height:44px; font-size:16px; }
+        }
+
+        @media (max-width: 559.98px) {
+            .topbar-team { display:none; }
+            .page { padding:1.25rem 1rem 2rem; }
+            .page-head { margin-bottom:1.5rem; }
+            .kpi-grid { grid-template-columns:repeat(2, minmax(0, 1fr)); gap:0.75rem; }
+            .kpi-grid > :last-child:nth-child(odd) { grid-column:1 / -1; }
+            .form-grid-3 { grid-template-columns:minmax(0, 1fr); }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .sidebar, .sidebar.is-open, .shell-backdrop, .shell-backdrop.is-open { transition:none; }
+            .live-dot, .skeleton { animation:none; }
+            .nav-item:hover { transform:none; }
+        }
     </style>
     @livewireStyles
     {{--
@@ -124,10 +223,13 @@
         guidance to never load Alpine yourself when Livewire is present.
     --}}
 </head>
-<body x-data="{ theme: localStorage.getItem('dot-design-theme') || 'dark' }" x-init="$watch('theme', value => { document.documentElement.classList.toggle('light', value === 'light'); localStorage.setItem('dot-design-theme', value); })">
+<body x-data="dotShell()" x-init="$watch('theme', value => { document.documentElement.classList.toggle('light', value === 'light'); try { localStorage.setItem('dot-design-theme', value); } catch (e) {} })" :class="{ 'shell-locked': navOpen }" @keydown.escape.window="closeNav()">
     <x-banner />
 
-    <aside class="sidebar">
+    {{-- Mobile drawer backdrop: click closes the drawer. Hidden at >= 860px. --}}
+    <div id="shell-backdrop" class="shell-backdrop" :class="{ 'is-open': navOpen }" aria-hidden="true" @click="closeNav()"></div>
+
+    <aside id="shell-drawer" class="sidebar" aria-label="Dot.Design sidebar" :class="{ 'is-open': navOpen }" @keydown.stop @keydown.escape="closeNav()">
         <div class="sidebar-brand">
             <div class="brand-icon">
                 <img src="{{ asset('images/logo.png') }}" alt="Dot.Design">
@@ -139,11 +241,14 @@
                     <span class="brand-subtitle">Design Studio</span>
                 </div>
             </div>
+            <button type="button" id="shell-drawer-close" class="shell-drawer-close" aria-label="Close menu" @click="closeNav()">
+                <span class="material-symbols-rounded" aria-hidden="true">close</span>
+            </button>
         </div>
 
         <div class="sidebar-divider"></div>
 
-        <nav class="sidebar-nav">
+        <nav class="sidebar-nav" aria-label="Main" @click="if ($event.target.closest('a')) closeNav(false)">
             <a href="{{ route('dashboard') }}" class="nav-item {{ request()->routeIs('dashboard') ? 'active' : '' }}">
                 <span class="material-symbols-rounded nav-icon">dashboard</span>
                 Dashboard
@@ -185,7 +290,11 @@
         @endauth
     </aside>
 
-    <header class="topbar">
+    <header class="topbar" :inert="navOpen">
+        <button type="button" id="shell-menu-button" class="shell-menu-button" aria-expanded="false" aria-controls="shell-drawer" :aria-expanded="navOpen ? 'true' : 'false'" @click="navOpen ? closeNav() : openNav()">
+            <span class="material-symbols-rounded" aria-hidden="true">menu</span>
+            <span>Menu</span>
+        </button>
         <div class="topbar-title">
             @isset($header){{ $header }}@else Dot.Design
             @endisset
@@ -193,12 +302,12 @@
         @auth
         <span class="topbar-team">{{ Auth::user()->currentTeam->name ?? 'Personal' }}</span>
         @endauth
-        <button type="button" class="topbar-btn" title="Toggle light / dark theme" @click="theme = (theme === 'light' ? 'dark' : 'light')">
+        <button type="button" class="topbar-btn" title="Toggle light / dark theme" aria-label="Toggle light / dark theme" @click="theme = (theme === 'light' ? 'dark' : 'light')">
             <span class="material-symbols-rounded" x-text="theme === 'light' ? 'dark_mode' : 'light_mode'"></span>
         </button>
         @auth
         <div class="user-menu" x-data="{ open: false }" @click.away="open = false">
-            <button type="button" class="topbar-btn" title="Account" @click="open = ! open">
+            <button type="button" class="topbar-btn" title="Account" aria-label="Account menu" aria-haspopup="true" :aria-expanded="open ? 'true' : 'false'" @click="open = ! open" @keydown.escape="open = false">
                 <span class="material-symbols-rounded">account_circle</span>
             </button>
 
@@ -262,7 +371,7 @@
         @endauth
     </header>
 
-    <div class="content-wrap">
+    <div class="content-wrap" :inert="navOpen">
         <main>{{ $slot }}</main>
     </div>
 

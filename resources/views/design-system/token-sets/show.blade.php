@@ -1,9 +1,9 @@
 <x-app-layout>
 <x-slot name="header">{{ $tokenSet->name }}</x-slot>
 
-<div style="padding:2rem 2.5rem;max-width:1400px;">
+<div class="page">
 
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.5rem;">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:0.75rem;flex-wrap:wrap;margin-bottom:0.5rem;">
         <h1 style="font-family:'Syne',sans-serif;font-size:1.6rem;font-weight:800;color:var(--text);margin:0;">
             {{ $tokenSet->name }}
         </h1>
@@ -23,7 +23,7 @@
                 <p style="color:var(--text-dim);font-size:0.82rem;margin:0;">No tokens in this set yet.</p>
             </div>
         @else
-            <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:0.85rem;">
+            <div class="card-grid" style="--card-min:220px;gap:0.85rem;">
                 @foreach ($tokenSet->tokens as $token)
                     <div class="dot-card" style="padding:1rem;">
                         @if ($token->category === 'color')
@@ -66,7 +66,7 @@
                 <p style="color:var(--text-dim);font-size:0.82rem;margin:0;">No consumers recorded yet.</p>
             </div>
         @else
-            <div class="dot-card" style="padding:0.5rem;">
+            <div class="dot-card table-scroll" tabindex="0" role="region" aria-label="Consuming platforms" style="padding:0.5rem;">
                 <table style="width:100%;border-collapse:collapse;font-size:0.83rem;color:var(--text-muted);">
                     <thead>
                         <tr style="text-align:left;border-bottom:1px solid var(--border);">

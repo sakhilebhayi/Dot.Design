@@ -1,8 +1,8 @@
 <x-app-layout>
 
-<div style="padding:2rem 2.5rem;max-width:1400px;">
+<div class="page">
 
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:2rem;">
+    <div class="page-head">
         <div>
             <h1 style="font-family:'Syne',sans-serif;font-size:1.6rem;font-weight:800;color:var(--text);margin:0 0 0.25rem;">
                 Projects
@@ -34,7 +34,7 @@
         </a>
     </div>
     @else
-    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:1rem;">
+    <div class="card-grid">
         @foreach($projects as $project)
         @php
             $typeColors = [
@@ -78,7 +78,7 @@
                 <form method="POST" action="{{ route('design.projects.destroy', $project) }}" onsubmit="return confirm('Delete this project and all its pages?');">
                     @csrf
                     @method('DELETE')
-                    <button type="submit" class="dot-btn dot-btn-ghost" title="Delete">
+                    <button type="submit" class="dot-btn dot-btn-ghost" title="Delete" aria-label="Delete project {{ $project->name }}">
                         <span class="material-symbols-rounded" style="font-size:15px;">delete</span>
                     </button>
                 </form>

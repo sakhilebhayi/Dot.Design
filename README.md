@@ -107,7 +107,22 @@ The editor is Alpine.js with no extra framework. Its logic is split so the part 
 
 **Saving.** Edits autosave after 500 ms. The header shows `Unsaved changes…`, `Saving…`, `Saved` or `Not saved`; a failure also puts a banner on screen that stays until a save succeeds (network errors retry every 8 seconds, or press Retry), and leaving the page with unsaved work asks first. Every save carries the page's `revision`; the server only writes if it still matches and bumps it in the same statement. A stale save returns **409** and the editor stops saving, saying the page changed elsewhere, and offers "Reload their version" or an explicit "Overwrite with mine". Nothing is overwritten silently.
 
-**Not supported:** multi-select, grouping, copy/paste between pages, live collaboration (two people editing see a conflict, not each other's cursors), and the app shell (`layouts/app.blade.php`) has no phone layout, so on a phone the 260 px sidebar leaves little room; the editor itself stacks its panels below 1100 px and is usable on tablets.
+**Not supported:** multi-select, grouping, copy/paste between pages, live collaboration (two people editing see a conflict, not each other's cursors). The editor stacks its panels below 1100 px, and the app shell around it is responsive (see "The responsive shell" below).
+
+## The responsive shell
+
+`resources/views/layouts/app.blade.php` is a two-state shell with a single breakpoint at 860 px (`max-width: 859.98px` for phones and small tablets, `min-width: 860px` for desktop; use those exact values so the two never overlap).
+
+- At 860 px and above: the 260 px sidebar is permanent and the top bar sits to its right, as before.
+- Below 860 px: the sidebar becomes an off-canvas drawer. The top bar gets a labelled **Menu** button (`#shell-menu-button`, `aria-expanded`, `aria-controls="shell-drawer"`); the drawer is `#shell-drawer` (the existing `<aside class="sidebar">`), with a close button (`#shell-drawer-close`) and a backdrop (`#shell-backdrop`). While it is open the page content and top bar are `inert`, body scroll is locked, focus moves into the drawer, and Escape, the backdrop, the close button or following a nav link close it and return focus to the Menu button. Growing the window past 860 px closes it. When closed the drawer is `visibility:hidden`, so it is not focusable or read by assistive technology. State lives in `dotShell()` (an inline function in the layout head, driven by the Alpine that Livewire already boots); there is no build step.
+- The top bar height is `--topbar-h` (54 px desktop, 56 px mobile) and the content offset uses the same variable, so they cannot drift apart.
+- `prefers-reduced-motion` turns the drawer transitions off.
+
+**Page bodies.** Wrap a non-editor page in `<div class="page">` (use `page--narrow` for forms). Helpers: `.page-head` (title row that wraps), `.card-grid` (auto-fill grid; set `--card-min` for a different minimum), `.kpi-grid`, `.form-grid-3` (three columns, one on phones). Inside `.page` the buttons and inputs get 44 px tap targets on phones. The canvas editor keeps its own `.ed-root` layout.
+
+**Adding a wide table.** Give the container `class="table-scroll"` (plus `tabindex="0" role="region" aria-label="..."` so keyboard users can scroll it) and put the `<table>` directly inside; the table gets a `34rem` minimum width so it scrolls inside the container instead of the page. See `design-system/token-sets/show.blade.php`.
+
+Tests: `tests/Feature/ResponsiveShellTest.php` pins these hooks on the real routes.
 
 ## Domain Models
 
