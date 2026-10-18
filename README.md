@@ -71,6 +71,24 @@ Signed-in users can upload images from the asset panel in a project's editor.
 4. GD holds a decoded image at 4 bytes per pixel, so a 40 megapixel image needs roughly 160 MB. Images that would not fit in PHP's `memory_limit` are refused with a clear message instead of crashing; raise `memory_limit` if you want the full range.
 5. If the web server or a proxy limits request bodies (nginx `client_max_body_size`, PHP `upload_max_filesize` / `post_max_size`), keep them at 8 MB or above or users will see "larger than the server accepts".
 
+## Image elements and export
+
+A canvas page holds `text`, `rectangle` and `image` elements. Every element can carry `rotation` (degrees, about its centre) and `opacity` (0 to 1). An `image` element stores `asset_id`, never a URL.
+
+- **Place** an asset from the panel with the add-image button. AI placeholders can be placed too; they are drawn with a PLACEHOLDER tag in the editor.
+- **Validation** (`UpdateDesignCanvasRequest`): at most 300 elements and 512 KB of serialized JSON per page (`design.canvas.*`), numeric bounds on position, size, rotation and opacity, hex-only colours, unknown keys dropped, and every `asset_id` must be an asset owned by the user who is saving. Another user's id is a 422, never accepted.
+- **Deleting a placed asset is refused** (409, naming the project and page) until it is removed from the canvas, so a page never points at a file that is gone.
+
+**SVG export** (always available) embeds images as data URIs read from the private disk (6 MB per image and 20 MB per export; over either cap the image is replaced by a labelled box that says so), applies rotation and opacity, and breaks long text into lines. SVG cannot wrap text itself, so line breaks use an estimated glyph width; another viewer's font may wrap slightly differently from the editor. AI placeholders are external URLs and are never fetched; they export as a labelled "Placeholder image" box.
+
+**PNG export** rasterises with GD: rectangles, images, rotation, opacity. It is narrower than SVG on purpose:
+
+- **Text needs a font.** GD draws scalable text only from a TrueType file and none ships with the app. Set `DESIGN_EXPORT_FONT` to an absolute `.ttf` path to enable it. Without one, a canvas that contains text is **refused** with a message pointing at SVG, rather than exported with the text missing (the PNG button is disabled with the reason).
+- Canvases over 4096 px a side or 16 megapixels are refused, as are renders that would not fit in `memory_limit`.
+- Opacity is exact for opaque pixels and approximate for already-translucent edges.
+
+JPEG and PDF export do not exist.
+
 ## Domain Models
 
 **Canvas / AI tool:**

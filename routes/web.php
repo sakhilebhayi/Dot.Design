@@ -91,6 +91,7 @@ Route::middleware([
         Route::post('projects/{project}/canvases', [DesignCanvasController::class, 'store'])->name('projects.canvases.store');
         Route::put('projects/{project}/canvases/{canvas}', [DesignCanvasController::class, 'update'])->name('projects.canvases.update');
         Route::get('projects/{project}/canvases/{canvas}/export.svg', [DesignCanvasExportController::class, 'svg'])->name('projects.canvases.export.svg');
+        Route::get('projects/{project}/canvases/{canvas}/export.png', [DesignCanvasExportController::class, 'png'])->name('projects.canvases.export.png');
 
         Route::post('projects/{project}/ai-generations', [AiGenerationController::class, 'store'])->name('projects.ai-generations.store');
 

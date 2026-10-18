@@ -25,6 +25,12 @@
         saveUrlTemplate: '{{ url('/design/projects/'.$project->id.'/canvases/__ID__') }}',
         csrfToken: '{{ csrf_token() }}',
         assets: {{ $assets->map->toEditorArray()->values()->toJson() }},
+        assetIndex: {{ $assetIndex->toJson() }},
+        maxElements: {{ (int) config('design.canvas.max_elements') }},
+        pngUrlTemplate: '{{ url('/design/projects/'.$project->id.'/canvases/__ID__/export.png') }}',
+        pngTextAvailable: {{ is_string(config('design.export.png_font')) && is_file((string) config('design.export.png_font')) ? 'true' : 'false' }},
+        pngMaxDimension: {{ (int) config('design.export.png_max_dimension') }},
+        pngMaxPixels: {{ (int) config('design.export.png_max_megapixels') * 1000000 }},
         usage: {{ json_encode($assetUsage) }},
         uploadUrl: '{{ route('design.assets.store') }}',
         assetDeleteUrlTemplate: '{{ url('/design/assets/__ID__') }}',
@@ -54,6 +60,18 @@
                 <span class="material-symbols-rounded" style="font-size:15px;">download</span>
                 Export SVG
             </a>
+            <template x-if="! pngBlockedReason()">
+                <a :href="pngUrlTemplate.replace('__ID__', activeCanvasId)" class="dot-btn dot-btn-ghost">
+                    <span class="material-symbols-rounded" style="font-size:15px;">image</span>
+                    Export PNG
+                </a>
+            </template>
+            <template x-if="pngBlockedReason()">
+                <span class="dot-btn dot-btn-ghost" aria-disabled="true" :title="pngBlockedReason()" style="opacity:0.5;cursor:not-allowed;">
+                    <span class="material-symbols-rounded" style="font-size:15px;">image</span>
+                    PNG unavailable
+                </span>
+            </template>
         </div>
     </div>
 
@@ -118,12 +136,13 @@
                             class="dot-btn"
                             :class="el.id === selectedElementId ? 'dot-btn-primary' : 'dot-btn-ghost'"
                             style="width:100%;justify-content:flex-start;font-size:11.5px;padding:5px 8px;">
-                        <span class="material-symbols-rounded" style="font-size:14px;" x-text="el.type === 'text' ? 'title' : 'rectangle'"></span>
-                        <span x-text="el.type === 'text' ? (el.text || 'Text').slice(0, 16) : 'Rectangle'"></span>
+                        <span class="material-symbols-rounded" style="font-size:14px;" x-text="layerIcon(el)"></span>
+                        <span x-text="layerLabel(el)"></span>
                     </button>
                 </template>
                 <p x-show="activeElements().length === 0" style="font-size:0.72rem;color:var(--text-faint);margin:0.25rem 0 0;">No elements yet.</p>
             </div>
+            <p x-show="editorNote" x-text="editorNote" role="status" style="font-size:0.7rem;color:#f87171;margin:0.6rem 0 0;"></p>
         </div>
 
         {{-- Canvas Surface --}}
@@ -140,9 +159,19 @@
                     <div
                         @mousedown="startDrag($event, el.id)"
                         @click.stop="selectedElementId = el.id"
-                        :style="`position:absolute;left:${(el.x / projectWidth) * 100}%;top:${(el.y / projectHeight) * 100}%;width:${(el.width / projectWidth) * 100}%;height:${(el.height / projectHeight) * 100}%;cursor:move;outline:${el.id === selectedElementId ? '2px solid #ec4899' : 'none'};outline-offset:2px;` + (el.type === 'text' ? `color:${el.color};font-size:${(el.fontSize / projectWidth) * 720}px;display:flex;align-items:center;overflow:hidden;white-space:nowrap;` : `background:${el.fill};`)"
-                        x-text="el.type === 'text' ? el.text : ''"
-                    ></div>
+                        :style="elementStyle(el)"
+                    >
+                        <span x-show="el.type === 'text'" x-text="el.text" style="width:100%;"></span>
+                        <template x-if="el.type === 'image' && assetFor(el)">
+                            <img :src="assetFor(el).url" :alt="assetFor(el).name" draggable="false" style="width:100%;height:100%;display:block;object-fit:fill;pointer-events:none;user-select:none;" />
+                        </template>
+                        <template x-if="el.type === 'image' && ! assetFor(el)">
+                            <span style="width:100%;font-size:11px;text-align:center;color:#52525b;">Image unavailable</span>
+                        </template>
+                        <span x-show="el.type === 'image' && assetFor(el) && assetFor(el).placeholder"
+                              :title="assetFor(el) && assetFor(el).placeholder_label"
+                              style="position:absolute;left:0;top:0;padding:1px 5px;font-size:10px;font-weight:700;letter-spacing:0.04em;background:#ec4899;color:#09090b;pointer-events:none;">PLACEHOLDER</span>
+                    </div>
                 </template>
             </div>
         </div>
@@ -193,6 +222,24 @@
                                 <input type="color" x-model="selectedElement().fill" @input="scheduleSave()" class="dot-input" style="padding:2px;height:34px;" />
                             </div>
                         </template>
+
+                        <template x-if="selectedElement().type === 'image'">
+                            <p style="margin:0;font-size:0.68rem;color:var(--text-dim);">
+                                <span x-text="assetFor(selectedElement()) ? assetFor(selectedElement()).name : 'Image unavailable'"></span>
+                                <template x-if="assetFor(selectedElement()) && assetFor(selectedElement()).placeholder"><span style="color:var(--accent);font-weight:600;"> &middot; Placeholder</span></template>
+                            </p>
+                        </template>
+
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;">
+                            <div>
+                                <label style="display:block;font-size:0.68rem;color:var(--text-dim);margin-bottom:0.25rem;">Rotation (&deg;)</label>
+                                <input type="number" min="-360" max="360" step="1" :value="selectedElement().rotation || 0" @input="setNumber(selectedElement(), 'rotation', $event.target.value, -360, 360)" class="dot-input" />
+                            </div>
+                            <div>
+                                <label style="display:block;font-size:0.68rem;color:var(--text-dim);margin-bottom:0.25rem;">Opacity</label>
+                                <input type="number" min="0" max="100" step="5" :value="Math.round((selectedElement().opacity ?? 1) * 100)" @input="setNumber(selectedElement(), 'opacity', $event.target.value / 100, 0, 1)" class="dot-input" />
+                            </div>
+                        </div>
 
                         <button type="button" @click="deleteSelected()" class="dot-btn dot-btn-ghost" style="color:#f87171;justify-content:center;margin-top:0.25rem;">
                             <span class="material-symbols-rounded" style="font-size:15px;">delete</span>
@@ -275,6 +322,9 @@
                                             <template x-if="! asset.placeholder"><span class="metric-val" x-text="assetMeta(asset)"></span></template>
                                         </div>
                                     </div>
+                                    <button type="button" @click="placeAsset(asset)" class="dot-btn dot-btn-ghost" style="padding:4px 6px;" :aria-label="'Place ' + asset.name + ' on canvas'" title="Place on canvas">
+                                        <span class="material-symbols-rounded" style="font-size:15px;">add_photo_alternate</span>
+                                    </button>
                                     <template x-if="confirmDeleteId !== asset.id">
                                         <button type="button" @click="confirmDeleteId = asset.id" class="dot-btn dot-btn-ghost" style="padding:4px 6px;" :aria-label="'Delete ' + asset.name" title="Delete asset">
                                             <span class="material-symbols-rounded" style="font-size:15px;">delete</span>
@@ -324,6 +374,13 @@ function canvasEditor(config) {
         saveTimer: null,
 
         assets: config.assets,
+        assetIndex: config.assetIndex,
+        maxElements: config.maxElements,
+        pngUrlTemplate: config.pngUrlTemplate,
+        pngTextAvailable: config.pngTextAvailable,
+        pngMaxDimension: config.pngMaxDimension,
+        pngMaxPixels: config.pngMaxPixels,
+        editorNote: '',
         usage: config.usage,
         uploadUrl: config.uploadUrl,
         assetDeleteUrlTemplate: config.assetDeleteUrlTemplate,
@@ -398,6 +455,7 @@ function canvasEditor(config) {
         upsertAsset(asset) {
             const index = this.assets.findIndex(a => a.id === asset.id);
             if (index === -1) this.assets.unshift(asset); else this.assets.splice(index, 1, asset);
+            this.assetIndex[asset.id] = asset;
         },
         async deleteAsset(asset) {
             this.uploadError = '';
@@ -433,6 +491,74 @@ function canvasEditor(config) {
         selectCanvas(id) {
             this.activeCanvasId = id;
             this.selectedElementId = null;
+        },
+
+        assetFor(el) {
+            return this.assetIndex[el.asset_id] || null;
+        },
+        layerIcon(el) {
+            return { text: 'title', image: 'image' }[el.type] || 'rectangle';
+        },
+        layerLabel(el) {
+            if (el.type === 'text') return (el.text || 'Text').slice(0, 16);
+            if (el.type === 'image') return (this.assetFor(el) ? this.assetFor(el).name : 'Image').slice(0, 16);
+            return 'Rectangle';
+        },
+        elementStyle(el) {
+            let style = `position:absolute;left:${(el.x / this.projectWidth) * 100}%;top:${(el.y / this.projectHeight) * 100}%;width:${(el.width / this.projectWidth) * 100}%;height:${(el.height / this.projectHeight) * 100}%;cursor:move;outline:${el.id === this.selectedElementId ? '2px solid #ec4899' : 'none'};outline-offset:2px;`;
+            if (el.rotation) style += `transform:rotate(${el.rotation}deg);transform-origin:center;`;
+            if (el.opacity !== undefined && el.opacity !== null && el.opacity < 1) style += `opacity:${el.opacity};`;
+            if (el.type === 'text') {
+                style += `color:${el.color};font-size:${(el.fontSize / this.projectWidth) * 720}px;line-height:1.2;display:flex;align-items:center;overflow:hidden;white-space:pre-wrap;overflow-wrap:anywhere;`;
+            } else if (el.type === 'rectangle') {
+                style += `background:${el.fill};`;
+            } else {
+                style += 'display:flex;align-items:center;justify-content:center;';
+            }
+            return style;
+        },
+        setNumber(el, key, value, min, max) {
+            const number = Number(value);
+            if (Number.isNaN(number)) return;
+            el[key] = Math.min(max, Math.max(min, number));
+            this.scheduleSave();
+        },
+        placeAsset(asset) {
+            const canvas = this.activeCanvas();
+            if (! canvas) return;
+            if (canvas.elements.length >= this.maxElements) {
+                this.editorNote = 'This page already has ' + this.maxElements + ' elements, the most it can hold.';
+                return;
+            }
+            this.editorNote = '';
+            // Fit within half the page, keeping the picture's proportions. Placeholders carry no pixel size, so they start square.
+            const naturalWidth = asset.width || 400;
+            const naturalHeight = asset.height || 400;
+            const ratio = Math.min(1, (this.projectWidth * 0.5) / naturalWidth, (this.projectHeight * 0.5) / naturalHeight);
+            const width = Math.max(16, Math.round(naturalWidth * ratio));
+            const height = Math.max(16, Math.round(naturalHeight * ratio));
+            const offset = (canvas.elements.length % 8) * 24;
+            const el = {
+                id: this.uuid(), type: 'image', asset_id: asset.id,
+                x: Math.max(0, Math.round((this.projectWidth - width) / 2) + offset - 96),
+                y: Math.max(0, Math.round((this.projectHeight - height) / 2) + offset - 96),
+                width, height, rotation: 0, opacity: 1,
+            };
+            this.assetIndex[asset.id] = asset;
+            canvas.elements.push(el);
+            this.selectedElementId = el.id;
+            this.scheduleSave();
+        },
+        pngBlockedReason() {
+            const canvas = this.activeCanvas();
+            if (! canvas) return 'Nothing to export.';
+            if (this.projectWidth > this.pngMaxDimension || this.projectHeight > this.pngMaxDimension || this.projectWidth * this.projectHeight > this.pngMaxPixels) {
+                return 'PNG export handles canvases up to ' + this.pngMaxDimension + ' px a side. Export SVG instead.';
+            }
+            if (! this.pngTextAvailable && canvas.elements.some(el => el.type === 'text' && (el.text || '').trim() !== '')) {
+                return 'PNG export cannot draw text on this server (no font configured). Export SVG instead.';
+            }
+            return '';
         },
 
         addText() {

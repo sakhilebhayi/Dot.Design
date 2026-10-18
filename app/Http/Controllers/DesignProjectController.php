@@ -73,9 +73,18 @@ class DesignProjectController extends Controller
             ->orWhereNull('design_project_id'))
             ->latest('id')->limit(100)->get();
         $assetUsage = DesignAsset::usageFor($project->user_id);
+
+        // The editor draws an image element from its asset's details. Include
+        // every asset the project's pages reference, even one filed under a
+        // different project (so not in the panel above), plus the panel's own.
+        $referenced = $project->canvases
+            ->flatMap(fn ($canvas) => collect($canvas->elements)->where('type', 'image')->pluck('asset_id'))
+            ->filter()->unique()->values();
+        $assetIndex = DesignAsset::whereIn('id', $referenced)->get()->concat($assets)
+            ->unique('id')->mapWithKeys(fn ($asset) => [$asset->id => $asset->toEditorArray()]);
         $generations = AiGenerationLog::where('design_project_id', $project->id)->latest()->limit(10)->get();
 
-        return view('design.projects.show', compact('project', 'assets', 'assetUsage', 'generations'));
+        return view('design.projects.show', compact('project', 'assets', 'assetUsage', 'assetIndex', 'generations'));
     }
 
     public function destroy(DesignProject $project): RedirectResponse

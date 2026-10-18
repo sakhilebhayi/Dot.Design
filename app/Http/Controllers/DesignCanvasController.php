@@ -3,12 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Events\DesignCanvasSaved;
+use App\Http\Requests\UpdateDesignCanvasRequest;
 use App\Models\DesignCanvas;
 use App\Models\DesignProject;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Validation\ValidationException;
 
 /**
  * Canvas pages within a project. update() is called from the editor's
@@ -30,7 +30,7 @@ class DesignCanvasController extends Controller
             ->with('activeCanvasId', $canvas->id);
     }
 
-    public function update(Request $request, DesignProject $project, DesignCanvas $canvas): JsonResponse
+    public function update(UpdateDesignCanvasRequest $request, DesignProject $project, DesignCanvas $canvas): JsonResponse
     {
         // The route nests {canvas} under {project}; confirm they actually
         // belong together rather than trusting the URL pairing -- both ids
@@ -41,36 +41,13 @@ class DesignCanvasController extends Controller
 
         $this->authorize('update', $canvas);
 
-        // bootstrap/app.php's shouldRenderJsonWhen() only treats "api/*"
-        // paths as JSON-expecting -- it overrides Laravel's normal
-        // Accept-header negotiation entirely, so a ValidationException
-        // thrown here (this route isn't under api/*) would otherwise
-        // render as an HTML redirect even though this endpoint is only
-        // ever called via fetch() and needs a JSON error body. Catching it
-        // explicitly keeps that global app-wide config (which the branded
-        // 404/403/419/etc. error pages rely on) untouched.
-        try {
-            $validated = $request->validate([
-                'elements' => ['present', 'array'],
-                'elements.*.id' => ['nullable', 'string', 'max:64'],
-                'elements.*.type' => ['required', 'string', 'in:text,rectangle'],
-                'elements.*.x' => ['nullable', 'numeric'],
-                'elements.*.y' => ['nullable', 'numeric'],
-                'elements.*.width' => ['nullable', 'numeric', 'min:0'],
-                'elements.*.height' => ['nullable', 'numeric', 'min:0'],
-                'elements.*.text' => ['nullable', 'string', 'max:2000'],
-                'elements.*.fontSize' => ['nullable', 'numeric', 'min:1', 'max:400'],
-                'elements.*.color' => ['nullable', 'string', 'max:32'],
-                'elements.*.fill' => ['nullable', 'string', 'max:32'],
-                'background_color' => ['nullable', 'string', 'max:32'],
-            ]);
-        } catch (ValidationException $e) {
-            return response()->json(['message' => $e->getMessage(), 'errors' => $e->errors()], 422);
-        }
-
+        // Validation lives in UpdateDesignCanvasRequest, which answers failures
+        // as JSON itself: bootstrap/app.php's shouldRenderJsonWhen() only treats
+        // "api/*" paths as JSON-expecting, so a plain ValidationException here
+        // would come back as an HTML redirect to a fetch() caller.
         $canvas->update([
-            'elements' => $validated['elements'],
-            'background_color' => $validated['background_color'] ?? $canvas->background_color,
+            'elements' => $request->elementsForStorage(),
+            'background_color' => $request->validated('background_color') ?? $canvas->background_color,
         ]);
 
         event(new DesignCanvasSaved($canvas));

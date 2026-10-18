@@ -2,6 +2,8 @@
 
 namespace App\Services\Assets;
 
+use App\Support\MemoryGuard;
+
 /**
  * Turns untrusted upload bytes into bytes we are willing to store and serve.
  *
@@ -93,45 +95,18 @@ class ImageSanitiser
     }
 
     /**
-     * GD holds a decoded image at four bytes per pixel. Refuse cleanly when
-     * that would not fit in PHP's memory_limit, instead of dying with a fatal
-     * "allowed memory size exhausted" that no code can catch. A rotated copy
-     * (EXIF orientation) needs the pixels twice.
+     * Refuse cleanly when the decoded image would not fit in PHP's
+     * memory_limit (see MemoryGuard). A rotated copy (EXIF orientation)
+     * needs the pixels twice.
      */
     private function checkMemory(int $width, int $height, bool $needsRotation): void
     {
-        $limit = $this->memoryLimitBytes();
+        $bytes = MemoryGuard::imageBytes($width, $height) * ($needsRotation ? 2 : 1);
+        $mb = MemoryGuard::shortfallMegabytes($bytes);
 
-        if ($limit === null) {
-            return;
-        }
-
-        $needed = $width * $height * 4 * ($needsRotation ? 2 : 1) + 8 * 1024 * 1024;
-        $available = $limit - memory_get_usage(true);
-
-        if ($needed > $available) {
-            $mb = (int) ceil($needed / 1048576);
-
+        if ($mb !== null) {
             throw new AssetRejected("This image is too large to process on this server (it needs about {$mb} MB of memory). Try a smaller version.", 'memory');
         }
-    }
-
-    private function memoryLimitBytes(): ?int
-    {
-        $raw = trim((string) ini_get('memory_limit'));
-
-        if ($raw === '' || $raw === '-1') {
-            return null;
-        }
-
-        $value = (int) $raw;
-
-        return match (strtolower(substr($raw, -1))) {
-            'g' => $value * 1024 ** 3,
-            'm' => $value * 1024 ** 2,
-            'k' => $value * 1024,
-            default => $value,
-        };
     }
 
     private function decode(string $bytes): \GdImage

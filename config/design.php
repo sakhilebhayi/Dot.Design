@@ -54,6 +54,9 @@ return [
         // Absolute path to a .ttf/.otf used to draw text in PNG exports.
         // Without one, PNG export refuses canvases that contain text.
         'png_font' => env('DESIGN_EXPORT_FONT'),
+        // PNG export refuses canvases larger than this (per side / in total).
+        'png_max_dimension' => 4096,
+        'png_max_megapixels' => 16,
     ],
 
 ];

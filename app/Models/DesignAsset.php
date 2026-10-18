@@ -41,6 +41,32 @@ class DesignAsset extends Model
         ];
     }
 
+    /**
+     * Pages of this user's projects that have this asset placed on them, as
+     * [['project' => name, 'page' => number], ...]. Scans the user's canvases
+     * in PHP because elements is a JSON blob with no index on asset_id.
+     */
+    public function placements(): array
+    {
+        $placements = [];
+
+        DesignCanvas::whereHas('project')
+            ->with('project:id,name')
+            ->select(['id', 'design_project_id', 'page_number', 'elements'])
+            ->lazyById()
+            ->each(function (DesignCanvas $canvas) use (&$placements): void {
+                foreach ((array) $canvas->elements as $element) {
+                    if (is_array($element) && ($element['type'] ?? null) === 'image' && (int) ($element['asset_id'] ?? 0) === $this->id) {
+                        $placements[] = ['project' => $canvas->project->name, 'page' => $canvas->page_number];
+
+                        return;
+                    }
+                }
+            });
+
+        return $placements;
+    }
+
     /** A file we hold on a private disk, as opposed to an external URL such as the mock AI placeholder. */
     public function isStoredUpload(): bool
     {

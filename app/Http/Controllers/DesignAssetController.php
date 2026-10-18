@@ -74,6 +74,20 @@ class DesignAssetController extends Controller
     {
         $this->authorize('delete', $asset);
 
+        // An image element points at the asset by id; deleting it would leave
+        // the canvas with a hole (and the next autosave failing validation).
+        $placements = $asset->placements();
+
+        if ($placements !== []) {
+            $first = $placements[0];
+            $more = count($placements) > 1 ? ' and '.(count($placements) - 1).' more page(s)' : '';
+            $message = "\"{$asset->name}\" is placed on {$first['project']}, Page {$first['page']}{$more}. Remove it from the canvas first.";
+
+            return $request->expectsJson()
+                ? response()->json(['message' => $message, 'placements' => $placements], 409)
+                : back()->with('error', $message);
+        }
+
         $assetId = $asset->id;
         $assetName = $asset->name;
         $userId = $asset->user_id;
