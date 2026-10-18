@@ -1,7 +1,7 @@
 <x-app-layout>
 <x-slot name="header">Component Library</x-slot>
 
-<div style="padding:2rem 2.5rem;max-width:1400px;">
+<div class="page">
 
     <div style="margin-bottom:2rem;">
         <h1 style="font-family:'Syne',sans-serif;font-size:1.6rem;font-weight:800;color:var(--text);margin:0 0 0.25rem;">
@@ -18,7 +18,7 @@
             <p style="color:var(--text-dim);font-size:0.85rem;margin:0;">No components yet.</p>
         </div>
     @else
-        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:1rem;">
+        <div class="card-grid">
             @foreach ($components as $component)
                 <a href="{{ route('design-system.components.show', $component) }}" class="dot-card" style="display:block;padding:1.25rem;text-decoration:none;">
                     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.5rem;">

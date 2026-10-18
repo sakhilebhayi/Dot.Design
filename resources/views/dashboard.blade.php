@@ -1,11 +1,11 @@
 <x-app-layout>
 
-<div style="padding:2rem 2.5rem;max-width:1400px;">
+<div class="page">
 
     {{-- ------------------------------------------------------------------ --}}
     {{-- Header                                                              --}}
     {{-- ------------------------------------------------------------------ --}}
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:2rem;">
+    <div class="page-head">
         <div>
             <h1 style="font-family:'Syne',sans-serif;font-size:1.6rem;font-weight:800;color:#f4f4f5;margin:0 0 0.25rem;">
                 Design Studio Dashboard
@@ -30,7 +30,7 @@
     {{-- ------------------------------------------------------------------ --}}
     {{-- KPI Cards                                                           --}}
     {{-- ------------------------------------------------------------------ --}}
-    <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:1rem;margin-bottom:2.25rem;">
+    <div class="kpi-grid">
 
         {{-- Total Projects --}}
         <div style="background:#141416;border:1px solid rgba(255,255,255,0.07);border-radius:14px;padding:1.35rem 1.25rem;">
@@ -115,7 +115,7 @@
             </a>
         </div>
         @else
-        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:1rem;">
+        <div class="card-grid">
             @foreach($projects as $project)
             @php
                 $typeColors = [
@@ -187,7 +187,7 @@
             <p style="color:#71717a;font-size:0.82rem;margin:0;">No assets yet. Upload images from inside a project's editor.</p>
         </div>
         @else
-        <div style="display:flex;gap:0.85rem;overflow-x:auto;padding-bottom:0.5rem;scrollbar-width:thin;scrollbar-color:rgba(67,70,86,0.4) transparent;">
+        <div class="table-scroll" tabindex="0" role="region" aria-label="Recent assets" style="display:flex;gap:0.85rem;padding-bottom:0.5rem;scrollbar-width:thin;scrollbar-color:rgba(67,70,86,0.4) transparent;">
             @foreach($recentAssets as $asset)
             @php
                 $assetBadge = [

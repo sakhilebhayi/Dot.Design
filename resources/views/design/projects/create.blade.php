@@ -1,6 +1,6 @@
 <x-app-layout>
 
-<div style="padding:2rem 2.5rem;max-width:640px;">
+<div class="page page--narrow">
 
     <div style="margin-bottom:1.5rem;">
         <h1 style="font-family:'Syne',sans-serif;font-size:1.6rem;font-weight:800;color:var(--text);margin:0 0 0.25rem;">
@@ -36,7 +36,7 @@
             </select>
         </div>
 
-        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem;">
+        <div class="form-grid-3">
             <div>
                 <label style="display:block;font-size:0.75rem;font-weight:600;color:var(--text-muted);margin-bottom:0.35rem;">Width</label>
                 <input type="number" name="width" min="1" max="10000" value="{{ old('width', 1200) }}" required class="dot-input" />

@@ -1,9 +1,9 @@
 <x-app-layout>
 <x-slot name="header">{{ $designComponent->name }}</x-slot>
 
-<div style="padding:2rem 2.5rem;max-width:1400px;">
+<div class="page">
 
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.5rem;">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:0.75rem;flex-wrap:wrap;margin-bottom:0.5rem;">
         <h1 style="font-family:'Syne',sans-serif;font-size:1.6rem;font-weight:800;color:var(--text);margin:0;">
             {{ $designComponent->name }}
         </h1>
