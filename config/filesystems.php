@@ -47,6 +47,18 @@ return [
             'report' => false,
         ],
 
+        // Uploaded design assets. Private by construction: not under the
+        // public disk's root, no URL, not served by the framework's local
+        // file route; the only way out is DesignAssetController::file().
+        'design_assets' => [
+            'driver' => 'local',
+            'root' => storage_path('app/private/design-assets'),
+            'visibility' => 'private',
+            'serve' => false,
+            'throw' => false,
+            'report' => false,
+        ],
+
         's3' => [
             'driver' => 's3',
             'key' => env('AWS_ACCESS_KEY_ID'),

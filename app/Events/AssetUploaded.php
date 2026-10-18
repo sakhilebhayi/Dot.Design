@@ -7,10 +7,9 @@ use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
 /**
- * Dispatched from AiImageGenerationService whenever a successful AI
- * generation creates a new DesignAsset -- the only asset-creation path
- * this pass wires up (there is still no manual file-upload endpoint; see
- * wiki.md Roadmap).
+ * Dispatched whenever a new DesignAsset row is created: by a real upload
+ * (AssetUploader; not for a duplicate that resolves to an existing row) and
+ * by AiImageGenerationService when a generation records its placeholder.
  */
 class AssetUploaded
 {

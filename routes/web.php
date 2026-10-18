@@ -94,6 +94,10 @@ Route::middleware([
 
         Route::post('projects/{project}/ai-generations', [AiGenerationController::class, 'store'])->name('projects.ai-generations.store');
 
+        Route::post('assets', [DesignAssetController::class, 'store'])
+            ->middleware('throttle:design-uploads')
+            ->name('assets.store');
+        Route::get('assets/{asset}/file', [DesignAssetController::class, 'file'])->name('assets.file');
         Route::delete('assets/{asset}', [DesignAssetController::class, 'destroy'])->name('assets.destroy');
     });
 

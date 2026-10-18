@@ -31,16 +31,52 @@ Dot.Design is the visual-creation platform in the Dot Ecosystem — a canvas-fir
 
 - Canvas editor domain — drag-and-drop text, shapes, images, and icons (data model in place; interactive editor UI not yet built)
 - AI image generation logging from text prompts, multi-provider (`AiGenerationLog.provider`: Anthropic, OpenAI, Stability, Replicate)
-- Asset library — uploaded/generated files with type, size, and metadata
+- Asset library — real image uploads (JPG/PNG/WebP, private storage, per-user quota) plus labelled AI placeholders; see [Uploads](#uploads)
 - Design-token / component catalog — versioned color/type/spacing/motion tokens, reusable component definitions, and a tracking table of which ecosystem platform consumes which token-set version
 - Ecosystem SSO via Sanctum handoff token (`EcosystemAuthController`)
+
+## Uploads
+
+Signed-in users can upload images from the asset panel in a project's editor.
+
+| | |
+|---|---|
+| Accepted | JPG, PNG, WebP. The type is read from the file's content, never its name or the browser's claim. |
+| **Not accepted** | **SVG** (an SVG can carry script, so it is refused outright), GIF, anything else. |
+| Size | 8 MB per file (`design.assets.max_kilobytes`). |
+| Dimensions | Each side 16 to 8000 px and at most 40 megapixels. Checked from the header, before the image is decoded. |
+| Quota | 200 MB of stored bytes per user (`DESIGN_ASSET_QUOTA_MB`), checked inside a transaction that locks the user row. |
+| Rate limit | 20 uploads per user per minute (`DESIGN_ASSET_UPLOADS_PER_MINUTE`). |
+| Duplicates | Identical content from the same user returns the existing asset instead of storing a second copy and costs no quota. If that asset sits in another project it moves to the library so both places can see it. |
+
+**What is stored.** The image is decoded and re-encoded with GD, which drops EXIF (including GPS) and anything appended after the image data; EXIF orientation is applied to the pixels first. Animated WebP keeps only its first frame. The file is written to a private disk (`storage/app/private/design-assets`, disk `design_assets`) under a random name, with its sha256, size, dimensions and MIME type recorded on the `design_assets` row. `content_hash` is the hash of the stored bytes.
+
+**How it is served.** Only through `GET /design/assets/{asset}/file`, behind login and `DesignAssetPolicy`; another user's asset is a 404. The response carries the stored `Content-Type`, `X-Content-Type-Options: nosniff`, a sandboxing `Content-Security-Policy`, `Cache-Control: private` and an ETag. There is no public URL.
+
+**Deleting.** Deleting an asset removes its file from the disk unless another row still points at the same path. Deleting a project moves its uploads to the library.
+
+**Assets and projects.** An asset belongs to one project or to the user's library (no project). The editor panel shows the current project's assets and the library. AI results are filed under the project that asked for them and stay labelled as placeholders; they are external URLs, not files on our disk.
+
+### Not supported
+
+- SVG upload (deliberate; see above).
+- Real AI image generation. No provider is connected; the mock driver returns placehold.co stand-ins that the UI labels "Placeholder (no AI provider connected)".
+- Collaboration or sharing of assets between users or teams. Assets are per user.
+
+### Upgrade notes
+
+1. Run `php artisan migrate` (adds `design_project_id`, `disk`, `content_hash`, `width`, `height` to `design_assets`; all nullable, existing rows stay valid).
+2. The new `design_assets` disk is defined in `config/filesystems.php`. Point `DESIGN_ASSET_DISK` at another private disk (for example an S3 bucket with no public access) to move storage; never at `public`. Make sure `storage/app/private` is writable and included in backups.
+3. The PHP `gd` extension (with WebP support) is required for sanitising. Without it, uploads are still accepted but stored **unmodified**, so EXIF/GPS is not stripped; each such row has `meta.reencoded = false`. Set `DESIGN_ASSET_REENCODE=false` to choose that deliberately. Check with `php -m | grep gd`.
+4. GD holds a decoded image at 4 bytes per pixel, so a 40 megapixel image needs roughly 160 MB. Images that would not fit in PHP's `memory_limit` are refused with a clear message instead of crashing; raise `memory_limit` if you want the full range.
+5. If the web server or a proxy limits request bodies (nginx `client_max_body_size`, PHP `upload_max_filesize` / `post_max_size`), keep them at 8 MB or above or users will see "larger than the server accepts".
 
 ## Domain Models
 
 **Canvas / AI tool:**
 - **DesignProject** — canvas project with metadata (type, dimensions, unit)
 - **DesignCanvas** — one or more pages per project, JSON `elements` blob
-- **DesignAsset** — uploaded/generated files
+- **DesignAsset** — uploaded images (stored on a private disk) and AI placeholder references
 - **AiGenerationLog** — one row per AI generation request
 
 **Design-token / component-library scaffold:**

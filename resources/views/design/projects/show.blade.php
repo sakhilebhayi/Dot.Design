@@ -24,6 +24,11 @@
         exportUrlTemplate: '{{ url('/design/projects/'.$project->id.'/canvases/__ID__/export.svg') }}',
         saveUrlTemplate: '{{ url('/design/projects/'.$project->id.'/canvases/__ID__') }}',
         csrfToken: '{{ csrf_token() }}',
+        assets: {{ $assets->map->toEditorArray()->values()->toJson() }},
+        usage: {{ json_encode($assetUsage) }},
+        uploadUrl: '{{ route('design.assets.store') }}',
+        assetDeleteUrlTemplate: '{{ url('/design/assets/__ID__') }}',
+        maxUploadBytes: {{ (int) config('design.assets.max_kilobytes') * 1024 }},
     })"
     style="padding:1.5rem 2rem 3rem;max-width:1500px;"
 >
@@ -228,26 +233,65 @@
             </div>
 
             {{-- Assets --}}
-            <div class="dot-card" style="padding:1rem;">
-                <div style="font-size:0.68rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-dim);margin-bottom:0.6rem;">Your Assets</div>
-                @if($recentAssets->isEmpty())
-                <p style="font-size:0.72rem;color:var(--text-faint);margin:0;">No assets yet. Direct uploads are not available; AI placeholders will appear here.</p>
-                @else
-                <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:0.4rem;">
-                    @foreach($recentAssets as $asset)
-                    <div style="position:relative;border-radius:6px;overflow:hidden;background:rgba(127,127,127,0.06);aspect-ratio:1;">
-                        <img src="{{ $asset->file_path }}" alt="{{ $asset->name }}" @if(! empty($asset->meta['placeholder'])) title="{{ \App\Services\Ai\AiImageResult::PLACEHOLDER_LABEL }}" @endif style="width:100%;height:100%;object-fit:cover;" />
-                        <form method="POST" action="{{ route('design.assets.destroy', $asset) }}" style="position:absolute;top:2px;right:2px;" onsubmit="return confirm('Delete this asset?');">
-                            @csrf
-                            @method('DELETE')
-                            <button type="submit" style="width:18px;height:18px;border-radius:50%;background:rgba(0,0,0,0.6);border:none;color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;">
-                                <span class="material-symbols-rounded" style="font-size:12px;">close</span>
-                            </button>
-                        </form>
+            <div class="dot-card" style="padding:1rem;"
+                 @dragover.prevent="dragOver = true"
+                 @dragleave.prevent="dragOver = false"
+                 @drop.prevent="dragOver = false; uploadFiles($event.dataTransfer.files)">
+                <div style="display:flex;align-items:baseline;justify-content:space-between;gap:0.5rem;margin-bottom:0.6rem;">
+                    <div style="font-size:0.68rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-dim);">Assets</div>
+                    <div class="metric-val" style="font-size:0.68rem;color:var(--text-dim);" :title="'Stored uploads count against a ' + formatBytes(usage.quota) + ' quota'">
+                        <span x-text="formatBytes(usage.used)"></span> / <span x-text="formatBytes(usage.quota)"></span>
                     </div>
-                    @endforeach
                 </div>
-                @endif
+
+                <div style="height:3px;border-radius:2px;background:var(--border);overflow:hidden;margin-bottom:0.75rem;" aria-hidden="true">
+                    <div :style="`height:100%;width:${Math.min(100, usage.quota ? (usage.used / usage.quota) * 100 : 0)}%;background:${usage.used / usage.quota > 0.9 ? '#f87171' : 'var(--accent)'};`"></div>
+                </div>
+
+                <input type="file" x-ref="fileInput" accept="image/jpeg,image/png,image/webp" multiple class="sr-only" style="position:absolute;width:1px;height:1px;opacity:0;" @change="uploadFiles($event.target.files); $event.target.value = ''" aria-label="Upload images" />
+                <button type="button" @click="$refs.fileInput.click()" :disabled="uploading"
+                        :style="`width:100%;display:flex;flex-direction:column;align-items:center;gap:0.2rem;padding:0.85rem 0.5rem;border-radius:8px;border:1px dashed ${dragOver ? 'var(--accent)' : 'var(--border-strong)'};background:${dragOver ? 'rgba(236,72,153,0.06)' : 'transparent'};color:var(--text-muted);cursor:pointer;font-family:inherit;`">
+                    <span class="material-symbols-rounded" style="font-size:20px;" x-text="uploading ? 'progress_activity' : 'upload'"></span>
+                    <span style="font-size:0.78rem;font-weight:600;" x-text="uploading ? 'Uploading ' + uploadingName + '…' : 'Upload images'"></span>
+                    <span style="font-size:0.66rem;color:var(--text-dim);">Drop files here or click. JPG, PNG or WebP, up to {{ (int) (config('design.assets.max_kilobytes') / 1024) }} MB. SVG is not accepted.</span>
+                </button>
+                <p x-show="uploadError" x-text="uploadError" role="alert" style="font-size:0.7rem;color:#f87171;margin:0.5rem 0 0;"></p>
+                <p x-show="uploadNote" x-text="uploadNote" role="status" style="font-size:0.7rem;color:var(--text-dim);margin:0.5rem 0 0;"></p>
+
+                <template x-for="group in assetGroups()" :key="group.key">
+                    <div x-show="group.items.length" style="margin-top:0.9rem;">
+                        <div style="display:flex;justify-content:space-between;font-size:0.64rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-dim);margin-bottom:0.4rem;">
+                            <span x-text="group.label"></span>
+                            <span class="metric-val" x-text="group.items.length"></span>
+                        </div>
+                        <div style="display:flex;flex-direction:column;gap:0.35rem;">
+                            <template x-for="asset in group.items" :key="asset.id">
+                                <div style="display:flex;align-items:center;gap:0.55rem;padding:0.35rem;border-radius:8px;background:rgba(127,127,127,0.06);">
+                                    <img :src="asset.url" :alt="asset.name" loading="lazy" style="width:44px;height:44px;border-radius:5px;object-fit:cover;flex-shrink:0;background:var(--bg-input);" />
+                                    <div style="min-width:0;flex:1;">
+                                        <div x-text="asset.name" :title="asset.name" style="font-size:0.74rem;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></div>
+                                        <div style="font-size:0.64rem;color:var(--text-dim);">
+                                            <template x-if="asset.placeholder"><span :title="asset.placeholder_label" style="color:var(--accent);font-weight:600;">Placeholder</span></template>
+                                            <template x-if="! asset.placeholder"><span class="metric-val" x-text="assetMeta(asset)"></span></template>
+                                        </div>
+                                    </div>
+                                    <template x-if="confirmDeleteId !== asset.id">
+                                        <button type="button" @click="confirmDeleteId = asset.id" class="dot-btn dot-btn-ghost" style="padding:4px 6px;" :aria-label="'Delete ' + asset.name" title="Delete asset">
+                                            <span class="material-symbols-rounded" style="font-size:15px;">delete</span>
+                                        </button>
+                                    </template>
+                                    <template x-if="confirmDeleteId === asset.id">
+                                        <div style="display:flex;gap:0.25rem;">
+                                            <button type="button" @click="deleteAsset(asset)" class="dot-btn" style="padding:4px 8px;font-size:11px;background:#f87171;color:#09090b;">Delete</button>
+                                            <button type="button" @click="confirmDeleteId = null" class="dot-btn dot-btn-ghost" style="padding:4px 8px;font-size:11px;">Keep</button>
+                                        </div>
+                                    </template>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+                </template>
+                <p x-show="assets.length === 0" style="font-size:0.72rem;color:var(--text-faint);margin:0.85rem 0 0;">No assets yet. Upload an image, or generate a placeholder above.</p>
             </div>
 
         </div>
@@ -278,6 +322,103 @@ function canvasEditor(config) {
         scale: 1,
         saveState: '',
         saveTimer: null,
+
+        assets: config.assets,
+        usage: config.usage,
+        uploadUrl: config.uploadUrl,
+        assetDeleteUrlTemplate: config.assetDeleteUrlTemplate,
+        maxUploadBytes: config.maxUploadBytes,
+        uploading: false,
+        uploadingName: '',
+        uploadError: '',
+        uploadNote: '',
+        dragOver: false,
+        confirmDeleteId: null,
+
+        assetGroups() {
+            return [
+                { key: 'project', label: 'This project', items: this.assets.filter(a => a.project_id === this.projectId) },
+                { key: 'library', label: 'Library', items: this.assets.filter(a => a.project_id === null) },
+            ];
+        },
+        assetMeta(asset) {
+            return (asset.width && asset.height ? asset.width + '×' + asset.height + ' · ' : '') + this.formatBytes(asset.size || 0);
+        },
+        formatBytes(bytes) {
+            if (bytes >= 1048576) return (bytes / 1048576).toFixed(1) + ' MB';
+            return Math.round(bytes / 1024) + ' KB';
+        },
+
+        async uploadFiles(fileList) {
+            const files = Array.from(fileList || []);
+            this.uploadError = '';
+            this.uploadNote = '';
+            for (const file of files) {
+                if (file.size > this.maxUploadBytes) {
+                    this.uploadError = file.name + ' is larger than ' + this.formatBytes(this.maxUploadBytes) + '.';
+                    continue;
+                }
+                this.uploading = true;
+                this.uploadingName = file.name;
+                try {
+                    const form = new FormData();
+                    form.append('file', file);
+                    form.append('project_id', this.projectId);
+                    const response = await fetch(this.uploadUrl, {
+                        method: 'POST',
+                        headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': this.csrfToken },
+                        body: form,
+                    });
+                    const body = await this.readJson(response);
+                    if (! response.ok) {
+                        this.uploadError = this.uploadFailureMessage(response, body, file.name);
+                        continue;
+                    }
+                    this.upsertAsset(body.asset);
+                    this.usage = body.usage;
+                    if (body.duplicate) this.uploadNote = file.name + ' was already in your assets.';
+                } catch (e) {
+                    this.uploadError = 'Could not reach the server to upload ' + file.name + '.';
+                } finally {
+                    this.uploading = false;
+                    this.uploadingName = '';
+                }
+            }
+        },
+        async readJson(response) {
+            try { return await response.json(); } catch (e) { return null; }
+        },
+        uploadFailureMessage(response, body, name) {
+            if (body && body.message) return body.message;
+            if (response.redirected || response.status === 401) return 'You were signed out. Reload the page and sign in again.';
+            if (response.status === 419) return 'Your session expired. Reload the page and try again.';
+            if (response.status === 413) return name + ' is larger than the server accepts.';
+            return 'Upload failed (HTTP ' + response.status + ').';
+        },
+        upsertAsset(asset) {
+            const index = this.assets.findIndex(a => a.id === asset.id);
+            if (index === -1) this.assets.unshift(asset); else this.assets.splice(index, 1, asset);
+        },
+        async deleteAsset(asset) {
+            this.uploadError = '';
+            this.uploadNote = '';
+            this.confirmDeleteId = null;
+            try {
+                const response = await fetch(this.assetDeleteUrlTemplate.replace('__ID__', asset.id), {
+                    method: 'DELETE',
+                    headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': this.csrfToken },
+                });
+                const body = await this.readJson(response);
+                if (! response.ok) {
+                    this.uploadError = (body && body.message) || 'Could not delete ' + asset.name + ' (HTTP ' + response.status + ').';
+                    return;
+                }
+                this.assets = this.assets.filter(a => a.id !== asset.id);
+                if (body && body.usage) this.usage = body.usage;
+            } catch (e) {
+                this.uploadError = 'Could not reach the server to delete ' + asset.name + '.';
+            }
+        },
 
         activeCanvas() {
             return this.canvases.find(c => c.id === this.activeCanvasId) || this.canvases[0];

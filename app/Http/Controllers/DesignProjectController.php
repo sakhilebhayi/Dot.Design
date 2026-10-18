@@ -65,10 +65,17 @@ class DesignProjectController extends Controller
 
         $project->load('canvases');
 
-        $recentAssets = DesignAsset::latest()->limit(12)->get();
+        // This project's own assets plus the user's library (assets with no
+        // project). The per-user global scope still applies to the whole
+        // group, so nothing here can reach another user's rows.
+        $assets = DesignAsset::where(fn ($query) => $query
+            ->where('design_project_id', $project->id)
+            ->orWhereNull('design_project_id'))
+            ->latest('id')->limit(100)->get();
+        $assetUsage = DesignAsset::usageFor($project->user_id);
         $generations = AiGenerationLog::where('design_project_id', $project->id)->latest()->limit(10)->get();
 
-        return view('design.projects.show', compact('project', 'recentAssets', 'generations'));
+        return view('design.projects.show', compact('project', 'assets', 'assetUsage', 'generations'));
     }
 
     public function destroy(DesignProject $project): RedirectResponse

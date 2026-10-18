@@ -184,7 +184,7 @@
         @if($recentAssets->isEmpty())
         <div style="background:#141416;border:1px dashed rgba(67,70,86,0.4);border-radius:14px;padding:2rem;text-align:center;">
             <span class="material-symbols-rounded" style="font-size:36px;color:#71717a;display:block;margin-bottom:0.5rem;">photo_library</span>
-            <p style="color:#71717a;font-size:0.82rem;margin:0;">No assets yet. Direct uploads are not available.</p>
+            <p style="color:#71717a;font-size:0.82rem;margin:0;">No assets yet. Upload images from inside a project's editor.</p>
         </div>
         @else
         <div style="display:flex;gap:0.85rem;overflow-x:auto;padding-bottom:0.5rem;scrollbar-width:thin;scrollbar-color:rgba(67,70,86,0.4) transparent;">
