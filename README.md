@@ -158,6 +158,34 @@ php artisan serve
 
 **Dot.Design** is one of roughly 20 platforms in the Dot Ecosystem, connected via shared PostgreSQL and Sanctum SSO, and unified by a shared knowledge repository, **Dot.Brain**. See `wiki.md` in this repo for Dot.Design's own account of what's implemented, and Dot.Brain's `platforms/dot-design.md` for the ecosystem-ingested view (currently a known, tracked mismatch — see `wiki.md` §1.1).
 
+### Publishing metrics to Dot.Analytics
+
+Once a day Dot.Design queues one signed, aggregate-only snapshot for Dot.Analytics (`php artisan design:publish-metrics`, scheduled daily at 00:10 UTC).
+
+**These numbers describe the platform, not a customer company.** Projects and assets belong to individual users, not to companies or teams. So the snapshot is a platform-wide aggregate, filed under one InfoDot company that you name in `ANALYTICS_COMPANY_UUID` (the operator's own company). It is not split per team or per user, and no customer is ever described by it.
+
+What is sent (exactly these keys, all whole numbers, nothing else):
+
+| Key | Meaning |
+|---|---|
+| `projects` | Design projects that exist right now |
+| `assets` | Rows in the asset library right now: uploaded images and labelled AI placeholders alike |
+
+Both are current counts, not windows. Projects and assets are hard-deleted in this app, so a deleted one is simply not counted; deleting a project keeps its uploads in the library, so they stay counted. The body is `{platform, company_uuid, taken_at, period: "day", metrics: {...}}`; `taken_at` is the start of the UTC day, so a retry or a second run the same day is an idempotent replay at Dot.Analytics. **No names, emails, file paths or any row data are sent.**
+
+Nothing is sent until **all three** of `ANALYTICS_INGEST_URL`, `ANALYTICS_INGEST_SECRET` and `ANALYTICS_COMPANY_UUID` are set. The secret must be the same value as `ANALYTICS_INGEST_SECRET_DESIGN` in Dot.Analytics' `.env`. Requests are signed with `X-InfoDot-Timestamp` and `X-InfoDot-Signature: sha256=` + HMAC-SHA256 of `"{timestamp}.{raw body}"`, computed at send time.
+
+| Variable | Default | Notes |
+|---|---|---|
+| `ANALYTICS_INGEST_URL` | empty | Full Dot.Analytics URL, ending `/api/ingest/snapshots`. Empty means nothing is published |
+| `ANALYTICS_INGEST_SECRET` | empty | Same value as `ANALYTICS_INGEST_SECRET_DESIGN` in Dot.Analytics. Empty means nothing is published |
+| `ANALYTICS_PLATFORM_KEY` | `design` | This platform's key in Dot.Analytics' metric catalogue |
+| `ANALYTICS_COMPANY_UUID` | empty | InfoDot company uuid the platform-wide numbers are filed under. Empty means nothing is published |
+
+It cannot hurt Dot.Design: the send is a queued job (5 second timeout, 3 tries with backoff) that never throws, and a circuit breaker leaves Dot.Analytics alone for 5 minutes after 3 failed deliveries in a row. A Dot.Analytics outage or a wrong setting only means the day's snapshot is not delivered.
+
+To run it you need the scheduler (`* * * * * php artisan schedule:run`) and a queue worker (`php artisan queue:work`). Check what would be sent with `php artisan design:publish-metrics --dry-run`; it prints the payload and sends nothing.
+
 ## License
 
 MIT
