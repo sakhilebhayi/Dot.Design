@@ -23,7 +23,7 @@ class EcosystemAuthTest extends TestCase
         $this->assertDatabaseCount('personal_access_tokens', 0);
 
         auth()->logout();
-        $this->get('/auth/ecosystem?token='.urlencode($token))->assertForbidden();
+        $this->get('/auth/ecosystem?token='.urlencode($token))->assertStatus(303)->assertRedirect('/login');
     }
 
     public function test_session_id_is_regenerated_on_sso_login(): void
@@ -41,16 +41,16 @@ class EcosystemAuthTest extends TestCase
 
     public function test_missing_token_is_a_clean_403(): void
     {
-        $this->get('/auth/ecosystem')->assertForbidden();
-        $this->get('/auth/ecosystem?token=')->assertForbidden();
+        $this->get('/auth/ecosystem')->assertStatus(303)->assertRedirect('/login');
+        $this->get('/auth/ecosystem?token=')->assertStatus(303)->assertRedirect('/login');
         $this->assertGuest();
     }
 
     public function test_array_or_garbage_token_is_a_clean_403(): void
     {
-        $this->get('/auth/ecosystem?token[]=x')->assertForbidden();
-        $this->get('/auth/ecosystem?token=not-a-real-token')->assertForbidden();
-        $this->get('/auth/ecosystem?token=1|nope')->assertForbidden();
+        $this->get('/auth/ecosystem?token[]=x')->assertStatus(303)->assertRedirect('/login');
+        $this->get('/auth/ecosystem?token=not-a-real-token')->assertStatus(303)->assertRedirect('/login');
+        $this->get('/auth/ecosystem?token=1|nope')->assertStatus(303)->assertRedirect('/login');
         $this->assertGuest();
     }
 
@@ -59,7 +59,7 @@ class EcosystemAuthTest extends TestCase
         $user = User::factory()->withPersonalTeam()->create();
         $token = $user->createToken('other', ['read'])->plainTextToken;
 
-        $this->get('/auth/ecosystem?token='.urlencode($token))->assertForbidden();
+        $this->get('/auth/ecosystem?token='.urlencode($token))->assertStatus(303)->assertRedirect('/login');
         $this->assertGuest();
     }
 
@@ -68,7 +68,7 @@ class EcosystemAuthTest extends TestCase
         $user = User::factory()->withPersonalTeam()->create();
         $token = $user->createToken('sso', ['ecosystem:read'], now()->subMinute())->plainTextToken;
 
-        $this->get('/auth/ecosystem?token='.urlencode($token))->assertForbidden();
+        $this->get('/auth/ecosystem?token='.urlencode($token))->assertStatus(303)->assertRedirect('/login');
         $this->assertGuest();
     }
 
@@ -79,14 +79,14 @@ class EcosystemAuthTest extends TestCase
 
         DB::table('users')->where('id', $user->id)->delete();
 
-        $this->get('/auth/ecosystem?token='.urlencode($token))->assertForbidden();
+        $this->get('/auth/ecosystem?token='.urlencode($token))->assertStatus(303)->assertRedirect('/login');
         $this->assertGuest();
     }
 
     public function test_sso_endpoint_is_throttled(): void
     {
         for ($i = 0; $i < 10; $i++) {
-            $this->get('/auth/ecosystem?token=bogus')->assertForbidden();
+            $this->get('/auth/ecosystem?token=bogus')->assertStatus(303)->assertRedirect('/login');
         }
 
         $this->get('/auth/ecosystem?token=bogus')->assertStatus(429);
