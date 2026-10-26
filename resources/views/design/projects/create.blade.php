@@ -23,13 +23,13 @@
         @csrf
 
         <div>
-            <label style="display:block;font-size:0.75rem;font-weight:600;color:var(--text-muted);margin-bottom:0.35rem;">Project Name</label>
-            <input type="text" name="name" value="{{ old('name') }}" required maxlength="255" class="dot-input" placeholder="e.g. Summer Sale Instagram Post" />
+            <label for="design-projects-create-name" style="display:block;font-size:0.75rem;font-weight:600;color:var(--text-muted);margin-bottom:0.35rem;">Project Name</label>
+            <input id="design-projects-create-name" type="text" name="name" value="{{ old('name') }}" required maxlength="255" class="dot-input" placeholder="e.g. Summer Sale Instagram Post" />
         </div>
 
         <div>
-            <label style="display:block;font-size:0.75rem;font-weight:600;color:var(--text-muted);margin-bottom:0.35rem;">Type</label>
-            <select name="type" required class="dot-input">
+            <label for="design-projects-create-type" style="display:block;font-size:0.75rem;font-weight:600;color:var(--text-muted);margin-bottom:0.35rem;">Type</label>
+            <select id="design-projects-create-type" name="type" required class="dot-input">
                 @foreach($types as $type)
                 <option value="{{ $type }}" @selected(old('type', 'graphic') === $type)>{{ ucfirst($type) }}</option>
                 @endforeach
@@ -38,16 +38,16 @@
 
         <div class="form-grid-3">
             <div>
-                <label style="display:block;font-size:0.75rem;font-weight:600;color:var(--text-muted);margin-bottom:0.35rem;">Width</label>
-                <input type="number" name="width" min="1" max="10000" value="{{ old('width', 1200) }}" required class="dot-input" />
+                <label for="design-projects-create-width" style="display:block;font-size:0.75rem;font-weight:600;color:var(--text-muted);margin-bottom:0.35rem;">Width</label>
+                <input id="design-projects-create-width" type="number" name="width" min="1" max="10000" value="{{ old('width', 1200) }}" required class="dot-input" />
             </div>
             <div>
-                <label style="display:block;font-size:0.75rem;font-weight:600;color:var(--text-muted);margin-bottom:0.35rem;">Height</label>
-                <input type="number" name="height" min="1" max="10000" value="{{ old('height', 628) }}" required class="dot-input" />
+                <label for="design-projects-create-height" style="display:block;font-size:0.75rem;font-weight:600;color:var(--text-muted);margin-bottom:0.35rem;">Height</label>
+                <input id="design-projects-create-height" type="number" name="height" min="1" max="10000" value="{{ old('height', 628) }}" required class="dot-input" />
             </div>
             <div>
-                <label style="display:block;font-size:0.75rem;font-weight:600;color:var(--text-muted);margin-bottom:0.35rem;">Unit</label>
-                <select name="unit" required class="dot-input">
+                <label for="design-projects-create-unit" style="display:block;font-size:0.75rem;font-weight:600;color:var(--text-muted);margin-bottom:0.35rem;">Unit</label>
+                <select id="design-projects-create-unit" name="unit" required class="dot-input">
                     @foreach(['px', 'in', 'cm', 'mm'] as $unit)
                     <option value="{{ $unit }}" @selected(old('unit', 'px') === $unit)>{{ $unit }}</option>
                     @endforeach

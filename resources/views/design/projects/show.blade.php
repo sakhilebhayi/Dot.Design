@@ -355,7 +355,7 @@
                 @endif
                 <form method="POST" action="{{ route('design.projects.ai-generations.store', $project) }}" style="display:flex;flex-direction:column;gap:0.5rem;">
                     @csrf
-                    <textarea name="prompt" required maxlength="1000" rows="3" class="dot-input" placeholder="Describe the image you want...">{{ old('prompt') }}</textarea>
+                    <textarea aria-label="Describe the image you want" name="prompt" required maxlength="1000" rows="3" class="dot-input" placeholder="Describe the image you want...">{{ old('prompt') }}</textarea>
                     <button type="submit" class="dot-btn dot-btn-primary" style="justify-content:center;">
                         <span class="material-symbols-rounded" style="font-size:15px;">auto_awesome</span>
                         Generate
