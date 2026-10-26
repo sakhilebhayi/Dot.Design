@@ -203,6 +203,7 @@
         }
 
         @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after { animation-duration:0.01ms !important; animation-iteration-count:1 !important; transition-duration:0.01ms !important; scroll-behavior:auto !important; }
             .sidebar, .sidebar.is-open, .shell-backdrop, .shell-backdrop.is-open { transition:none; }
             .live-dot, .skeleton { animation:none; }
             .nav-item:hover { transform:none; }
