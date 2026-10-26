@@ -108,6 +108,7 @@
     <div style="display:flex;align-items:center;gap:0.4rem;margin-bottom:1rem;flex-wrap:wrap;">
         <template x-for="canvas in canvases" :key="canvas.id">
             <button type="button"
+                    :aria-label="'Page ' + canvas.page_number"
                     @click="selectCanvas(canvas.id)"
                     class="dot-btn"
                     :class="canvas.id === activeCanvasId ? 'dot-btn-primary' : 'dot-btn-ghost'"
@@ -149,7 +150,7 @@
             <div class="ed-label" style="margin-top:1rem;">Layers <span style="font-weight:400;text-transform:none;letter-spacing:0;">(top first)</span></div>
             <div style="display:flex;flex-direction:column;gap:0.25rem;max-height:260px;overflow-y:auto;">
                 <template x-for="el in layersTopFirst()" :key="el.id">
-                    <button type="button" @click="selectedElementId = el.id"
+                    <button type="button" :aria-label="layerLabel(el)" @click="selectedElementId = el.id"
                             class="dot-btn"
                             :class="el.id === selectedElementId ? 'dot-btn-primary' : 'dot-btn-ghost'"
                             :aria-pressed="el.id === selectedElementId"
@@ -355,7 +356,7 @@
                 @endif
                 <form method="POST" action="{{ route('design.projects.ai-generations.store', $project) }}" style="display:flex;flex-direction:column;gap:0.5rem;">
                     @csrf
-                    <textarea name="prompt" required maxlength="1000" rows="3" class="dot-input" placeholder="Describe the image you want...">{{ old('prompt') }}</textarea>
+                    <textarea aria-label="Describe the image you want" name="prompt" required maxlength="1000" rows="3" class="dot-input" placeholder="Describe the image you want...">{{ old('prompt') }}</textarea>
                     <button type="submit" class="dot-btn dot-btn-primary" style="justify-content:center;">
                         <span class="material-symbols-rounded" style="font-size:15px;">auto_awesome</span>
                         Generate
