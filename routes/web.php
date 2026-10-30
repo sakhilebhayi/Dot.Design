@@ -3,6 +3,7 @@
 use App\Http\Controllers\AiGenerationController;
 use App\Http\Controllers\Auth\EcosystemAuthController;
 use App\Http\Controllers\ComponentController;
+use App\Http\Controllers\CspReportController;
 use App\Http\Controllers\DesignAssetController;
 use App\Http\Controllers\DesignCanvasController;
 use App\Http\Controllers\DesignCanvasExportController;
@@ -14,8 +15,10 @@ use App\Models\AiGenerationLog;
 use App\Models\DesignAsset;
 use App\Models\DesignCanvas;
 use App\Models\DesignProject;
+use Illuminate\Session\Middleware\StartSession;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Str;
+use Illuminate\View\Middleware\ShareErrorsFromSession;
 use Laravel\Fortify\Features;
 use Laravel\Jetstream\Jetstream;
 
@@ -27,6 +30,20 @@ Route::post('/auth/ecosystem', [EcosystemAuthController::class, 'handle'])
 // Links minted before the token moved into a POST body carried it in the URL. They are no longer honoured:
 // the visitor is sent to the normal sign-in page and the token in the URL is never read.
 Route::get('/auth/ecosystem', [EcosystemAuthController::class, 'legacy']);
+
+// Content-Security-Policy violation reports. Browsers post these without a CSRF token, and they carry no login, so the
+// route is CSRF-exempt and session-less (no session row or cookie per report); throttled, and the controller keeps only
+// the violated directive and the blocked host.
+Route::post('/csp-report', CspReportController::class)
+    ->withoutMiddleware([
+        'Illuminate\Foundation\Http\Middleware\PreventRequestForgery',
+        'Illuminate\Foundation\Http\Middleware\VerifyCsrfToken',
+        'Illuminate\Foundation\Http\Middleware\ValidateCsrfToken',
+        StartSession::class,
+        ShareErrorsFromSession::class,
+    ])
+    ->middleware('throttle:60,1,csp-report')
+    ->name('csp.report');
 
 Route::get('/', function () {
     return view('welcome');
