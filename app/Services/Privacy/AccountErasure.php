@@ -10,6 +10,7 @@ use App\Models\DesignTemplate;
 use App\Models\Team;
 use App\Models\User;
 use App\Services\Design\ProjectAssets;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
@@ -98,7 +99,7 @@ class AccountErasure
     }
 
     /**
-     * @param  \Illuminate\Support\Collection<int, Team>  $continuing
+     * @param  Collection<int, Team>  $continuing
      * @param  list<array{string, string}>  $files
      */
     private function handleProjects(User $user, $continuing, array &$files): void
@@ -132,7 +133,7 @@ class AccountErasure
     }
 
     /**
-     * @param  \Illuminate\Support\Collection<int, Team>  $continuing
+     * @param  Collection<int, Team>  $continuing
      * @param  list<array{string, string}>  $files
      */
     private function handleAssets(User $user, $continuing, array &$files): void
@@ -176,7 +177,7 @@ class AccountErasure
         return DesignAsset::withoutGlobalScopes()->where('disk', $asset->disk)->where('file_path', $asset->file_path)->where('id', '!=', $asset->id)->exists();
     }
 
-    /** @param \Illuminate\Support\Collection<int, Team> $continuing */
+    /** @param Collection<int, Team> $continuing */
     private function handleBrandAndTemplates(User $user, $continuing): void
     {
         foreach ($continuing as $team) {

@@ -3,6 +3,8 @@
 namespace Tests\Feature\Security;
 
 use App\Events\EcosystemMemberRemoved;
+use App\Services\Integrations\Contracts\FileVault;
+use App\Services\Integrations\IntegrationRefused;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -119,10 +121,10 @@ class WebhookAndOutboundTest extends IntegrationTestCase
         Http::fake(['*' => Http::response('', 302, ['Location' => 'https://evil.example/collect'])]);
         [$owner, $team] = $this->workspace();
 
-        $vault = app(\App\Services\Integrations\Contracts\FileVault::class);
+        $vault = app(FileVault::class);
         try {
             $vault->store($team, 'x.png', 'bytes');
-        } catch (\App\Services\Integrations\IntegrationRefused) {
+        } catch (IntegrationRefused) {
             // a 302 is a failure to the caller, not a hop to somewhere else
         }
 

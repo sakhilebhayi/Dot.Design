@@ -2,6 +2,7 @@
 
 namespace Tests\Support;
 
+use App\Http\Middleware\EnsurePlatformOperator;
 use Illuminate\Routing\Route as LaravelRoute;
 use Illuminate\Support\Facades\Route;
 
@@ -54,7 +55,7 @@ final class RouteCatalog
     {
         $method = collect($route->methods())->reject(fn ($m) => in_array($m, ['HEAD', 'OPTIONS'], true))->first();
 
-        return ($route->getName() ?? $method.' '.$route->uri());
+        return $route->getName() ?? $method.' '.$route->uri();
     }
 
     public static function method(LaravelRoute $route): string
@@ -95,7 +96,7 @@ final class RouteCatalog
     public static function hasOperator(LaravelRoute $route): bool
     {
         return in_array('operator', $route->gatherMiddleware(), true)
-            || in_array(\App\Http\Middleware\EnsurePlatformOperator::class, $route->gatherMiddleware(), true);
+            || in_array(EnsurePlatformOperator::class, $route->gatherMiddleware(), true);
     }
 
     /** @return list<LaravelRoute> the application's own signed-in routes */

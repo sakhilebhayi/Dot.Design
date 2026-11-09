@@ -3,9 +3,10 @@
 namespace Tests\Feature\Security;
 
 use App\Models\DesignComment;
+use App\Models\DesignProject;
 use App\Models\DesignShare;
+use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
 use Tests\Support\BusinessFixtures;
 use Tests\Support\ImageFixtures;
@@ -140,13 +141,13 @@ class PrivacyRightsAndRetentionTest extends TestCase
         $this->assertNotNull(DesignShare::find($a['share']->id), 'a live link is never touched');
         $this->assertNotNull(DesignShare::find($revokedYesterday->id), 'a link turned off yesterday is kept for now');
         $this->assertNotNull(DesignComment::find($guest->id), 'a guest comment stays with the design');
-        $this->assertNotNull(\App\Models\DesignProject::withoutGlobalScopes()->find($a['project']->id));
+        $this->assertNotNull(DesignProject::withoutGlobalScopes()->find($a['project']->id));
         $this->assertNotNull(DesignComment::find($a['comment']->id));
     }
 
     public function test_retention_is_scheduled_daily_and_has_floors_so_a_typo_cannot_wipe_everything(): void
     {
-        $scheduled = collect(app(\Illuminate\Console\Scheduling\Schedule::class)->events())->map(fn ($e) => $e->command)->implode(' ');
+        $scheduled = collect(app(Schedule::class)->events())->map(fn ($e) => $e->command)->implode(' ');
         $this->assertStringContainsString('design:prune-expired', $scheduled);
         $this->assertStringContainsString('design:prune-ai-proposals', $scheduled);
 

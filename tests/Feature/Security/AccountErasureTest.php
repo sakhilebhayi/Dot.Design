@@ -10,13 +10,17 @@ use App\Models\DesignProject;
 use App\Models\DesignReview;
 use App\Models\DesignShare;
 use App\Models\DesignTemplate;
+use App\Models\Team;
 use App\Models\User;
 use App\Services\Design\ActivityLog;
+use App\Services\Privacy\AccountErasure;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 use Laravel\Jetstream\Contracts\DeletesUsers;
+use Laravel\Jetstream\Http\Livewire\DeleteUserForm;
+use Livewire\Livewire;
 use Tests\Support\BusinessFixtures;
 use Tests\Support\ImageFixtures;
 use Tests\Support\SecurityWorld;
@@ -166,7 +170,7 @@ class AccountErasureTest extends TestCase
 
         // The same refusal reaches the person on the profile page, as an error under the password box.
         $this->actingAs($owner->fresh());
-        \Livewire\Livewire::test(\Laravel\Jetstream\Http\Livewire\DeleteUserForm::class)->set('password', 'password')->call('deleteUser')->assertHasErrors(['password']);
+        Livewire::test(DeleteUserForm::class)->set('password', 'password')->call('deleteUser')->assertHasErrors(['password']);
 
         $this->assertNotNull(User::find($owner->id));
         $this->assertSame($projects, DesignProject::withoutGlobalScopes()->count());
@@ -191,7 +195,7 @@ class AccountErasureTest extends TestCase
         $this->erase($solo);
 
         $this->assertNull(User::find($solo->id));
-        $this->assertNull(\App\Models\Team::find($company->id));
+        $this->assertNull(Team::find($company->id));
         $this->assertSame(0, DesignProject::withoutGlobalScopes()->whereIn('id', [$project->id, $personal->id])->count());
         $this->assertSame(0, BrandKit::withoutGlobalScopes()->where('id', $kit->id)->count());
         $this->assertSame(0, DesignAsset::withoutGlobalScopes()->where('id', $picture->id)->count());
@@ -209,7 +213,7 @@ class AccountErasureTest extends TestCase
 
         try {
             DB::transaction(function () use ($user): void {
-                app(\App\Services\Privacy\AccountErasure::class)->prepare($user);
+                app(AccountErasure::class)->prepare($user);
                 throw new \RuntimeException('something later in the deletion failed');
             });
         } catch (\RuntimeException) {
@@ -229,7 +233,7 @@ class AccountErasureTest extends TestCase
         $picture = $this->upload($user, null, $project, 'mine.png', 30);
 
         $this->actingAs($user);
-        \Livewire\Livewire::test(\Laravel\Jetstream\Http\Livewire\DeleteUserForm::class)
+        Livewire::test(DeleteUserForm::class)
             ->set('password', 'password')
             ->call('deleteUser')
             ->assertHasNoErrors();

@@ -3,9 +3,11 @@
 namespace Tests\Feature\Security;
 
 use App\Models\DesignComment;
+use App\Models\DesignProject;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Facades\Schema;
 use Tests\Support\BusinessFixtures;
 use Tests\Support\ImageFixtures;
 use Tests\Support\SecurityWorld;
@@ -148,7 +150,7 @@ class PublicShareAbuseTest extends TestCase
 
         // Nothing about the visitor is kept: no column anywhere that could hold an address or an agent string.
         foreach (['design_shares', 'design_comments', 'design_activity'] as $table) {
-            foreach (\Illuminate\Support\Facades\Schema::getColumnListing($table) as $column) {
+            foreach (Schema::getColumnListing($table) as $column) {
                 $this->assertDoesNotMatchRegularExpression('/(^|_)(ip|address|agent|user_agent|ua|fingerprint)(_|$)/i', $column, "{$table}.{$column} could hold visitor data");
             }
         }
@@ -221,7 +223,7 @@ class PublicShareAbuseTest extends TestCase
 
         $t['share']->forceFill(['revoked_at' => null])->save();
         $this->get($live)->assertOk();
-        \App\Models\DesignProject::withoutGlobalScopes()->whereKey($t['project']->id)->delete();
+        DesignProject::withoutGlobalScopes()->whereKey($t['project']->id)->delete();
         $this->get($live)->assertNotFound();
     }
 }

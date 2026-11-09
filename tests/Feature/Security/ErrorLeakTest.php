@@ -2,9 +2,13 @@
 
 namespace Tests\Feature\Security;
 
+use App\Models\User;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\QueryException;
+use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Route;
+use Tests\Support\EnforcedCsrf;
 use Tests\TestCase;
 
 /**
@@ -26,7 +30,7 @@ class ErrorLeakTest extends TestCase
         Route::middleware('web')->get('/__boom', fn () => throw new \RuntimeException('secret-db-password /etc/passwd password=hunter2'));
         Route::middleware('web')->get('/__sql', fn () => throw new QueryException('pgsql', 'select * from users where password = ?', ['secret-db-password'], new \PDOException('SQLSTATE[08006] connection to server at 10.0.0.5 failed')));
         Route::middleware('web')->get('/__forbidden', fn () => abort(403, 'secret-db-password'));
-        Route::middleware('web')->get('/__denied', fn () => throw new \Illuminate\Auth\Access\AuthorizationException('secret-db-password'));
+        Route::middleware('web')->get('/__denied', fn () => throw new AuthorizationException('secret-db-password'));
     }
 
     private function assertNoLeak(string $body, string $label): void
@@ -62,8 +66,8 @@ class ErrorLeakTest extends TestCase
 
     public function test_the_csrf_failure_page_and_the_throttled_pages_say_nothing_about_the_system(): void
     {
-        $user = \App\Models\User::factory()->withPersonalTeam()->create();
-        $this->app->bind(\Illuminate\Foundation\Http\Middleware\PreventRequestForgery::class, \Tests\Support\EnforcedCsrf::class);
+        $user = User::factory()->withPersonalTeam()->create();
+        $this->app->bind(PreventRequestForgery::class, EnforcedCsrf::class);
 
         $forged = $this->actingAs($user)->post('/logout', [], ['Sec-Fetch-Site' => 'cross-site']);
         $forged->assertStatus(419);

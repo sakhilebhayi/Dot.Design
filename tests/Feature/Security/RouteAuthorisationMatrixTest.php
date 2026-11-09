@@ -3,6 +3,7 @@
 namespace Tests\Feature\Security;
 
 use App\Models\DesignProject;
+use App\Models\DesignProjectGrant;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Routing\Route as LaravelRoute;
 use Tests\Support\BusinessFixtures;
@@ -402,7 +403,7 @@ class RouteAuthorisationMatrixTest extends TestCase
 
         // The editor also held an explicit grant; removing them from the workspace does not remove the grant row, which
         // is a documented exception (docs/R45_BACKEND.md "Access"), so it is deleted here like Jetstream's removal flow does.
-        \App\Models\DesignProjectGrant::query()->where('user_id', $t['editor']->id)->delete();
+        DesignProjectGrant::query()->where('user_id', $t['editor']->id)->delete();
 
         foreach (RouteCatalog::app() as $route) {
             if (! in_array('project', RouteCatalog::tenantParams($route), true)) {

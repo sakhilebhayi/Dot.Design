@@ -4,9 +4,10 @@ namespace Tests\Support;
 
 use App\Models\BrandAsset;
 use App\Models\BrandKit;
-use App\Models\DesignAiProposal;
 use App\Models\Component;
+use App\Models\DesignAiProposal;
 use App\Models\DesignAsset;
+use App\Models\DesignCanvas;
 use App\Models\DesignComment;
 use App\Models\DesignProject;
 use App\Models\DesignProjectGrant;
@@ -14,9 +15,10 @@ use App\Models\DesignReview;
 use App\Models\DesignShare;
 use App\Models\DesignTemplate;
 use App\Models\DesignToken;
+use App\Models\DesignVersion;
+use App\Models\Team;
 use App\Models\TokenConsumptionRecord;
 use App\Models\TokenSet;
-use App\Models\Team;
 use App\Models\User;
 use App\Services\Design\VersionService;
 use Illuminate\Support\Facades\Storage;
@@ -39,8 +41,8 @@ trait SecurityWorld
     }
 
     /**
-     * @return array{label: string, sentinel: string, team: Team, owner: User, admin: User, editor: User, viewer: User, project: DesignProject, page: \App\Models\DesignCanvas,
-     *   version: \App\Models\DesignVersion, comment: DesignComment, review: DesignReview, share: DesignShare, token: string, grant: DesignProjectGrant, asset: DesignAsset,
+     * @return array{label: string, sentinel: string, team: Team, owner: User, admin: User, editor: User, viewer: User, project: DesignProject, page: DesignCanvas,
+     *   version: DesignVersion, comment: DesignComment, review: DesignReview, share: DesignShare, token: string, grant: DesignProjectGrant, asset: DesignAsset,
      *   kit: BrandKit, brandAsset: BrandAsset, template: DesignTemplate, proposal: DesignAiProposal}
      */
     protected function tenant(string $label, string $visibility = 'team'): array

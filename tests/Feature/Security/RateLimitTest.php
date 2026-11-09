@@ -3,6 +3,7 @@
 namespace Tests\Feature\Security;
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\RateLimiter;
 use Tests\Support\BusinessFixtures;
@@ -102,7 +103,7 @@ class RateLimitTest extends TestCase
             $this->assertNotNull($limiter, "{$name} is defined");
 
             foreach ([11, 12] as $id) {
-                $request = \Illuminate\Http\Request::create('/x', 'POST', [], [], [], ['REMOTE_ADDR' => '198.51.100.30']);
+                $request = Request::create('/x', 'POST', [], [], [], ['REMOTE_ADDR' => '198.51.100.30']);
                 $request->setUserResolver(fn () => new class($id)
                 {
                     public function __construct(public int $id) {}

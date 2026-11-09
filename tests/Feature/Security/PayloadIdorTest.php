@@ -2,11 +2,15 @@
 
 namespace Tests\Feature\Security;
 
+use App\Models\BrandKit;
 use App\Models\DesignAsset;
+use App\Models\DesignComment;
 use App\Models\DesignProject;
+use App\Models\DesignProjectGrant;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\URL;
 use Tests\Support\BusinessFixtures;
 use Tests\Support\ImageFixtures;
 use Tests\Support\SecurityWorld;
@@ -104,7 +108,7 @@ class PayloadIdorTest extends TestCase
         $this->actingAs($user)->postJson(route('design.brand.kits.store'), ['name' => 'Squatter', 'team_id' => $this->b['team']->id])->assertStatus(422);
 
         $this->assertNull($this->a['project']->fresh()->brand_kit_id);
-        $this->assertSame(0, \App\Models\BrandKit::withoutGlobalScopes()->where('name', 'Squatter')->count());
+        $this->assertSame(0, BrandKit::withoutGlobalScopes()->where('name', 'Squatter')->count());
     }
 
     public function test_a_design_cannot_be_started_from_another_businesss_template_kit_or_picture(): void
@@ -156,8 +160,8 @@ class PayloadIdorTest extends TestCase
         // Reordering with another project's page ids.
         $this->actingAs($owner)->putJson(route('design.projects.pages.order', $p), ['order' => [$this->b['page']->id]])->assertStatus(422);
 
-        $this->assertSame(0, \App\Models\DesignComment::where('body', 'x')->count());
-        $this->assertSame(1, \App\Models\DesignProjectGrant::where('design_project_id', $p->id)->count(), 'only the original grant may exist');
+        $this->assertSame(0, DesignComment::where('body', 'x')->count());
+        $this->assertSame(1, DesignProjectGrant::where('design_project_id', $p->id)->count(), 'only the original grant may exist');
     }
 
     public function test_another_users_ai_proposal_cannot_be_applied_or_dismissed(): void
@@ -184,11 +188,11 @@ class PayloadIdorTest extends TestCase
         $this->get($forged)->assertStatus(403);
 
         // A validly signed URL for B's picture under A's token (only possible with the app key) still refuses: it is not in A's design.
-        $signed = \Illuminate\Support\Facades\URL::temporarySignedRoute('studio.share.asset', now()->addMinutes(5), ['token' => $this->a['token'], 'asset' => $this->b['asset']->id]);
+        $signed = URL::temporarySignedRoute('studio.share.asset', now()->addMinutes(5), ['token' => $this->a['token'], 'asset' => $this->b['asset']->id]);
         $this->get($signed)->assertNotFound();
 
         // A's signed URL under B's token: not B's picture either.
-        $crossed = \Illuminate\Support\Facades\URL::temporarySignedRoute('studio.share.asset', now()->addMinutes(5), ['token' => $this->b['token'], 'asset' => $this->a['asset']->id]);
+        $crossed = URL::temporarySignedRoute('studio.share.asset', now()->addMinutes(5), ['token' => $this->b['token'], 'asset' => $this->a['asset']->id]);
         $this->get($crossed)->assertNotFound();
     }
 

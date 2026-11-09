@@ -5,6 +5,7 @@ namespace Tests\Feature\Security;
 use App\Models\DesignAsset;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
 use Tests\Support\BusinessFixtures;
 use Tests\Support\ImageFixtures;
@@ -216,7 +217,7 @@ class UploadAbuseTest extends TestCase
             'enabled' => true, 'url' => 'https://files.test', 'secret' => 'files-secret-for-tests-0001', 'platform' => 'design', 'folder' => 'Dot.Design',
             'timeout' => 5, 'formats' => ['png', 'jpg', 'pdf', 'svg', 'gif'], 'max_bytes' => 25 * 1024 * 1024,
         ]]);
-        \Illuminate\Support\Facades\Http::fake();
+        Http::fake();
 
         $t = $this->tenant('Alpha');
         $t['team']->forceFill(['infodot_team_uuid' => '5b0f2d3e-8a41-4c7e-9d62-3f1a7c9e0b44'])->save();
@@ -247,7 +248,7 @@ class UploadAbuseTest extends TestCase
             $post(['file' => $file($svg, 'x.svg'), 'format' => 'svg', 'scope' => 'all', 'acknowledge' => true])->assertStatus(422);
         }
 
-        \Illuminate\Support\Facades\Http::assertNothingSent();
+        Http::assertNothingSent();
     }
 
     public function test_an_svg_export_whose_text_merely_mentions_scripting_words_is_not_refused(): void
@@ -256,7 +257,7 @@ class UploadAbuseTest extends TestCase
             'enabled' => true, 'url' => 'https://files.test', 'secret' => 'files-secret-for-tests-0001', 'platform' => 'design', 'folder' => 'Dot.Design',
             'timeout' => 5, 'formats' => ['png', 'jpg', 'pdf', 'svg', 'gif'], 'max_bytes' => 25 * 1024 * 1024,
         ]]);
-        \Illuminate\Support\Facades\Http::fake(['*' => \Illuminate\Support\Facades\Http::response(['uuid' => '9c1d0e2a-7b3f-4a55-8e61-2d4f6a8b0c13', 'name' => 'x.svg', 'open_url' => 'https://files.test/o/1'], 201)]);
+        Http::fake(['*' => Http::response(['uuid' => '9c1d0e2a-7b3f-4a55-8e61-2d4f6a8b0c13', 'name' => 'x.svg', 'open_url' => 'https://files.test/o/1'], 201)]);
 
         $t = $this->tenant('Alpha');
         $t['team']->forceFill(['infodot_team_uuid' => '5b0f2d3e-8a41-4c7e-9d62-3f1a7c9e0b44'])->save();

@@ -56,7 +56,7 @@ class DocumentSanitiserFuzzTest extends TestCase
     {
         $pool = [
             null, true, false, 0, -1, 1, 0.5, -0.0, 1e308, -1e308, PHP_INT_MAX, PHP_INT_MIN, INF, -INF, NAN, '1e999', '-1e999', '0x10', ' 5', '5 ', '',
-            'NaN', 'Infinity', '<script>alert(1)</script>', '"><img src=x onerror=alert(1)>', "javascript:alert(1)", 'data:text/html;base64,PHNjcmlwdD4=',
+            'NaN', 'Infinity', '<script>alert(1)</script>', '"><img src=x onerror=alert(1)>', 'javascript:alert(1)', 'data:text/html;base64,PHNjcmlwdD4=',
             "\0", "a\0b", "\x1b[31m", "\u{202E}rtl", "\xff\xfe invalid utf8", str_repeat('A', 100_000), '__proto__', 'constructor', 'prototype',
             '#12345', '#GGGGGG', '#fff', '#FFFFFF', '#ffffffff', 'url(javascript:alert(1))', 'expression(alert(1))', 'M0 0 L1 1', '../../etc/passwd',
             [], [[]], ['__proto__' => ['polluted' => true]], ['constructor' => ['prototype' => ['x' => 1]]], [1, 2, 3], ['a' => ['b' => ['c' => ['d' => 1]]]],
@@ -207,7 +207,7 @@ class DocumentSanitiserFuzzTest extends TestCase
     {
         $shape = fn (string $d) => ['elements' => [['id' => 'p1', 'type' => 'shape', 'kind' => 'path', 'x' => 0, 'y' => 0, 'width' => 10, 'height' => 10, 'd' => $d]]];
 
-        $ok = $this->sanitiser->sanitisePage($shape("m0,0 l10 10 z"));
+        $ok = $this->sanitiser->sanitisePage($shape('m0,0 l10 10 z'));
         $this->assertMatchesRegularExpression('/^[MmLlZz0-9 .\-]+$/', $ok->elements[0]['d']);
 
         foreach (['M0 0 L" onload="alert(1)', 'M0 0 </path><script>alert(1)</script>', 'M0 0 L1 1 A5 5 0 0 1 9 9', "M0 0 L1\n1; alert(1)", 'M 1e999 0', 'M0 0 L1', 'L1 1', '', 'M0 0 '.str_repeat('L1 1 ', 30_000)] as $d) {
