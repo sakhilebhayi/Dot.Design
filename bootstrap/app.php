@@ -24,6 +24,7 @@ return Application::configure(basePath: dirname(__DIR__))
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(
-            fn (Request $request) => $request->is('api/*'),
+            // R-45: the studio's design/* endpoints answer JSON (validation, 401/403/404) when the caller asks for JSON.
+            fn (Request $request) => $request->is('api/*') || ($request->is('design/*') && $request->expectsJson()),
         );
     })->create();
