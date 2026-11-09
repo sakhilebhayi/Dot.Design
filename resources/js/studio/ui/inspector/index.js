@@ -78,8 +78,11 @@ function mountPage(el, ctx) {
         const d = ctx.safeArea && ctx.safeArea.describe();
         safeT.el.disabled = !d; safeT.set(!!d && ctx.safeArea.on);
         if (!d) { safeNote.textContent = 'This size has no bleed or safe area defined.'; return; }
-        const u = d.top === d.bottom && d.left === d.right && d.top === d.left ? Math.round(d.top) + ' px' : 'varies by side';
-        safeNote.textContent = `Safe area: keep text inside ${u} of the edge.${d.bleed ? ' Bleed: ' + Math.round(d.bleed) + ' px past the edge for printing.' : ''}`;
+        // in the unit the person works in (millimetres for print), the same one the size fields use
+        const unit = readUnit(ctx.config.project, ctx.config.formats);
+        const fmtLen = (px) => formatUnit(px, unit) + ' ' + unit;
+        const even = d.top === d.bottom && d.left === d.right && d.top === d.left;
+        safeNote.textContent = `Safe area: keep text ${even ? 'inside ' + fmtLen(d.top) + ' of the edge' : 'inside the green line'}.${d.bleed ? ' Bleed: ' + fmtLen(d.bleed) + ' past the edge for printing (the red line).' : ''}`;
     });
     add(h('p', { class: 'st-note', id: 'st-gridnote' }), () => {});
 

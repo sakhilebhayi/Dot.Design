@@ -601,7 +601,7 @@
     .st-app[data-right="closed"] .st-right { transform: translateX(100%); visibility: hidden; transition: transform var(--lt-dur-3) var(--lt-ease), visibility 0s linear var(--lt-dur-3); }
     .st-app[data-right="open"] .st-stage { right: var(--st-drawer-w); }
     .st-right .st-panel__close { display: inline-flex; }
-    .st-drawertab { display: inline-flex; right: 0; }
+    .st-app .st-drawertab:not([hidden]) { display: inline-flex; right: 0; }
     .st-app[data-right="open"] .st-drawertab { right: var(--st-drawer-w); }
     .st-top__mode { margin: 0; }
     .st-top .lt-btn--secondary .st-top__btnlabel { display: none; }

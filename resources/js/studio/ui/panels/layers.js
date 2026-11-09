@@ -52,6 +52,8 @@ export function mountLayers(ctx, shell) {
             main.addEventListener('keydown', (ev) => {
                 const items = Array.from(list.querySelectorAll('.st-layer__main'));
                 const at = items.indexOf(main);
+                // Alt with an arrow moves the layer itself (this branch must come before the plain arrows, which only move focus)
+                if (ev.altKey && (ev.key === 'ArrowUp' || ev.key === 'ArrowDown')) { ev.preventDefault(); ctx.run('element.reorder', { ids: [e.id], to: ev.key === 'ArrowUp' ? 'forward' : 'back' }); return; }
                 if (ev.key === 'ArrowDown' && items[at + 1]) { ev.preventDefault(); items[at + 1].focus(); } else if (ev.key === 'ArrowUp' && items[at - 1]) { ev.preventDefault(); items[at - 1].focus(); } else if (ev.key === 'F2') { ev.preventDefault(); startRename(e, label); } else if ((ev.key === 'Delete' || ev.key === 'Backspace') && sel.has(e.id)) { ev.preventDefault(); ctx.run('element.remove', { ids: [e.id] }); } else if (ev.key === 'ArrowRight' && e.type === 'group' && collapsed.has(e.id)) { collapsed.delete(e.id); render(); } else if (ev.key === 'ArrowLeft' && e.type === 'group' && !collapsed.has(e.id)) { collapsed.add(e.id); render(); } else if ((ev.altKey) && (ev.key === 'ArrowUp' || ev.key === 'ArrowDown')) { ev.preventDefault(); ctx.run('element.reorder', { ids: [e.id], to: ev.key === 'ArrowUp' ? 'forward' : 'back' }); }
             });
             main.addEventListener('focus', () => { if (!sel.has(e.id)) studio.select([e.id], { group: r.parentId }); });

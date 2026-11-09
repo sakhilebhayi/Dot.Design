@@ -9,7 +9,7 @@ const ELEMENTS = [
     { id: 'bg', type: 'shape', kind: 'rect', name: 'Background colour', role: 'background', x: 0, y: 0, width: 1200, height: 800, fill: '#145a3c' },
     { id: 'chip', type: 'shape', kind: 'rect', name: 'Label block', x: 60, y: 40, width: 200, height: 56, fill: '#111111' },
     { id: 'chiptext', type: 'text', name: 'Label', role: 'badge', x: 60, y: 40, width: 200, height: 56, text: 'PART 1', fontSize: 28, color: '#ffffff', font: 'inter', align: 'center', valign: 'middle' },
-    { id: 'head', type: 'text', name: 'Headline', role: 'headline', x: 60, y: 140, width: 620, height: 420, text: 'Slow cooked lamb', fontSize: 120, fontWeight: 700, color: '#ffffff', font: 'inter', autoFit: 'shrink' },
+    { id: 'head', type: 'text', name: 'Headline', role: 'headline', x: 60, y: 140, width: 620, height: 420, text: 'Slow cooked lamb', fontSize: 80, fontWeight: 700, color: '#ffffff', font: 'inter', autoFit: 'shrink' },
     { id: 'pic', type: 'image', name: 'Main picture', x: 720, y: 60, width: 420, height: 600 },
 ];
 
@@ -120,7 +120,7 @@ test('desktop: opens on the page, a text inspector that fits, a toolbar that sta
         await page.getByRole('tab', { name: 'Elements' }).click();
         await page.locator('.st-elsec[data-section=shapes]').waitFor();
         assert.ok((await page.locator('.st-elsec .st-group__title').count()) >= 3);
-        await page.getByRole('button', { name: 'Add circle' }).click();
+        await page.getByRole('button', { name: 'Add circle', exact: true }).click();
         await page.getByRole('tab', { name: 'Elements' }).click().catch(() => {});
         await page.locator('.st-elsec--recent').waitFor({ state: 'visible' });
         assert.equal(await page.locator('.st-recent .st-tile').count(), 1, 'the circle is under Recently used');
