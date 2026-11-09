@@ -34,9 +34,9 @@ class CanvasPngExporter
         }
 
         $project = $canvas->project;
-        $width = (int) $project->width;
-        $height = (int) $project->height;
-        $elements = array_values(array_filter((array) $canvas->elements, 'is_array'));
+        $width = (int) ($canvas->width ?: $project->width);
+        $height = (int) ($canvas->height ?: $project->height);
+        $elements = array_values(array_filter((array) $canvas->elements, fn ($e) => is_array($e) && empty($e['hidden'])));
 
         $this->checkCanvasSize($width, $height);
         $font = $this->fontFor($elements);
@@ -44,7 +44,7 @@ class CanvasPngExporter
         $image = imagecreatetruecolor($width, $height);
         imagesavealpha($image, true);
         imagealphablending($image, false);
-        imagefill($image, 0, 0, $this->colour($image, $canvas->background_color ?: '#ffffff'));
+        imagefill($image, 0, 0, $this->colour($image, $this->backgroundColour($canvas)));
         imagealphablending($image, true);
 
         $resolver = new ExportImageResolver($project);
@@ -72,6 +72,17 @@ class CanvasPngExporter
         imagepng($image, null, 6);
 
         return (string) ob_get_clean();
+    }
+
+    private function backgroundColour(DesignCanvas $canvas): string
+    {
+        $background = $canvas->background;
+
+        if (is_array($background) && is_string($background['color'] ?? null)) {
+            return $background['color'];
+        }
+
+        return $canvas->background_color ?: '#ffffff';
     }
 
     /** Whether any element needs a font this server does not have. */
@@ -136,7 +147,17 @@ class CanvasPngExporter
         $width = (int) max(1, round((float) ($element['width'] ?? 0)));
         $height = (int) max(1, round((float) ($element['height'] ?? 0)));
 
-        if (! in_array($element['type'] ?? null, ['rectangle', 'text', 'image'], true)) {
+        // Schema v2 (R-45): shapes of kind rect and ellipse and pictures are drawn; groups, icons and the other shape
+        // kinds are skipped, as are empty picture slots. The editor exports in the browser; this stays for the API.
+        if (! in_array($element['type'] ?? null, ['rectangle', 'text', 'image', 'shape'], true)) {
+            return null;
+        }
+
+        if ($element['type'] === 'shape' && ! in_array($element['kind'] ?? null, ['rect', 'ellipse'], true)) {
+            return null;
+        }
+
+        if ($element['type'] === 'image' && ($element['asset_id'] ?? null) === null && array_key_exists('fit', $element)) {
             return null;
         }
 
@@ -156,11 +177,35 @@ class CanvasPngExporter
 
         match ($element['type']) {
             'rectangle' => imagefilledrectangle($layer, 0, 0, $width, $height, $this->colour($layer, $element['fill'] ?? '#cccccc')),
+            'shape' => $this->drawShape($layer, $element, $width, $height),
             'image' => $this->drawImage($layer, $element, $resolver, $width, $height),
             'text' => $this->drawText($layer, $element, (string) $font, $width, $height),
         };
 
         return $layer;
+    }
+
+    private function drawShape(GdImage $layer, array $element, int $width, int $height): void
+    {
+        $fill = $element['fill'] ?? '#e4e4e7';
+
+        if (is_array($fill)) {
+            $fill = $fill['stops'][0]['color'] ?? '#e4e4e7';
+        }
+
+        if (! is_string($fill)) {
+            return; // no fill: nothing to draw
+        }
+
+        $colour = $this->colour($layer, $fill);
+
+        if (($element['kind'] ?? null) === 'ellipse') {
+            imagefilledellipse($layer, intdiv($width, 2), intdiv($height, 2), $width, $height, $colour);
+
+            return;
+        }
+
+        imagefilledrectangle($layer, 0, 0, $width, $height, $colour);
     }
 
     private function drawImage(GdImage $layer, array $element, ExportImageResolver $resolver, int $width, int $height): void
@@ -281,6 +326,11 @@ class CanvasPngExporter
 
         if (strlen($hex) === 3) {
             $hex = $hex[0].$hex[0].$hex[1].$hex[1].$hex[2].$hex[2];
+        }
+
+        // v2 colours may carry an alpha pair (#rrggbbaa); the layer's own opacity handles transparency here.
+        if (strlen($hex) === 8) {
+            $hex = substr($hex, 0, 6);
         }
 
         if (! preg_match('/^[0-9a-fA-F]{6}$/', $hex)) {

@@ -57,5 +57,11 @@ class JetstreamServiceProvider extends ServiceProvider
             'create',
             'update',
         ])->description('Editor users have the ability to read, create, and update.');
+
+        // R-45: a reviewer looks at designs, comments on them and approves them, but does not edit. What each role may do
+        // in the studio is defined once, in App\Support\Design\DesignCapability.
+        Jetstream::role('viewer', 'Reviewer', [
+            'read',
+        ])->description('Reviewers can view designs, comment on them and approve or request changes. They cannot edit.');
     }
 }

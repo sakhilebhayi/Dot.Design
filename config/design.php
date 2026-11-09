@@ -59,4 +59,57 @@ return [
         'png_max_megapixels' => 16,
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | R-45 studio backend
+    |--------------------------------------------------------------------------
+    |
+    | Limits for the structured-document API (docs/R45_BACKEND.md). The document
+    | limits themselves (elements per page, depth, text length, JSON bytes) live
+    | in resources/design/document-schema.json, the single source of truth shared
+    | with the browser engine; only operational knobs are here.
+    */
+    'studio' => [
+        // Throttles, per user per minute (shares/comments/thumbnails/exports) -- see StudioBackendServiceProvider.
+        'saves_per_minute' => (int) env('DESIGN_SAVES_PER_MINUTE', 120),
+        'shares_per_minute' => (int) env('DESIGN_SHARES_PER_MINUTE', 20),
+        'comments_per_minute' => (int) env('DESIGN_COMMENTS_PER_MINUTE', 30),
+        'thumbnails_per_minute' => (int) env('DESIGN_THUMBNAILS_PER_MINUTE', 30),
+        'exports_per_minute' => (int) env('DESIGN_EXPORTS_PER_MINUTE', 60),
+        // Public share-link comments per minute per link and visitor address (the address is hashed by the limiter, never stored by us).
+        'public_comments_per_minute' => (int) env('DESIGN_PUBLIC_COMMENTS_PER_MINUTE', 6),
+        'public_views_per_minute' => (int) env('DESIGN_PUBLIC_VIEWS_PER_MINUTE', 120),
+
+        'versions' => [
+            // An automatic snapshot is taken at most this often while a project is being edited.
+            'auto_interval_minutes' => 10,
+            // Newest automatic snapshots kept per project; manual, review and approved versions are never pruned.
+            'auto_retention' => 50,
+            'max_label_length' => 80,
+        ],
+
+        'thumbnail' => [
+            'max_bytes' => 300 * 1024,
+            'max_dimension' => 1600,
+        ],
+
+        'shares' => [
+            'max_active_per_project' => 20,
+            'max_expiry_days' => 365,
+            'asset_url_minutes' => 10,
+        ],
+
+        'comments' => [
+            'max_length' => 2000,
+            'max_mentions' => 20,
+            'max_per_listing' => 500,
+        ],
+
+        // How long a client-supplied Idempotency-Key is remembered for page creation.
+        'idempotency_hours' => 24,
+
+        // Request body ceiling (bytes) for the page-save endpoint: the document limit plus envelope headroom.
+        'max_request_bytes' => 1_400_000,
+    ],
+
 ];

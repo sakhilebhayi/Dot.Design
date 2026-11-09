@@ -11,8 +11,8 @@ use Illuminate\Support\Facades\Storage;
  * export: it tracks the total bytes handed out so a canvas cannot make an
  * export balloon. Never reaches out over HTTP -- AI placeholders are external
  * URLs, so they are reported as placeholders for the exporter to draw as a
- * labelled box -- and only ever reads assets owned by the project's owner, no
- * matter what asset id the stored JSON claims.
+ * labelled box -- and only ever reads assets that belong with the project (the
+ * owner's, filed under it, or the workspace's brand assets), no matter what asset id the stored JSON claims.
  */
 class ExportImageResolver
 {
@@ -22,8 +22,18 @@ class ExportImageResolver
 
     public function resolve(mixed $assetId): ExportImage
     {
+        // The owner's pictures, pictures filed under this project, and the workspace's brand assets: the same set a page
+        // of this project may legitimately hold (see ProjectAssets), never an arbitrary id found in a document.
+        $project = $this->project;
         $asset = DesignAsset::withoutGlobalScopes()
-            ->where('user_id', $this->project->user_id)
+            ->where(function ($q) use ($project): void {
+                $q->where('user_id', $project->user_id)
+                    ->orWhere('design_project_id', $project->id);
+
+                if ($project->team_id !== null) {
+                    $q->orWhere(fn ($brand) => $brand->where('license', 'brand')->where('team_id', $project->team_id));
+                }
+            })
             ->find((int) $assetId);
 
         if ($asset === null) {

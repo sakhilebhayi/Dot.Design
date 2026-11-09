@@ -24,9 +24,10 @@ class AssetUploader
     public function __construct(private readonly ImageSanitiser $sanitiser) {}
 
     /**
+     * @param  array{folder?: ?string, tags?: ?list<string>}  $library  where the asset is filed in the library
      * @return array{0: DesignAsset, 1: bool} the asset and whether it was newly created
      */
-    public function store(User $user, UploadedFile $file, ?DesignProject $project): array
+    public function store(User $user, UploadedFile $file, ?DesignProject $project, array $library = []): array
     {
         $original = (string) file_get_contents($file->getRealPath());
 
@@ -41,7 +42,7 @@ class AssetUploader
         $name = $this->displayName($file->getClientOriginalName());
 
         try {
-            return $this->persist($user, $project, $image, $hash, $name);
+            return $this->persist($user, $project, $image, $hash, $name, $library);
         } catch (UniqueConstraintViolationException $e) {
             // Lost a race with an identical upload from the same user.
             $existing = $this->findByHash($user, $hash);
@@ -54,13 +55,13 @@ class AssetUploader
         }
     }
 
-    private function persist(User $user, ?DesignProject $project, SanitisedImage $image, string $hash, string $name): array
+    private function persist(User $user, ?DesignProject $project, SanitisedImage $image, string $hash, string $name, array $library = []): array
     {
         $disk = (string) config('design.assets.disk');
         $written = null;
 
         try {
-            $result = DB::transaction(function () use ($user, $project, $image, $hash, $name, $disk, &$written) {
+            $result = DB::transaction(function () use ($user, $project, $image, $hash, $name, $disk, $library, &$written) {
                 User::query()->whereKey($user->id)->lockForUpdate()->first();
 
                 $existing = $this->findByHash($user, $hash);
@@ -91,7 +92,11 @@ class AssetUploader
                 $asset = DesignAsset::create([
                     'user_id' => $user->id,
                     'design_project_id' => $project?->id,
+                    'team_id' => $project?->team_id,
                     'name' => $name,
+                    'folder' => $library['folder'] ?? null,
+                    'tags' => $library['tags'] ?? null,
+                    'source' => 'upload',
                     'type' => 'image',
                     'file_path' => $path,
                     'disk' => $disk,

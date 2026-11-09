@@ -2,7 +2,9 @@
 
 namespace App\Models;
 
-use App\Models\Concerns\HasUserScope;
+use App\Models\Concerns\HasStudioRelations;
+use App\Models\Concerns\HasWorkspaceScope;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -11,9 +13,33 @@ use Illuminate\Support\Facades\DB;
 
 class DesignProject extends Model
 {
-    use HasUserScope;
+    use HasStudioRelations;
+    use HasWorkspaceScope;
+
+    public const STATUSES = ['draft', 'in_review', 'approved', 'archived'];
+
+    public const VISIBILITIES = ['private', 'team'];
+
+    protected $attributes = ['visibility' => 'private', 'status' => 'draft'];
 
     protected $fillable = ['user_id', 'name', 'type', 'width', 'height', 'unit'];
+
+    /**
+     * Visible = the owner's own, or shared with a workspace the user belongs to (visibility "team"), or one they hold an
+     * explicit grant on, or one that names them as reviewer. Mirrored by DesignAccess::capabilities().
+     */
+    protected static function constrainToVisible(Builder $query, int $userId): void
+    {
+        $table = (new static)->getTable();
+
+        $query->where("{$table}.user_id", $userId)
+            ->orWhere(fn (Builder $team) => $team->where("{$table}.visibility", 'team')
+                ->where(fn (Builder $member) => $member
+                    ->whereIn("{$table}.team_id", DB::table('teams')->select('id')->where('user_id', $userId))
+                    ->orWhereIn("{$table}.team_id", DB::table('team_user')->select('team_id')->where('user_id', $userId))))
+            ->orWhereIn("{$table}.id", DB::table('design_project_grants')->select('design_project_id')->where('user_id', $userId))
+            ->orWhereIn("{$table}.id", DB::table('design_reviews')->select('design_project_id')->where('reviewer_id', $userId)->where('status', '!=', 'cancelled'));
+    }
 
     public function user(): BelongsTo
     {

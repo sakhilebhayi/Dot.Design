@@ -162,16 +162,21 @@ class InfoDotTeamSyncTest extends TestCase
         $this->assertSame(0, Team::whereNotNull('infodot_team_uuid')->count());
     }
 
-    public function test_the_viewer_role_falls_back_to_the_least_powerful_role_this_app_has(): void
+    public function test_the_viewer_role_maps_to_the_reviewer_role_and_an_ordinary_member_keeps_editing(): void
     {
+        // R-45 added the "viewer" (Reviewer) role, so an explicit InfoDot viewer now gets it instead of the old editor
+        // fallback; an ordinary member must keep editing, so it maps to editor.
         $this->signIn('ann@acme.test', [$this->company(self::ACME, 'Acme Ltd', 'owner')], self::ACME);
         $this->signIn('vic@acme.test', [$this->company(self::ACME, 'Acme Ltd', 'viewer')], self::ACME);
+        $this->signIn('mia@acme.test', [$this->company(self::ACME, 'Acme Ltd', 'member')], self::ACME);
 
         $team = Team::where('infodot_team_uuid', self::ACME)->firstOrFail();
         $vic = User::where('email', 'vic@acme.test')->firstOrFail();
+        $mia = User::where('email', 'mia@acme.test')->firstOrFail();
 
-        $this->assertSame('editor', $vic->teamRole($team)->key);
+        $this->assertSame('viewer', $vic->teamRole($team)->key);
         $this->assertFalse($vic->ownsTeam($team));
+        $this->assertSame('editor', $mia->teamRole($team)->key);
     }
 
     public function test_link_team_command_attaches_an_existing_team_and_refuses_bad_links(): void

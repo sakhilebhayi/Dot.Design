@@ -2,25 +2,61 @@
 
 namespace App\Models;
 
-use App\Models\Concerns\HasUserScope;
+use App\Models\Concerns\HasWorkspaceScope;
 use App\Services\Ai\AiImageResult;
+use App\Support\Design\DesignAccess;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 
 class DesignAsset extends Model
 {
-    use HasUserScope;
+    use HasWorkspaceScope;
+
+    public const LICENSES = ['own', 'brand', 'builtin'];
 
     /** The only content types we store and serve; the file route never trusts the row beyond this list. */
     public const SERVABLE_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 
     protected $fillable = [
-        'user_id', 'design_project_id', 'name', 'type', 'file_path', 'disk', 'mime_type', 'content_hash',
-        'file_size', 'width', 'height', 'meta',
+        'user_id', 'team_id', 'design_project_id', 'name', 'folder', 'tags', 'license', 'source', 'type', 'file_path', 'disk',
+        'mime_type', 'content_hash', 'file_size', 'width', 'height', 'meta',
     ];
 
-    protected $casts = ['meta' => 'array'];
+    protected $casts = ['meta' => 'array', 'tags' => 'array'];
+
+    /**
+     * Visible = the owner's own, or a workspace brand asset of a workspace the user belongs to, or one filed in a
+     * project the user can see. (An asset placed on a page of a project is also reachable through that project: see
+     * ProjectAssets.) Mirrored by DesignAccess::canViewAsset().
+     */
+    protected static function constrainToVisible(Builder $query, int $userId): void
+    {
+        $table = (new static)->getTable();
+
+        $query->where("{$table}.user_id", $userId)
+            ->orWhere(fn (Builder $brand) => $brand->where("{$table}.license", 'brand')
+                ->where(fn (Builder $member) => $member
+                    ->whereIn("{$table}.team_id", DB::table('teams')->select('id')->where('user_id', $userId))
+                    ->orWhereIn("{$table}.team_id", DB::table('team_user')->select('team_id')->where('user_id', $userId))))
+            ->orWhereIn("{$table}.design_project_id", DesignProject::query()->select('id'));
+    }
+
+    /** An upload filed in a project lands in that project's workspace; anything else in the creator's. */
+    protected static function workspaceFor($model): ?int
+    {
+        if ($model->design_project_id !== null) {
+            $teamId = DesignProject::withoutGlobalScopes()->whereKey($model->design_project_id)->value('team_id');
+
+            if ($teamId !== null) {
+                return (int) $teamId;
+            }
+        }
+
+        return DesignAccess::defaultTeamId((int) $model->user_id);
+    }
 
     public function user(): BelongsTo
     {
@@ -52,19 +88,72 @@ class DesignAsset extends Model
 
         DesignCanvas::whereHas('project')
             ->with('project:id,name')
-            ->select(['id', 'design_project_id', 'page_number', 'elements'])
+            ->select(['id', 'design_project_id', 'page_number', 'elements', 'background'])
             ->lazyById()
             ->each(function (DesignCanvas $canvas) use (&$placements): void {
-                foreach ((array) $canvas->elements as $element) {
-                    if (is_array($element) && ($element['type'] ?? null) === 'image' && (int) ($element['asset_id'] ?? 0) === $this->id) {
-                        $placements[] = ['project' => $canvas->project->name, 'page' => $canvas->page_number];
-
-                        return;
-                    }
+                if ($this->isPlacedOn($canvas)) {
+                    $placements[] = ['project' => $canvas->project->name, 'page' => $canvas->page_number];
                 }
             });
 
         return $placements;
+    }
+
+    /** Whether a page holds this asset: an image element at any depth (groups included) or the page background. */
+    private function isPlacedOn(DesignCanvas $canvas): bool
+    {
+        $background = $canvas->background;
+
+        if (is_array($background) && (int) ($background['asset_id'] ?? 0) === $this->id) {
+            return true;
+        }
+
+        $search = function (array $elements) use (&$search): bool {
+            foreach ($elements as $element) {
+                if (! is_array($element)) {
+                    continue;
+                }
+
+                if (($element['type'] ?? null) === 'image' && (int) ($element['asset_id'] ?? 0) === $this->id) {
+                    return true;
+                }
+
+                if (is_array($element['children'] ?? null) && $search($element['children'])) {
+                    return true;
+                }
+            }
+
+            return false;
+        };
+
+        return $search((array) $canvas->elements);
+    }
+
+    /**
+     * Where this asset is placed, split into what the viewer may see (named) and pages of projects they cannot (counted
+     * only, never named). Deleting an asset has to account for both, otherwise a colleague's private design would be left
+     * with a hole.
+     *
+     * @return array{visible: list<array{project: string, page: int}>, hidden: int}
+     */
+    public function placementsIncludingHidden(): array
+    {
+        $visible = $this->placements();
+        $total = 0;
+
+        DesignCanvas::query()
+            ->whereIn('design_project_id', DesignProject::withoutGlobalScopes()
+                ->select('id')
+                ->where(fn ($q) => $q->where('user_id', $this->user_id)->orWhere(fn ($t) => $t->whereNotNull('team_id')->where('team_id', $this->team_id))))
+            ->select(['id', 'elements', 'background'])
+            ->lazyById()
+            ->each(function (DesignCanvas $canvas) use (&$total): void {
+                if ($this->isPlacedOn($canvas)) {
+                    $total++;
+                }
+            });
+
+        return ['visible' => $visible, 'hidden' => max(0, $total - count($visible))];
     }
 
     /** A file we hold on a private disk, as opposed to an external URL such as the mock AI placeholder. */

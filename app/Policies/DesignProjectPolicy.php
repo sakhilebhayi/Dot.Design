@@ -4,33 +4,76 @@ namespace App\Policies;
 
 use App\Models\DesignProject;
 use App\Models\User;
+use App\Support\Design\DesignAccess;
+use App\Support\Design\DesignCapability;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
 /**
- * DesignProject's HasUserScope global scope already makes another user's
- * project unreachable via route-model binding (404, not 403 -- see
- * wiki.md's own note on this). This policy is the explicit, defense-in-depth
- * ownership check wiki.md §"0.3.2" required before any per-ID route landed:
- * "none of that future code should be added without an ownership check...
- * matching Dot.Finance's pattern" -- so authorization still holds even if
- * the scope is ever bypassed (e.g. a future withoutGlobalScopes() call).
+ * Every ability is a capability check through DesignAccess (the Jetstream role plus any grant). The workspace scope
+ * already makes an invisible project a 404; this is the "visible but forbidden" 403 and the defence in depth should
+ * the scope ever be bypassed.
  */
 class DesignProjectPolicy
 {
     use HandlesAuthorization;
 
+    public function create(User $user): bool
+    {
+        return DesignAccess::canCreateIn($user, DesignAccess::defaultTeamId($user->id));
+    }
+
     public function view(User $user, DesignProject $project): bool
     {
-        return $user->id === $project->user_id;
+        return $this->can($user, $project, DesignCapability::View);
     }
 
     public function update(User $user, DesignProject $project): bool
     {
-        return $user->id === $project->user_id;
+        return $this->can($user, $project, DesignCapability::Edit);
     }
 
     public function delete(User $user, DesignProject $project): bool
     {
-        return $user->id === $project->user_id;
+        return $this->can($user, $project, DesignCapability::Delete);
+    }
+
+    public function comment(User $user, DesignProject $project): bool
+    {
+        return $this->can($user, $project, DesignCapability::Comment);
+    }
+
+    public function export(User $user, DesignProject $project): bool
+    {
+        return $this->can($user, $project, DesignCapability::Export);
+    }
+
+    public function share(User $user, DesignProject $project): bool
+    {
+        return $this->can($user, $project, DesignCapability::ShareLink);
+    }
+
+    public function requestReview(User $user, DesignProject $project): bool
+    {
+        return $this->can($user, $project, DesignCapability::RequestReview);
+    }
+
+    public function changeVisibility(User $user, DesignProject $project): bool
+    {
+        return $this->can($user, $project, DesignCapability::ChangeVisibility);
+    }
+
+    public function manageGrants(User $user, DesignProject $project): bool
+    {
+        return $this->can($user, $project, DesignCapability::ManageGrants);
+    }
+
+    public function viewActivity(User $user, DesignProject $project): bool
+    {
+        return $this->can($user, $project, DesignCapability::ViewActivity);
+    }
+
+    private function can(User $user, DesignProject $project, DesignCapability $capability): bool
+    {
+        return DesignAccess::can($user, $project, $capability);
     }
 }
