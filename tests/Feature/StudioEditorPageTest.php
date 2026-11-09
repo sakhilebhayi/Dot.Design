@@ -6,6 +6,7 @@ use App\Models\BrandKit;
 use App\Models\DesignAsset;
 use App\Models\DesignProject;
 use App\Models\User;
+use App\Services\Design\Assistant\AssistantStatus;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\Support\ReadsEditorBoot;
 use Tests\Support\StudioWorld;
@@ -102,7 +103,7 @@ class StudioEditorPageTest extends TestCase
 
             $boot = $this->editorBoot($this->open($user, $project)->assertOk()->getContent());
 
-            $this->assertSame(\App\Services\Design\Assistant\AssistantStatus::enabled(), $boot['flags']['ai'], "key '{$key}', enabled ".var_export($enabled, true));
+            $this->assertSame(AssistantStatus::enabled(), $boot['flags']['ai'], "key '{$key}', enabled ".var_export($enabled, true));
             $this->assertSame($key !== '' && $enabled, $boot['flags']['ai']);
         }
     }
