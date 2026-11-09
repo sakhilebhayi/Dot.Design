@@ -6,9 +6,9 @@ use App\Models\BrandKit;
 use App\Models\DesignProject;
 use App\Models\DesignUserSetting;
 use App\Models\User;
-use App\Support\Ui\Icons;
 use App\Services\Integrations\Contracts\FileVault;
 use App\Services\Integrations\Contracts\NotificationGateway;
+use App\Support\Ui\Icons;
 use Illuminate\Support\Facades\Route;
 
 /**
