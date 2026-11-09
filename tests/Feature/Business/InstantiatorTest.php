@@ -196,6 +196,25 @@ class InstantiatorTest extends TestCase
         $this->assertSame([], $off->readable, 'without brand colours nothing is changed');
     }
 
+    public function test_the_page_background_follows_a_recoloured_full_page_backdrop(): void
+    {
+        $user = $this->workspaceUser();
+        $this->actingAs($user);
+        $kit = $this->makeKit($user);
+        $this->seedFixtureTemplates();
+        $template = $this->fixtureTemplate();
+
+        $on = app(TemplateInstantiator::class)->instantiate($template, ['business_name' => 'X'], $kit, true, $user);
+        $backdrop = collect($on->pages[0]['elements'])->firstWhere('name', 'Backdrop');
+
+        $this->assertSame('#0057b8', $backdrop['fill']);
+        $this->assertSame('#0057b8', $on->pages[0]['background']['color'], 'the Page inspector must show the colour the page is drawn in, not the template palette underneath the backdrop');
+
+        $off = app(TemplateInstantiator::class)->instantiate($template, ['business_name' => 'X'], $kit, false, $user);
+        $this->assertSame('#ff3b30', $off->pages[0]['background']['color'], 'without the brand the page keeps the template colour');
+        $this->assertSame('solid', $on->pages[0]['background']['type']);
+    }
+
     public function test_a_kit_with_no_value_for_a_token_leaves_the_element_alone_and_warns(): void
     {
         $user = $this->workspaceUser();
