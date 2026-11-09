@@ -63,3 +63,36 @@ export function firstDiff(a, b, path = '') {
     }
     return `${path}: ${JSON.stringify(a)} vs ${JSON.stringify(b)}`;
 }
+
+/** Download dialog: pick a format tab (and size chip), press Prepare file, press Download. Returns the Playwright Download. */
+export async function exportFile(page, { tab = 'PNG', scale = null, pages = null } = {}) {
+    if (!(await page.locator('.out-adv').count())) await page.getByRole('button', { name: 'Download', exact: true }).first().click();
+    await page.locator('.out-adv').evaluate((e) => { e.open = true; });
+    await page.getByRole('tab', { name: tab, exact: true }).click();
+    if (scale) {
+        // size chips are toggles (picking several makes a ZIP): leave exactly the wanted one pressed
+        for (const n of [scale, ...[1, 2, 3, 4].filter((x) => x !== scale)]) {
+            const chip = page.getByRole('button', { name: `${n}x`, exact: true });
+            const on = (await chip.getAttribute('aria-pressed')) === 'true';
+            if (on !== (n === scale)) await chip.click();
+        }
+    }
+    await page.getByRole('button', { name: 'Prepare file' }).click();
+    const btn = page.locator('.out-actions button', { hasText: /^Download \(/ });
+    await btn.waitFor({ timeout: 90000 });
+    const dl = page.waitForEvent('download');
+    await btn.click();
+    return dl;
+}
+
+export async function closeDialog(page) {
+    await page.keyboard.press('Escape');
+    await page.waitForTimeout(200);
+}
+
+/** Types into a labelled inspector number field and commits it. */
+export async function setField(page, label, value) {
+    const f = page.getByLabel(label, { exact: true }).first();
+    await f.fill(String(value));
+    await f.press('Enter');
+}
