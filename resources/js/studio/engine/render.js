@@ -18,6 +18,7 @@ import { elementMatrix, round3 } from '../doc/geometry.js';
 import { parsePath } from '../doc/path.js';
 import { isGroup } from '../doc/tree.js';
 import { builtinRegistry } from './icons.js';
+import { DEFAULT_TONES, editorFill, glyphColour, glyphNodes, placeholderTones, previewArt } from './placeholder-art.js';
 import { createStubMeasurer, layoutText } from './text-layout.js';
 
 export const SVG_NS = 'http://www.w3.org/2000/svg';
@@ -110,6 +111,10 @@ function defaultCtx(opts = {}) {
         assetSize: opts.assetSize || (() => null),
         fonts: opts.fonts || null,
         forExport: !!opts.forExport,
+        // How an EMPTY picture slot is drawn: 'editor' (tonal prompt with a glyph and the words), 'preview' (abstract tonal
+        // art, template cards only) or 'none'. Unset: the editor look on screen, nothing in an export.
+        placeholderStyle: opts.placeholderStyle || (opts.forExport ? 'none' : 'editor'),
+        tones: null,
         idPrefix: opts.idPrefix || 'dd-',
         editingId: opts.editingId || null,
     };
@@ -294,23 +299,57 @@ function maskKind(el) {
     return { ellipse: 'ellipse', star: 'star', triangle: 'triangle', hexagon: 'polygon', rounded: 'rect', none: 'rect' }[el.mask] || 'rect';
 }
 
+/** An empty picture slot: the designed editor prompt, or abstract tonal art for template cards (see placeholder-art.js). */
+function emptySlotNodes(el, ctx, defs) {
+    const w = el.width;
+    const hh = el.height;
+    const tones = (ctx.tones && ctx.tones.get(el.id)) || DEFAULT_TONES;
+    // The empty slot follows the slot's own shape (ellipse, star, rounded...) and its label scales with the slot;
+    // a slot too small to hold the words shows only the dashed shape, never text spilling out of it.
+    const r = el.mask === 'rounded' || el.radius ? Math.min(el.radius || Math.min(w, hh) * 0.12, w / 2, hh / 2) : Math.min(8, w / 8, hh / 8);
+    const short = Math.min(w, hh);
+    if (ctx.placeholderStyle === 'preview') {
+        const clipId = uid(ctx, 'pc', el.id);
+        defs.push(h('clipPath', { id: clipId }, [outline(maskKind(el), { x: 0, y: 0, w, h: hh }, { radius: r, points: 5, inner: 0.5, sides: 6 })]));
+        const art = previewArt(h, el, tones, (k) => uid(ctx, k, el.id));
+        defs.push(...art.defs);
+        return [h('g', { 'clip-path': urlRef(clipId), 'data-placeholder-art': art.scene }, art.nodes)];
+    }
+    const fill = editorFill(tones);
+    const gid = uid(ctx, 'pf', el.id);
+    defs.push(h('linearGradient', { id: gid, gradientUnits: 'userSpaceOnUse', x1: 0, y1: 0, x2: w * 0.4, y2: hh }, [
+        h('stop', { offset: 0, 'stop-color': fill.from }), h('stop', { offset: 1, 'stop-color': fill.to }),
+    ]));
+    const stack = ctx.fonts && ctx.fonts.stackFor ? ctx.fonts.stackFor('inter') : 'sans-serif';
+    const label = el.asset_id ? 'Picture unavailable' : 'Add a picture';
+    const fs = Math.min(Math.max(28, short * 0.06), w / 9, hh / 4, (w * 0.86) / (label.length * 0.56));
+    const fits = fs >= 7;
+    const shape = outline(maskKind(el), { x: 0.75, y: 0.75, w: Math.max(1, w - 1.5), h: Math.max(1, hh - 1.5) }, { radius: r, points: 5, inner: 0.5, sides: 6 }, { fill: urlRef(gid), stroke: fill.edge, 'stroke-width': 1.5, 'stroke-dasharray': '6 5', 'data-placeholder': '1' });
+    const ink = glyphColour(tones);
+    const nodes = [shape];
+    // the glyph, centred above the label (or alone when the words do not fit)
+    const g = Math.min(Math.max(short * 0.24, 0), 132, w * 0.5);
+    if (g >= 26) {
+        const gh = g * 0.8;
+        const gap = fits ? fs * 0.9 : 0;
+        const total = gh + (fits ? gap + fs : 0);
+        const top = (hh - total) / 2;
+        nodes.push(h('g', { transform: `translate(${fmt(w / 2 - g / 2)} ${fmt(top)})`, opacity: 0.8, 'data-placeholder-glyph': '1' }, glyphNodes(h, g, ink)));
+        if (fits) nodes.push(h('text', { x: w / 2, y: top + gh + gap + fs * 0.8, 'text-anchor': 'middle', 'font-size': fs, 'font-family': stack, fill: ink }, [label]));
+        return nodes;
+    }
+    if (fits) nodes.push(h('text', { x: w / 2, y: hh / 2 + fs * 0.35, 'text-anchor': 'middle', 'font-size': fs, 'font-family': stack, fill: ink }, [label]));
+    return nodes;
+}
+
 function imageNodes(el, ctx, defs) {
     const w = el.width;
     const hh = el.height;
     const id = el.id;
     const url = el.asset_id !== null && el.asset_id !== undefined ? safeUrl(ctx.assetUrl(el.asset_id)) : null;
     if (!url) {
-        if (ctx.forExport) return [];
-        // The empty slot follows the slot's own shape (ellipse, star, rounded...) and its label scales with the slot;
-        // a slot too small to hold the words shows only the dashed shape, never text spilling out of it.
-        const r = el.mask === 'rounded' || el.radius ? Math.min(el.radius || Math.min(w, hh) * 0.12, w / 2, hh / 2) : Math.min(8, w / 8, hh / 8);
-        const short = Math.min(w, hh);
-        const stack = ctx.fonts && ctx.fonts.stackFor ? ctx.fonts.stackFor('inter') : 'sans-serif';
-        const label = el.asset_id ? 'Picture unavailable' : 'Add a picture';
-        const fs = Math.min(Math.max(28, short * 0.06), w / 9, hh / 4, (w * 0.86) / (label.length * 0.56));
-        const fits = fs >= 7;
-        const shape = outline(maskKind(el), { x: 0.75, y: 0.75, w: Math.max(1, w - 1.5), h: Math.max(1, hh - 1.5) }, { radius: r, points: 5, inner: 0.5, sides: 6 }, { fill: '#f4f4f5', stroke: '#a1a1aa', 'stroke-width': 1.5, 'stroke-dasharray': '6 5', 'data-placeholder': '1' });
-        return fits ? [shape, h('text', { x: w / 2, y: hh / 2 + fs * 0.35, 'text-anchor': 'middle', 'font-size': fs, 'font-family': stack, fill: '#71717a' }, [label])] : [shape];
+        if (ctx.placeholderStyle === 'none') return [];
+        return emptySlotNodes(el, ctx, defs);
     }
     const radius = el.mask === 'rounded' && !el.radius ? Math.min(w, hh) * 0.12 : el.radius;
     const box = { x: 0, y: 0, w, h: hh };
@@ -472,6 +511,7 @@ export function backgroundNodes(page, ctx) {
 /** Full SVG document string for a page (export, thumbnails, share view). */
 export function renderPageToSvgString(page, opts = {}) {
     const ctx = defaultCtx(opts);
+    if (ctx.placeholderStyle !== 'none') ctx.tones = placeholderTones(page);
     const scale = opts.scale || 1;
     const bg = backgroundNodes(page, ctx);
     const body = (page.elements || []).map((e) => elementVNode(e, ctx)).filter(Boolean);
@@ -506,6 +546,8 @@ export function createLiveRenderer(svgRoot, options = {}) {
     const doc = options.document || svgRoot.ownerDocument;
     const ctx = defaultCtx(options);
     ctx.forExport = false;
+    ctx.placeholderStyle = options.placeholderStyle || 'editor';
+    let toneSig = '';
     const stats = { created: 0, rebuilt: 0, framed: 0, removed: 0, touched: [] };
     let epoch = 0;
     let bgLayer = null;
@@ -638,6 +680,10 @@ export function createLiveRenderer(svgRoot, options = {}) {
             setAttr(svgRoot, 'width', fmt(page.width));
             setAttr(svgRoot, 'height', fmt(page.height));
             setAttr(svgRoot, 'viewBox', `0 0 ${fmt(page.width)} ${fmt(page.height)}`);
+            // placeholder tones follow the page: when they change, every empty slot is drawn again
+            ctx.tones = placeholderTones(page);
+            const sig = Array.from(ctx.tones, ([id, t]) => `${id}:${t.base}:${t.accent}`).join('|');
+            if (sig !== toneSig) { toneSig = sig; epoch += 1; }
             renderBackground(page);
             syncList(elLayer, page.elements, rootCache);
             pageRef = page;

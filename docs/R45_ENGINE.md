@@ -74,3 +74,10 @@ Latin-subset fonts only (other scripts use the fallback stack). Textarea wrappin
 ## Library QA changes to the engine (wave 3, D-1602 and D-1603)
 - `layoutText`, `autoFit: 'shrink'`: a word wider than the box counts as not fitting (the text gets smaller instead of breaking mid-word); the fitted size is floored to a quarter point and compared with a 0.01 tolerance. `autoFit: 'none'` and `'grow'` behave as before. Tests: `tests/js/text-layout.test.mjs`.
 - Empty picture slot (the screen placeholder, never exported): follows the image's `mask` and `radius`, scales with the slot and omits its label when it would not fit. Tests: `tests/js/render.test.mjs`.
+
+## Empty picture slots (R-45 polish, D-2200)
+`renderPageToSvgString(page, {placeholderStyle})` and `createLiveRenderer(svg, {placeholderStyle})` choose how an image element with `asset_id: null` is drawn:
+- `'editor'` (the default on screen): a soft tonal gradient from the page's own colours, the dashed outline that follows the slot's mask, a thin picture glyph and the words "Add a picture" (the words only when they fit; a slot of 56 px or less keeps only the outline). Tones are taken from the page by `placeholderTones(page)` in `engine/placeholder-art.js`: the shape directly behind the slot, the page colour and the most colourful large fill. The live renderer redraws every empty slot when those tones change.
+- `'preview'`: abstract tonal art (dunes and a sun, overlapping blobs or flowing ribbons) with no words, clipped to the slot's shape, generated from the slot id, size and tones so the same slot always draws the same picture. For template cards and the template list only. It is not content and not a photograph.
+- `'none'` (the default when `forExport` is true): nothing is drawn. Exports, thumbnails and the share viewer are unchanged.
+Tests: `tests/js/render-placeholder.test.mjs` (9), plus the existing `render.test.mjs` and `createflow-templates.test.mjs`. Callers changed: `pages/lib/preview.js` (`buildPreviewSvg`) and `ui/template-render.js` pass `placeholderStyle: 'preview'` for cards and the editor's Templates tab.

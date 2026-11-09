@@ -1,4 +1,4 @@
-// Dev-only contact sheet drawn by the REAL engine renderer. Query: ?data=<file in /data>&h=<page height px>&placeholders=0|1
+// Dev-only contact sheet drawn by the REAL engine renderer. Query: ?data=<file in /data>&h=<page height px>&placeholders=0|1|preview
 //   &only=a,b (slugs) &page=2 (only that page index, 1-based) &w=<max width>
 import './harness.mjs';
 
@@ -8,7 +8,8 @@ const H = Number(q.get('h') || 520);
 const MAXW = Number(q.get('w') || 760);
 const only = (q.get('only') || '').split(',').filter(Boolean);
 const pageOnly = Number(q.get('page') || 0);
-const placeholders = q.get('placeholders') !== '0';
+const placeholders = q.get('placeholders') !== '0' && q.get('placeholders') !== 'preview';
+const placeholderStyle = q.get('placeholders') === 'preview' ? 'preview' : undefined;
 const grid = document.getElementById('grid');
 const list = data.filter((t) => !only.length || only.includes(t.slug) || only.some((o) => t.slug.includes(o)));
 await window.QA.ensure(list.flatMap((t) => t.pages));
@@ -23,7 +24,7 @@ for (const tpl of list) {
         cap.style.setProperty('--cap', Math.round(w * scale) + 'px');
         fig.append(cap);
         const holder = document.createElement('div');
-        holder.innerHTML = window.QA.svg(page, { width: tpl.width, height: tpl.height }, { placeholders });
+        holder.innerHTML = window.QA.svg(page, { width: tpl.width, height: tpl.height }, { placeholders, placeholderStyle });
         const svg = holder.firstElementChild;
         svg.setAttribute('width', Math.round(w * scale)); svg.setAttribute('height', Math.round(h * scale));
         svg.dataset.slug = tpl.slug;

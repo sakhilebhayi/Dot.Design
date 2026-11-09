@@ -15,7 +15,7 @@ export function buildPreviewSvg(template, pageIndex, { measure, fonts, icons, as
     const pages = Array.isArray(template.pages) ? template.pages : [];
     const raw = pages[pageIndex] || pages[0] || { elements: [] };
     const page = normalisePage(raw, { project: { width: template.width || 1080, height: template.height || 1080 } });
-    return renderPageToSvgString(page, { measure: measure || createStubMeasurer(), fonts, icons, assetUrl, assetSize, forExport: true });
+    return renderPageToSvgString(page, { measure: measure || createStubMeasurer(), fonts, icons, assetUrl, assetSize, forExport: true, placeholderStyle: 'preview' });
 }
 
 /** Put an SVG string on the page as real SVG nodes (so the page's loaded fonts apply), scaled to its box. */
