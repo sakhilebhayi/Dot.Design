@@ -40,7 +40,10 @@ trait ScopesToWorkspace
         $teamIds = static::workspaceTeamIds($user);
 
         $builder->where(function (Builder $query) use ($table, $user, $teamIds): void {
-            $query->where("$table.user_id", $user->id);
+            // What a person made for a workspace belongs to the workspace: once they leave it, it is gone from their view
+            // (R-45 security S-3). Rows with no workspace (personal, or the workspace was deleted) stay with their maker.
+            $query->where(fn (Builder $mine) => $mine->where("$table.user_id", $user->id)
+                ->where(fn (Builder $own) => $own->whereNull("$table.team_id")->when($teamIds !== [], fn (Builder $b) => $b->orWhereIn("$table.team_id", $teamIds))));
 
             if ($teamIds !== []) {
                 $query->orWhereIn("$table.team_id", $teamIds);

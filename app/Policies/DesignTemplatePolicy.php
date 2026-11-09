@@ -13,8 +13,11 @@ class DesignTemplatePolicy
             return $template->isPublished() || (bool) $user->is_platform_operator;
         }
 
-        return $user->id === $template->user_id
-            || ($template->source === 'team' && $this->isMember($user, $template));
+        if ($template->source === 'team' && $template->team_id !== null) {
+            return $this->isMember($user, $template);
+        }
+
+        return $user->id === $template->user_id;
     }
 
     /** Operators curate the shipped library; people edit what they saved; team members need the update capability. */
@@ -24,7 +27,7 @@ class DesignTemplatePolicy
             return (bool) $user->is_platform_operator;
         }
 
-        return $user->id === $template->user_id || $this->can($user, $template, 'update');
+        return $this->mayChange($user, $template, 'update');
     }
 
     public function delete(User $user, DesignTemplate $template): bool
@@ -33,7 +36,17 @@ class DesignTemplatePolicy
             return (bool) $user->is_platform_operator;
         }
 
-        return $user->id === $template->user_id || $this->can($user, $template, 'delete');
+        return $this->mayChange($user, $template, 'delete');
+    }
+
+    /** Your own saved template is yours. A workspace template is changed by members whose role allows it; its maker who has since left, or lost the right, has no say. */
+    private function mayChange(User $user, DesignTemplate $template, string $permission): bool
+    {
+        if ($template->source !== 'team' || $template->team_id === null) {
+            return $user->id === $template->user_id;
+        }
+
+        return $this->can($user, $template, $permission) || ($user->id === $template->user_id && $this->can($user, $template, 'update'));
     }
 
     private function isMember(User $user, DesignTemplate $template): bool

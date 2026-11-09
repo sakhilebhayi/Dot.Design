@@ -13,7 +13,7 @@ class BrandKitPolicy
 {
     public function view(User $user, BrandKit $kit): bool
     {
-        return $this->owns($user, $kit) || $this->isMember($user, $kit);
+        return $kit->team_id === null ? $this->owns($user, $kit) : $this->isMember($user, $kit);
     }
 
     public function create(User $user): bool
@@ -21,14 +21,19 @@ class BrandKitPolicy
         return true;
     }
 
+    /** A personal kit is its maker's. A workspace kit is changed by members whose role allows it, whoever made it (a person who left, or was demoted, has no say). */
     public function update(User $user, BrandKit $kit): bool
     {
-        return $this->owns($user, $kit) || $this->can($user, $kit, 'update');
+        return $kit->team_id === null ? $this->owns($user, $kit) : $this->can($user, $kit, 'update');
     }
 
     public function delete(User $user, BrandKit $kit): bool
     {
-        return $this->owns($user, $kit) || $this->can($user, $kit, 'delete');
+        if ($kit->team_id === null) {
+            return $this->owns($user, $kit);
+        }
+
+        return $this->can($user, $kit, 'delete') || ($this->owns($user, $kit) && $this->can($user, $kit, 'update'));
     }
 
     private function owns(User $user, BrandKit $kit): bool

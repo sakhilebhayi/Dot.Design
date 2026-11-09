@@ -209,6 +209,11 @@ final class DesignAccess
 
     public static function canDeleteAsset(User $user, DesignAsset $asset): bool
     {
+        // A workspace brand asset belongs to the workspace, not to whoever uploaded it: only its owners and admins decide.
+        if ($asset->license === 'brand' && $asset->team_id !== null) {
+            return in_array(self::teamRole($user->id, (int) $asset->team_id), ['owner', 'admin'], true);
+        }
+
         if ((int) $asset->user_id === $user->id) {
             return true;
         }

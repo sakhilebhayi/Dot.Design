@@ -60,7 +60,10 @@ class DesignTemplate extends Model
                 if (! $operator) {
                     $curated->where("$table.status", 'published');
                 }
-            })->orWhere("$table.user_id", $user->id);
+            })->orWhere(fn (Builder $mine) => $mine->where("$table.user_id", $user->id)
+                // A template saved for the workspace belongs to it: its maker loses it on leaving (R-45 security S-3).
+                ->where(fn (Builder $own) => $own->where("$table.source", '!=', 'team')->orWhereNull("$table.team_id")
+                    ->when($teamIds !== [], fn (Builder $b) => $b->orWhereIn("$table.team_id", $teamIds))));
 
             if ($teamIds !== []) {
                 $query->orWhere(fn (Builder $team) => $team->where("$table.source", 'team')->whereIn("$table.team_id", $teamIds));
