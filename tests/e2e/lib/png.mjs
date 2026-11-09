@@ -71,3 +71,10 @@ export const photoPng = () => encodePng(PHOTO.w, PHOTO.h, (x, y) => (Math.abs(x 
 // The fixture logo: dark green rounded-ish block with an orange bar (two distinct brand colours).
 export const LOGO = { w: 240, h: 90, bg: [20, 90, 60], bar: [240, 120, 20] };
 export const logoPng = () => encodePng(LOGO.w, LOGO.h, (x, y) => (y > 60 && y < 80 && x > 20 && x < 220 ? LOGO.bar : LOGO.bg));
+
+/** A noisy PNG (does not compress), about `mb` megabytes. Deterministic. */
+export function noisePng(side, seed = 7) {
+    let s = seed;
+    const rnd = () => { s = (s * 1664525 + 1013904223) >>> 0; return s; };
+    return encodePng(side, side, () => { const v = rnd(); return [v & 255, (v >> 8) & 255, (v >> 16) & 255]; });
+}

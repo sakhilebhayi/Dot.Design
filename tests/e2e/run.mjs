@@ -95,6 +95,7 @@ async function main() {
         DB_CONNECTION: 'sqlite', DB_DATABASE: db, DB_FOREIGN_KEYS: 'true',
         SESSION_DRIVER: 'file', SESSION_LIFETIME: '120', CACHE_STORE: 'file', QUEUE_CONNECTION: 'sync', LOG_CHANNEL: 'single',
         LARAVEL_STORAGE_PATH: storage, FILESYSTEM_DISK: 'local',
+        PHP_INI_SCAN_DIR: `:${join(root, 'tests/e2e/support/ini')}`,
         MAIL_MAILER: 'log', BROADCAST_CONNECTION: 'log', LOG_LEVEL: 'debug',
         ANTHROPIC_API_KEY: '', DESIGN_AI_ENABLED: 'true', AI_IMAGE_DRIVER: 'mock',
         DESIGN_FILES_ENABLED: 'false',
