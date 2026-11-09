@@ -137,7 +137,8 @@ class ContentSecurityPolicyPagesTest extends TestCase
         $this->assertContains('design.projects.show', $without, 'the editor must never get unsafe-eval');
         $this->assertContains('share', $without, 'the share viewer must never get unsafe-eval');
         $this->assertContains('welcome', $without);
-        $this->assertContains('dashboard', $withEval, 'the signed-in shell ships Livewire, so it is the one place unsafe-eval is allowed');
+        // The signed-in layout no longer loads Livewire (perf, D-15xx): only the Jetstream account and team pages inject it.
+        $this->assertContains('dashboard', $without, 'the Home page ships no Livewire, so it never gets unsafe-eval');
     }
 
     public function test_livewires_own_tags_carry_the_nonce(): void
