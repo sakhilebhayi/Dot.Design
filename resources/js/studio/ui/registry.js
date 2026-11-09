@@ -72,6 +72,11 @@ export function createRegistry() {
             return sections.filter((s) => (!mode || s.modes.includes(mode)) && (!s.when || safe(() => s.when(selection, ctx)))).sort(byOrder);
         },
         dialog(id) { return dialogs.get(id) || null; },
+        /** By-id lookups (any mode, no `when`): lazy module stubs use them to find the real registration that replaced them. */
+        leftTab(id) { return tabs.find((t) => t.id === id) || null; },
+        topbarAction(id) { return actions.find((a) => a.id === id) || null; },
+        inspectorSection(id) { return sections.find((s) => s.id === id) || null; },
+        shortcut(id) { return shortcuts.find((s) => s.id === id) || null; },
         contextActions(selection, ctx) { return contextActions.filter((a) => !a.when || safe(() => a.when(selection, ctx))).sort(byOrder); },
         shortcuts() { return shortcuts.slice().sort(byOrder); },
         counts() { return { tabs: tabs.length, actions: actions.length, sections: sections.length, dialogs: dialogs.size, context: contextActions.length, shortcuts: shortcuts.length }; },

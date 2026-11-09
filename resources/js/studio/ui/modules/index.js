@@ -1,11 +1,8 @@
-import * as assistant from './assistant.js';
-import * as exportModule from './export.js';
-import * as animate from './animate.js';
-import * as resize from './resize.js';
-import * as share from './share.js';
-import * as comments from './comments.js';
-import * as versions from './versions.js';
-import * as review from './review.js';
-import * as files from './files.js';
+import { stubModules } from './deferred.js';
 
-export const modules = [assistant, exportModule, animate, resize, share, comments, versions, review, files];
+// The feature modules are separate chunks (ui/modules/deferred.js): the editor entry holds only their stubs, and each real
+// module loads in idle time or on first use. The real modules are unchanged: assistant, export, animate, resize, share,
+// comments, versions, review, files (each still exports `register(ctx)`).
+export const modules = stubModules();
+
+export { warmModules } from './deferred.js';
