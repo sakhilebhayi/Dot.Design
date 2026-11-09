@@ -372,7 +372,7 @@ class DesignAssetUploadTest extends TestCase
     public function test_guests_cannot_upload(): void
     {
         $this->postJson(route('design.assets.store'), ['file' => UploadedFile::fake()->createWithContent('a.png', $this->imageBytes('png'))])
-            ->assertRedirect(route('login'));
+            ->assertUnauthorized(); // R-45: JSON callers on design/* get 401 (they used to get a redirect to the login page)
 
         $this->assertSame([], $this->storedFiles());
     }
