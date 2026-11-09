@@ -1,59 +1,28 @@
-<x-guest-layout>
+<x-guest-layout :title="__('Create account')">
     <x-authentication-card>
-        <x-slot name="logo">
-            <x-authentication-card-logo />
-        </x-slot>
+        <h1 class="lt-auth__title">{{ __('Create your account') }}</h1>
+        <x-validation-errors />
 
-        <x-validation-errors class="mb-4" />
-
-        <form method="POST" action="{{ route('register') }}">
+        <form method="POST" action="{{ route('register') }}" class="lt-form">
             @csrf
-
-            <div>
-                <x-label for="name" value="{{ __('Name') }}" />
-                <x-input id="name" class="block mt-1 w-full" type="text" name="name" :value="old('name')" required autofocus autocomplete="name" />
-            </div>
-
-            <div class="mt-4">
-                <x-label for="email" value="{{ __('Email') }}" />
-                <x-input id="email" class="block mt-1 w-full" type="email" name="email" :value="old('email')" required autocomplete="username" />
-            </div>
-
-            <div class="mt-4">
-                <x-label for="password" value="{{ __('Password') }}" />
-                <x-input id="password" class="block mt-1 w-full" type="password" name="password" required autocomplete="new-password" />
-            </div>
-
-            <div class="mt-4">
-                <x-label for="password_confirmation" value="{{ __('Confirm Password') }}" />
-                <x-input id="password_confirmation" class="block mt-1 w-full" type="password" name="password_confirmation" required autocomplete="new-password" />
-            </div>
+            <x-ds.field :label="__('Name')" name="name" type="text" required autofocus autocomplete="name" />
+            <x-ds.field :label="__('Email')" name="email" type="email" required autocomplete="username" />
+            <x-ds.field :label="__('Password')" name="password" type="password" required autocomplete="new-password" />
+            <x-ds.field :label="__('Confirm password')" name="password_confirmation" type="password" required autocomplete="new-password" />
 
             @if (Laravel\Jetstream\Jetstream::hasTermsAndPrivacyPolicyFeature())
-                <div class="mt-4">
-                    <x-label for="terms">
-                        <div class="flex items-center">
-                            <x-checkbox name="terms" id="terms" required />
-
-                            <div class="ms-2">
-                                {!! __('I agree to the :terms_of_service and :privacy_policy', [
-                                        'terms_of_service' => '<a target="_blank" href="'.route('terms.show').'" class="underline text-sm text-[var(--ink-soft)] hover:text-[var(--ink)] rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--gold)]">'.__('Terms of Service').'</a>',
-                                        'privacy_policy' => '<a target="_blank" href="'.route('policy.show').'" class="underline text-sm text-[var(--ink-soft)] hover:text-[var(--ink)] rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--gold)]">'.__('Privacy Policy').'</a>',
-                                ]) !!}
-                            </div>
-                        </div>
-                    </x-label>
-                </div>
+                <label for="terms" class="lt-check" style="align-items: flex-start;">
+                    <input type="checkbox" name="terms" id="terms" required>
+                    <span>{!! __('I agree to the :terms_of_service and :privacy_policy', [
+                        'terms_of_service' => '<a target="_blank" href="'.route('terms.show').'">'.__('Terms of Service').'</a>',
+                        'privacy_policy' => '<a target="_blank" href="'.route('policy.show').'">'.__('Privacy Policy').'</a>',
+                    ]) !!}</span>
+                </label>
             @endif
 
-            <div class="flex items-center justify-end mt-4">
-                <a class="underline text-sm text-[var(--ink-soft)] hover:text-[var(--ink)] rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--gold)]" href="{{ route('login') }}">
-                    {{ __('Already registered?') }}
-                </a>
-
-                <x-button class="ms-4">
-                    {{ __('Register') }}
-                </x-button>
+            <div class="lt-form__actions" style="justify-content: space-between;">
+                <x-ds.button type="submit">{{ __('Create account') }}</x-ds.button>
+                <a href="{{ route('login') }}" class="lt-small">{{ __('Already have an account?') }}</a>
             </div>
         </form>
     </x-authentication-card>

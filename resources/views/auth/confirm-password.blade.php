@@ -1,28 +1,15 @@
-<x-guest-layout>
+<x-guest-layout :title="__('Confirm password')">
     <x-authentication-card>
-        <x-slot name="logo">
-            <x-authentication-card-logo />
-        </x-slot>
-
-        <div class="mb-4 text-sm text-[var(--ink-soft)]">
-            {{ __('This is a secure area of the application. Please confirm your password before continuing.') }}
+        <div style="display: grid; gap: var(--lt-space-2);">
+            <h1 class="lt-auth__title">{{ __('Confirm your password') }}</h1>
+            <p class="lt-small">{{ __('This is a secure area. Please confirm your password before continuing.') }}</p>
         </div>
+        <x-validation-errors />
 
-        <x-validation-errors class="mb-4" />
-
-        <form method="POST" action="{{ route('password.confirm') }}">
+        <form method="POST" action="{{ route('password.confirm') }}" class="lt-form">
             @csrf
-
-            <div>
-                <x-label for="password" value="{{ __('Password') }}" />
-                <x-input id="password" class="block mt-1 w-full" type="password" name="password" required autocomplete="current-password" autofocus />
-            </div>
-
-            <div class="flex justify-end mt-4">
-                <x-button class="ms-4">
-                    {{ __('Confirm') }}
-                </x-button>
-            </div>
+            <x-ds.field :label="__('Password')" name="password" type="password" required autofocus autocomplete="current-password" />
+            <div class="lt-form__actions"><x-ds.button type="submit">{{ __('Confirm') }}</x-ds.button></div>
         </form>
     </x-authentication-card>
 </x-guest-layout>

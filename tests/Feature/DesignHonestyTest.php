@@ -59,10 +59,11 @@ class DesignHonestyTest extends TestCase
     public function test_dashboard_has_no_dead_links_or_upload_claims(): void
     {
         $user = User::factory()->withPersonalTeam()->create();
+        DesignProject::create(['user_id' => $user->id, 'name' => 'Honesty Poster', 'type' => 'poster', 'width' => 297, 'height' => 420, 'unit' => 'mm']);
 
         $html = $this->actingAs($user)->get('/dashboard')->assertOk()->getContent();
 
-        // "View all" on the projects section is a real link; the two that
+        // "View all designs" on the recent section is a real link (only shown when there is something to view); the two that
         // pointed at href="#" (assets, AI log) are gone.
         $this->assertStringNotContainsString('View log', $html);
         $this->assertStringNotContainsString('No assets uploaded yet', $html);

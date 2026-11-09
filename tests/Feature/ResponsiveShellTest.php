@@ -12,9 +12,8 @@ use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
 
 /**
- * The app shell collapses to an off-canvas drawer below 860px (see the
- * "Responsive shell" note in README.md). These tests pin the markup hooks the
- * behaviour hangs off, on the real routes; they say nothing about pixels.
+ * The Light Table shell: a labelled rail on desktop, a slim top bar plus a bottom tab bar on phones, "More" in a sheet.
+ * These tests pin the landmarks and hooks the CSS and behaviours hang off, on the real routes; they say nothing about pixels.
  */
 class ResponsiveShellTest extends TestCase
 {
@@ -41,61 +40,51 @@ class ResponsiveShellTest extends TestCase
     }
 
     #[DataProvider('shellRoutes')]
-    public function test_every_shell_page_carries_the_drawer_hooks(string $routeName): void
+    public function test_every_shell_page_carries_the_shell_landmarks(string $routeName): void
     {
         $response = $this->actingAs($this->signedInUser())->get(route($routeName));
 
         $response->assertOk();
         $this->assertShellHooks($response);
+        // exactly one h1 per page
+        $this->assertSame(1, substr_count($response->getContent(), '<h1'), "{$routeName} should have exactly one h1");
     }
 
     public function test_the_viewport_meta_is_present(): void
     {
         $response = $this->actingAs($this->signedInUser())->get(route('dashboard'));
 
-        $response->assertSee('<meta name="viewport" content="width=device-width, initial-scale=1" />', false);
+        $response->assertSee('<meta name="viewport" content="width=device-width, initial-scale=1">', false);
     }
 
-    public function test_the_menu_button_is_labelled_and_wired_to_the_drawer(): void
+    public function test_the_skip_link_targets_the_main_landmark(): void
     {
         $html = $this->actingAs($this->signedInUser())->get(route('dashboard'))->getContent();
 
-        $this->assertSame(1, preg_match('#<button\b[^>]*\bid="shell-menu-button"[^>]*>(.*?)</button>#s', $html, $button));
-
-        $this->assertStringContainsString('aria-expanded="false"', $button[0]);
-        $this->assertStringContainsString('aria-controls="shell-drawer"', $button[0]);
-        // A visible text label, not an icon alone.
-        $this->assertStringContainsString('Menu', trim(strip_tags($button[1])));
+        $this->assertStringContainsString('<a class="lt-skip" href="#main">', $html);
+        $this->assertStringContainsString('<main id="main"', $html);
     }
 
-    public function test_the_drawer_is_the_sidebar_and_holds_the_navigation_and_a_close_button(): void
+    public function test_the_rail_holds_the_main_navigation_and_the_current_page_is_marked(): void
+    {
+        $html = $this->actingAs($this->signedInUser())->get(route('design.projects.index'))->getContent();
+
+        $this->assertSame(1, preg_match('#<aside\b[^>]*class="lt-rail"[^>]*>(.*?)</aside>#s', $html, $rail));
+        $this->assertStringContainsString('aria-label="Main"', $rail[1]);
+        $this->assertStringContainsString(route('design.projects.index'), $rail[1]);
+        $this->assertMatchesRegularExpression('#<a href="'.preg_quote(route('design.projects.index'), '#').'" class="lt-nav__item"\\s+aria-current="page"#', $rail[1]);
+    }
+
+    public function test_the_phone_tab_bar_and_more_sheet_exist_with_labelled_controls(): void
     {
         $html = $this->actingAs($this->signedInUser())->get(route('dashboard'))->getContent();
 
-        $this->assertSame(1, preg_match('#<aside\b[^>]*\bid="shell-drawer"[^>]*>(.*?)</aside>#s', $html, $drawer));
-
-        $this->assertStringContainsString('aria-label=', $drawer[0]);
-        $this->assertStringContainsString('class="sidebar-nav"', $drawer[1]);
-        $this->assertStringContainsString('id="shell-drawer-close"', $drawer[1]);
-        $this->assertStringContainsString(route('design.projects.index'), $drawer[1]);
-    }
-
-    public function test_the_content_and_top_bar_go_inert_behind_the_open_drawer(): void
-    {
-        $response = $this->actingAs($this->signedInUser())->get(route('dashboard'));
-
-        $response->assertSee(':inert="navOpen"', false);
-        $response->assertSee('class="content-wrap" :inert="navOpen"', false);
-    }
-
-    public function test_the_single_breakpoint_is_used_consistently(): void
-    {
-        $html = $this->actingAs($this->signedInUser())->get(route('dashboard'))->getContent();
-
-        $this->assertStringContainsString('max-width: 859.98px', $html);
-        $this->assertStringContainsString('(min-width: 860px)', $html);
-        $this->assertStringNotContainsString('max-width: 860px', $html);
-        $this->assertStringNotContainsString('max-width:860px', $html);
+        $this->assertStringContainsString('class="lt-tabbar" aria-label="Main"', $html);
+        $this->assertStringContainsString('data-lt-dialog-open="more-sheet"', $html);
+        $this->assertStringContainsString('<dialog id="more-sheet"', $html);
+        // the theme controls are real buttons with names
+        $this->assertStringContainsString('data-theme-set="dark"', $html);
+        $this->assertStringContainsString('aria-label="Switch theme"', $html);
     }
 
     public function test_the_token_set_consumers_table_scrolls_inside_its_own_wrapper(): void
@@ -133,12 +122,13 @@ class ResponsiveShellTest extends TestCase
         ]);
 
         $index = $this->actingAs($user)->get(route('design.projects.index'));
-        $index->assertSee('class="page"', false);
-        $index->assertSee('class="card-grid"', false);
+        $index->assertSee('class="lt-page"', false);
+        $index->assertSee('class="lt-contacts lt-views"', false);
         $index->assertSee('Responsive Poster Fixture');
 
         $create = $this->actingAs($user)->get(route('design.projects.create'));
-        $create->assertSee('class="form-grid-3"', false);
+        $create->assertSee('lt-page lt-page--narrow', false);
+        $create->assertSee('form-grid-3', false);
     }
 
     public function test_the_component_pages_use_the_page_wrapper(): void
@@ -155,7 +145,7 @@ class ResponsiveShellTest extends TestCase
 
         $this->actingAs($user)->get(route('design-system.components.show', $component))
             ->assertOk()
-            ->assertSee('class="page"', false)
+            ->assertSee('class="lt-page', false)
             ->assertSee('Responsive Why Block');
     }
 
@@ -171,10 +161,9 @@ class ResponsiveShellTest extends TestCase
 
     private function assertShellHooks(TestResponse $response): void
     {
-        $response->assertSee('id="shell-menu-button"', false);
-        $response->assertSee('aria-controls="shell-drawer"', false);
-        $response->assertSee('id="shell-drawer"', false);
-        $response->assertSee('id="shell-backdrop"', false);
-        $response->assertSee('class="topbar"', false);
+        $response->assertSee('class="lt-rail"', false);
+        $response->assertSee('class="lt-topbar"', false);
+        $response->assertSee('class="lt-tabbar"', false);
+        $response->assertSee('id="main"', false);
     }
 }

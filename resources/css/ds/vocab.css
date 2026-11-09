@@ -1,0 +1,76 @@
+/*
+ * The Light Table vocabulary: crop marks, ruled strip, proof frame, swatch chip, registration target.
+ * These are the structural marks of the product. They are used where they carry meaning (a design's trim edge,
+ * a measured strip, a colour), never as wallpaper.
+ */
+
+/* crop marks: four L ticks outside the trim corners of any positioned box */
+.lt-crop { position: relative; --crop-len: 10px; --crop-gap: 6px; --crop-c: var(--lt-ink-3); }
+.lt-crop::after {
+    content: "";
+    position: absolute;
+    inset: calc(-1 * (var(--crop-gap) + var(--crop-len)));
+    pointer-events: none;
+    --o: calc(var(--crop-gap) + var(--crop-len));
+    background:
+        linear-gradient(var(--crop-c), var(--crop-c)) left 0 top var(--o) / var(--crop-len) 1px no-repeat,
+        linear-gradient(var(--crop-c), var(--crop-c)) left var(--o) top 0 / 1px var(--crop-len) no-repeat,
+        linear-gradient(var(--crop-c), var(--crop-c)) right 0 top var(--o) / var(--crop-len) 1px no-repeat,
+        linear-gradient(var(--crop-c), var(--crop-c)) right var(--o) top 0 / 1px var(--crop-len) no-repeat,
+        linear-gradient(var(--crop-c), var(--crop-c)) left 0 bottom var(--o) / var(--crop-len) 1px no-repeat,
+        linear-gradient(var(--crop-c), var(--crop-c)) left var(--o) bottom 0 / 1px var(--crop-len) no-repeat,
+        linear-gradient(var(--crop-c), var(--crop-c)) right 0 bottom var(--o) / var(--crop-len) 1px no-repeat,
+        linear-gradient(var(--crop-c), var(--crop-c)) right var(--o) bottom 0 / 1px var(--crop-len) no-repeat;
+    transition: inset var(--lt-dur-2) var(--lt-ease), opacity var(--lt-dur-2) var(--lt-ease);
+}
+.lt-crop--quiet::after { opacity: 0.55; }
+.lt-crop--link:hover::after, .lt-crop--link:focus-visible::after, a:hover > .lt-crop--link::after, a:focus-visible > .lt-crop--link::after { opacity: 1; --crop-c: var(--lt-ink); inset: calc(-1 * (var(--crop-gap) + var(--crop-len) + 3px)); }
+
+/* ruled strip: a measured edge. Ticks every 8px, a longer tick every 40px. Drawn as a mask so it takes the theme's ink. */
+.lt-ruler { position: relative; height: 9px; color: var(--lt-ink-3); background: currentColor; opacity: 0.85;
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='9' viewBox='0 0 40 9'%3E%3Cpath d='M0 0.5H40M0.5 0V9M8.5 0V4M16.5 0V4M24.5 0V4M32.5 0V4' stroke='black' stroke-width='1' fill='none'/%3E%3C/svg%3E") left top / 40px 9px repeat-x; mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='9' viewBox='0 0 40 9'%3E%3Cpath d='M0 0.5H40M0.5 0V9M8.5 0V4M16.5 0V4M24.5 0V4M32.5 0V4' stroke='black' stroke-width='1' fill='none'/%3E%3C/svg%3E") left top / 40px 9px repeat-x; }
+
+/* proof frame: a design page at its true aspect ratio. --w and --h are set inline from real data. */
+.lt-frame {
+    position: relative;
+    display: block;
+    aspect-ratio: var(--w, 4) / var(--h, 3);
+    background: var(--lt-paper);
+    box-shadow: 0 0 0 1px var(--lt-rule-strong), 0 1px 2px rgb(14 18 22 / 0.1), 0 6px 16px -8px rgb(14 18 22 / 0.25);
+    color: var(--lt-paper-ink);
+}
+.lt-frame > img { width: 100%; height: 100%; object-fit: cover; }
+.lt-frame--blank::before {
+    content: ""; position: absolute; inset: 0;
+    background: repeating-linear-gradient(135deg, transparent 0 7px, rgb(20 24 28 / 0.045) 7px 8px);
+}
+.lt-stage { background: var(--lt-stage); }
+
+/* swatch chip: a colour (or a font, or a format) as a small unit on a strip */
+.lt-swatch { display: inline-flex; align-items: center; gap: var(--lt-space-2); min-width: 0; font-size: var(--lt-text-sm); }
+.lt-swatch__chip { flex: none; width: 1.25rem; height: 1.25rem; border-radius: var(--lt-radius-1); background: var(--c, var(--lt-panel-sunk)); box-shadow: inset 0 0 0 1px rgb(20 24 28 / 0.22), 0 0 0 1px rgb(255 255 255 / 0.04); }
+.lt-swatch--lg .lt-swatch__chip { width: 2.5rem; height: 2.5rem; border-radius: var(--lt-radius-2); }
+.lt-swatch__label { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lt-swatch__value { font-family: var(--lt-font-mono); font-size: var(--lt-text-xs); color: var(--lt-ink-3); }
+
+/* a strip: chips laid on a ruled edge */
+.lt-strip { display: flex; flex-wrap: wrap; align-items: stretch; gap: var(--lt-space-3); }
+.lt-strip--scroll { flex-wrap: nowrap; overflow-x: auto; padding-bottom: var(--lt-space-2); scroll-snap-type: x proximity; }
+.lt-strip--scroll > * { scroll-snap-align: start; flex: none; }
+
+/* format chip: the true proportion of a format, drawn, with its name and size */
+.lt-fchip {
+    display: grid; grid-template-rows: 3.25rem auto; justify-items: start; align-content: start; gap: var(--lt-space-2);
+    width: 7.25rem; min-width: 0; padding: var(--lt-space-3) var(--lt-space-3) var(--lt-space-3);
+    background: transparent; border-radius: var(--lt-radius-2); text-align: left;
+    transition: background-color var(--lt-dur-1) var(--lt-ease);
+}
+.lt-fchip:hover { background: var(--lt-panel-sunk); }
+.lt-fchip:active { background: var(--lt-rule); }
+.lt-fchip__frame { align-self: end; background: var(--lt-paper); box-shadow: 0 0 0 1px var(--lt-edge); max-width: 100%; max-height: 3.25rem; aspect-ratio: var(--w) / var(--h); height: calc(3.25rem * min(1, var(--h) / var(--w))); transition: transform var(--lt-dur-2) var(--lt-ease); }
+.lt-fchip:hover .lt-fchip__frame { transform: translateY(-2px); }
+.lt-fchip__name { display: block; font-weight: 600; font-size: var(--lt-text-sm); line-height: 1.2; }
+.lt-fchip__size { display: block; font-size: var(--lt-text-xs); color: var(--lt-ink-3); font-variant-numeric: tabular-nums; margin-top: 2px; }
+
+/* registration target: used once per screen at most (empty states, the landing table) */
+.lt-reg { width: 2.25rem; height: 2.25rem; color: var(--lt-ink-3); }
