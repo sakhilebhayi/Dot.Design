@@ -30,6 +30,8 @@ use Illuminate\Support\Str;
  */
 trait SecurityWorld
 {
+    protected bool $securityDiskFaked = false;
+
     /** The marker planted in every name, label and note of a tenant. */
     protected function sentinel(string $label): string
     {
@@ -43,7 +45,11 @@ trait SecurityWorld
      */
     protected function tenant(string $label, string $visibility = 'team'): array
     {
-        Storage::fake('design_assets');
+        // Fake the private disk once per test: faking again would wipe the files of tenants made earlier in the same test.
+        if (! ($this->securityDiskFaked ?? false)) {
+            Storage::fake('design_assets');
+            $this->securityDiskFaked = true;
+        }
 
         $mark = $this->sentinel($label);
         $w = $this->workspace();
