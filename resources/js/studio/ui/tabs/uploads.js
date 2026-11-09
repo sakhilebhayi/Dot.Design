@@ -35,9 +35,12 @@ export function mountUploads(el, ctx) {
     drop.addEventListener('click', () => choose.click());
 
     async function addFiles(files) {
+        // The banner says "Pick a picture for this spot": the first picture that arrives fills that spot, the rest go to the library.
+        let target = ctx.uploadTarget || (ctx.selection().emptyPicture ? ctx.selection().el.id : null);
         for (const f of files.slice(0, 10)) {
             const r = await ctx.uploads.upload(f);
-            if (!r.ok) ctx.toast(r.message, { kind: 'bad' });
+            if (!r.ok) { ctx.toast(r.message, { kind: 'bad' }); continue; }
+            if (target) { ctx.uploads.usePicture(r.asset, { targetId: target }); target = null; }
         }
     }
 
