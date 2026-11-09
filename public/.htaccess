@@ -1,3 +1,38 @@
+# ---------------------------------------------------------------------------------------------------------------
+# R-45 perf: compression and caching for static files (measured in docs/R45_PERF.md). Every block is guarded, so a
+# host without the module just skips it. A shared cPanel host normally has all four modules; if compression or the
+# cache headers are missing in the response headers of /build/assets/*.js, ask the host to enable
+# mod_deflate (and mod_brotli), mod_headers and mod_expires, or set the same rules in cPanel "Optimize Website".
+# ---------------------------------------------------------------------------------------------------------------
+
+# Text is sent compressed: brotli when the browser accepts it, gzip otherwise (the first filter that applies wins).
+<IfModule mod_brotli.c>
+    AddOutputFilterByType BROTLI_COMPRESS text/html text/css text/plain text/xml application/javascript text/javascript application/json application/manifest+json image/svg+xml
+</IfModule>
+<IfModule mod_deflate.c>
+    AddOutputFilterByType DEFLATE text/html text/css text/plain text/xml application/javascript text/javascript application/json application/manifest+json image/svg+xml
+</IfModule>
+
+# Vite writes a content hash into every built file name (main-DzKbthGx.js), so a changed file is a new URL and the
+# old one can be kept for a year. Fonts and images are immutable too: a replaced font is shipped under a new name.
+<IfModule mod_headers.c>
+    <FilesMatch "^.+-[A-Za-z0-9_-]{8}\.(js|css|woff2|png|jpg|jpeg|webp|avif|svg|gif)$">
+        Header set Cache-Control "public, max-age=31536000, immutable"
+    </FilesMatch>
+    <FilesMatch "\.(woff2|woff|ttf|otf)$">
+        Header set Cache-Control "public, max-age=31536000, immutable"
+    </FilesMatch>
+    # Small unhashed files (theme script, icons, logos): revalidate cheaply rather than guess.
+    <FilesMatch "\.(png|ico|svg|webp|jpg|jpeg)$">
+        Header setifempty Cache-Control "public, max-age=86400"
+    </FilesMatch>
+</IfModule>
+<IfModule mod_expires.c>
+    ExpiresActive On
+    ExpiresByType font/woff2 "access plus 1 year"
+    ExpiresByType application/font-woff2 "access plus 1 year"
+</IfModule>
+
 <IfModule mod_rewrite.c>
     <IfModule mod_negotiation.c>
         Options -MultiViews -Indexes
