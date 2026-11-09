@@ -328,6 +328,8 @@
 .st-right .st-panel__close { display: none; }
 .st-stage .studio-page { background: var(--lt-paper); box-shadow: 0 0 0 1px rgb(20 24 28 / 0.22), 0 2px 4px rgb(14 18 22 / 0.12), 0 14px 32px -12px rgb(14 18 22 / 0.35); }
 .st-stage.is-repositioning { cursor: grab; }
+/* a viewer sees the page as it will print: no "Add a picture" hints for spots nobody filled */
+.st-stage[data-readonly="1"] [data-placeholder], .st-stage[data-readonly="1"] [data-placeholder] + text { display: none; }
 .st-crops.lt-crop { position: absolute; left: var(--x, 0); top: var(--y, 0); width: var(--w, 0); height: var(--h, 0); pointer-events: none; --crop-c: var(--lt-ink-3); --crop-gap: 8px; --crop-len: 12px; opacity: 0.75; }
 .st-grid { position: absolute; left: var(--x, 0); top: var(--y, 0); width: var(--w, 0); height: var(--h, 0); pointer-events: none; background-image: linear-gradient(to right, rgb(10 106 145 / 0.22) 1px, transparent 1px), linear-gradient(to bottom, rgb(10 106 145 / 0.22) 1px, transparent 1px); background-size: var(--gs, 20px) var(--gs, 20px); }
 .st-ruler { position: absolute; background: var(--lt-panel); z-index: 3; touch-action: none; }
@@ -338,6 +340,8 @@
 .st-guideline[data-axis="y"] { left: 0; right: 0; top: var(--gy, 0); height: 1px; }
 .st-guideline[data-axis="x"] { top: 0; bottom: 0; left: var(--gx, 0); width: 1px; }
 .st-empty { position: absolute; left: var(--cx, 50%); top: var(--cy, 50%); transform: translate(-50%, -50%); width: min(22rem, calc(100% - 2rem)); padding: var(--lt-space-4); background: var(--lt-panel); border-radius: var(--lt-radius-3); box-shadow: 0 0 0 1px var(--lt-rule-strong), var(--lt-shadow-float); display: grid; gap: var(--lt-space-2); z-index: 4; }
+.st-empty { pointer-events: none; }
+.st-empty button { pointer-events: auto; }
 .st-empty__title { font-family: var(--lt-font-display); font-weight: 600; font-size: var(--lt-text-lg); }
 .st-empty__text { color: var(--lt-ink-2); font-size: var(--lt-text-sm); }
 .st-empty__actions { display: flex; flex-wrap: wrap; gap: var(--lt-space-2); margin-top: var(--lt-space-1); }

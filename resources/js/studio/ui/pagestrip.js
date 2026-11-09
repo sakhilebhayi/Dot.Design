@@ -71,7 +71,7 @@ export function createPageStrip(ctx, shell) {
     function startDrag(e, li, page, index) {
         if (ctx.readOnly || e.button !== 0) return;
         drag = { li, page, index, x: e.clientX, y: e.clientY, active: false, target: index };
-        li.setPointerCapture(e.pointerId);
+        e.currentTarget.setPointerCapture(e.pointerId);
     }
     function moveDrag(e) {
         if (!drag) return;

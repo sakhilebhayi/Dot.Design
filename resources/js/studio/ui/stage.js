@@ -120,9 +120,9 @@ export function createStage(ctx, shell) {
     const hasFiles = (dt) => dt && Array.from(dt.types || []).includes('Files');
     const hasPayload = (dt) => dt && Array.from(dt.types || []).includes(DND_TYPE);
     if (!ctx.readOnly) {
-        root.addEventListener('dragover', (e) => { if (hasFiles(e.dataTransfer) || hasPayload(e.dataTransfer)) { e.preventDefault(); e.dataTransfer.dropEffect = 'copy'; dropHint.hidden = !hasFiles(e.dataTransfer); } });
-        root.addEventListener('dragleave', (e) => { if (!root.contains(e.relatedTarget)) dropHint.hidden = true; });
-        root.addEventListener('drop', async (e) => {
+        wrap.addEventListener('dragover', (e) => { if (hasFiles(e.dataTransfer) || hasPayload(e.dataTransfer)) { e.preventDefault(); e.dataTransfer.dropEffect = 'copy'; dropHint.hidden = !hasFiles(e.dataTransfer); } });
+        wrap.addEventListener('dragleave', (e) => { if (!wrap.contains(e.relatedTarget)) dropHint.hidden = true; });
+        wrap.addEventListener('drop', async (e) => {
             dropHint.hidden = true; document.body.classList.remove('st-dragging');
             const point = pointFromEvent(e);
             if (hasFiles(e.dataTransfer)) { e.preventDefault(); ctx.placeFiles(Array.from(e.dataTransfer.files), { point }); return; }
@@ -143,7 +143,7 @@ export function createStage(ctx, shell) {
         window.addEventListener('drop', () => document.body.classList.remove('st-dragging'));
         // a file dropped outside the canvas must not make the browser open it
         window.addEventListener('dragover', (e) => { if (hasFiles(e.dataTransfer)) e.preventDefault(); });
-        window.addEventListener('drop', (e) => { if (hasFiles(e.dataTransfer) && !root.contains(e.target)) e.preventDefault(); });
+        window.addEventListener('drop', (e) => { if (hasFiles(e.dataTransfer) && !wrap.contains(e.target)) e.preventDefault(); });
     }
 
     // ---- read-only viewers: pan and zoom without the editing input -------------------------------

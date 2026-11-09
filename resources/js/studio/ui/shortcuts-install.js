@@ -65,7 +65,7 @@ export function shortcutSheet(ctx) {
             const groups = new Map();
             for (const s of ctx.registry.shortcuts()) { if (s.hidden) continue; const g = s.group || 'More'; if (!groups.has(g)) groups.set(g, []); groups.get(g).push(s); }
             const caps = (spec) => {
-                const parts = /(^|\+)(mod|shift|alt)(\+|$)/.test(spec) && !/hold/.test(spec) ? labelFor(spec, mac) : String(spec).split('+');
+                const parts = String(spec).length === 1 ? [String(spec)] : /(^|\+)(mod|shift|alt)(\+|$)/.test(spec) && !/hold/.test(spec) ? labelFor(spec, mac) : String(spec).split('+');
                 return h('span', { class: 'st-keys' }, ...parts.map((p) => h('kbd', { class: 'lt-kbd', text: p })));
             };
             const section = (title, rows) => h('section', { class: 'st-keysec' }, h('h3', { class: 'st-group__title', text: title }), h('dl', { class: 'st-keylist' }, ...rows.flatMap(([label, spec]) => [h('dt', { text: label }), h('dd', {}, caps(spec))])));
