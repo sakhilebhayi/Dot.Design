@@ -169,6 +169,15 @@ class DocumentSanitiserTest extends TestCase
         $this->assertSame('<b>bold</b>', $e['name'], 'a name is plain data; control characters are removed');
     }
 
+    public function test_bind_keys_follow_the_schema_pattern_including_digits(): void
+    {
+        $this->assertSame('photo_1', $this->first($this->text(['bind' => 'photo_1']))['bind']);
+        $this->assertSame('business_name', $this->first($this->text(['bind' => 'business_name']))['bind']);
+        $this->assertNull($this->first($this->text(['bind' => '1photo']))['bind']);
+        $this->assertNull($this->first($this->text(['bind' => 'Photo']))['bind']);
+        $this->assertNull($this->first($this->text(['bind' => str_repeat('a', 41)]))['bind']);
+    }
+
     public function test_text_is_stored_as_data_and_control_characters_are_removed(): void
     {
         $e = $this->first($this->text(['text' => "Line one\r\nLine two\x00\x08<script>alert(1)</script>\ttab"]));

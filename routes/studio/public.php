@@ -12,7 +12,8 @@ use Illuminate\View\Middleware\ShareErrorsFromSession;
 // no CSRF token to check, so the comment POST is exempt. The link itself is the credential; every route re-validates it.
 Route::prefix('s/{token}')
     ->name('studio.share.')
-    ->where(['token' => '[A-Za-z0-9]{1,64}', 'asset' => '[0-9]{1,18}'])
+    // Any segment reaches the controller, which answers every unusable token with the same 404 page.
+    ->where(['token' => '[^/]+', 'asset' => '[0-9]{1,18}'])
     ->withoutMiddleware([
         'Illuminate\Foundation\Http\Middleware\PreventRequestForgery',
         'Illuminate\Foundation\Http\Middleware\VerifyCsrfToken',
