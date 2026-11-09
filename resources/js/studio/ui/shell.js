@@ -35,7 +35,8 @@ export function createShell(ctx) {
     const rightTabs = h('div', { class: 'st-right__tabs', attrs: { role: 'tablist', 'aria-label': 'Panel' } });
     const rightBody = h('div', { class: 'st-panel__body st-right__body' });
     const right = h('aside', { class: 'st-right', attrs: { 'aria-label': 'Properties' } }, rightHead, rightTabs, rightBody);
-    const pages = h('footer', { class: 'st-pages', attrs: { 'aria-label': 'Pages' } });
+    // A named navigation, not a footer: it moves between the pages of the design.
+    const pages = h('nav', { class: 'st-pages', attrs: { 'aria-label': 'Pages of this design' } });
     const banner = h('div', { class: 'st-banner', hidden: true });
     root.append(top, banner, rail, left, stageWrap, right, pages);
 

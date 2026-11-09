@@ -320,7 +320,7 @@ button.st-layer__fold:hover { color: var(--lt-ink); background: var(--lt-panel);
 .st-layer:hover .st-layer__tools, .st-layer:focus-within .st-layer__tools, .st-layer.is-hidden .st-layer__tools, .st-layer.is-locked .st-layer__tools { opacity: 1; }
 .st-layer__btn { width: 1.75rem; height: 1.75rem; display: grid; place-items: center; color: var(--lt-ink-3); border-radius: var(--lt-radius-1); }
 .st-layer__btn:hover { color: var(--lt-ink); background: var(--lt-panel); }
-.st-layer__btn[aria-pressed="false"]:not(:hover) { opacity: 0.55; }
+@media (pointer: coarse) { .st-layer__tools { opacity: 1; } }  /* no hover on touch: the eye and the lock are always there */
 .st-layer__rename { min-height: 1.75rem; padding: 0 var(--lt-space-2); font-size: var(--lt-text-sm); }
 .st-layers.is-sorting { cursor: grabbing; }
 .st-layer.is-drop-before::before, .st-layer.is-drop-end::after { content: ""; position: absolute; left: 0; right: 0; height: 2px; background: var(--lt-accent); }

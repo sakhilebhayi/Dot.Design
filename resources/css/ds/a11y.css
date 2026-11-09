@@ -15,14 +15,77 @@
         outline-offset: 2px;
     }
     /* controls that were outlined by a shadow now get an outline of their own (inset, so nothing moves) */
-    .lt-btn, .lt-icon-btn, .lt-chip, .lt-tag, .lt-fchip, .lt-seg, .lt-seg > button, .lt-input, .lt-select, .lt-textarea,
-    .st-save, .st-tog, .st-seg__btn, .st-rail__tab, .st-float__btn, .st-top__btn, .st-sw, .st-colourbtn, .st-fontbtn,
-    .st-page__btn, .st-pageadd, .st-layer__btn, .st-pop, .st-coach, .st-toast, .cb-btn, .cb-chip, .cb-tag, .cb-input,
-    .out-format, .as-tag, .br-pair, .br-fontopt, .cf-pick, .cf-asset {
+    .lt-btn, .lt-icon-btn, .lt-input, .lt-select, .lt-textarea, .st-rail__tab, .st-float__btn, .st-top__btn, .st-page__btn, .st-pageadd, .st-layer__btn, .st-toast, .st-num__input, .st-select,
+    .cb-btn, .cb-chip, .cb-tag, .cb-input, .out-format,
+    .as-bulk .lt-btn,
+    .as-folder,
+    .as-tag,
+    .as-tile__check,
+    .as-tile__pic,
+    .asst-page,
+    .asst-swatch,
+    .br-ba__page,
+    .br-cand__chip,
+    .br-chip__sw,
+    .br-color__well,
+    .br-contrast__sample,
+    .br-fontopt,
+    .br-img__pic,
+    .br-kit__chips,
+    .br-logo__tile,
+    .br-pair,
+    .br-prev__frame,
+    .br-read,
+    .br-specimen,
+    .br-style__preview,
+    .br-switch__track,
+    .br-word,
+    .cf-asset,
+    .cf-pcard--blank .cf-pcard__frame,
+    .cf-picker__frame,
+    .cf-size,
+    .cf-size__frame,
+    .cf-steps__mark,
+    .cf-style,
+    .cf-swatch,
+    .cf-switch__input,
+    .lp-mode,
+    .lp-slot,
+    .lt-asset,
+    .lt-contact__actions .lt-icon-btn,
+    .lt-fchip__frame,
+    .lt-menu__panel,
+    .lt-panel--bordered,
+    .lt-swatch__chip,
+    .lt-tokenview__color,
+    .lt-workspace__btn,
+    .out-format__frame,
+    .out-preview__frame,
+    .st-choice,
+    .st-coach,
+    .st-colourbtn,
+    .st-colourbtn__chip,
+    .st-empty,
+    .st-fontbtn,
+    .st-fontchip,
+    .st-gradchip,
+    .st-gradient__bar,
+    .st-lib,
+    .st-num,
+    .st-pair,
+    .st-pic,
+    .st-preset,
+    .st-reposition,
+    .st-save,
+    .st-sw--more,
+    .st-tile,
+    .st-tog,
+    .st-unitbtn,
+    .sv-gone {
         outline: 1px solid ButtonText;
         outline-offset: -1px;
     }
-    :focus-visible { outline: 2px solid Highlight; outline-offset: 2px; }
+    :focus-visible:focus-visible:focus-visible { outline: 2px solid Highlight; outline-offset: 2px; } /* tripled: it must beat every outline above */
     /* selected, pressed, current and on: Highlight with its own text colour (not colour alone: the aria state is also in the name) */
     [aria-pressed="true"], [aria-current="true"], [aria-selected="true"], [aria-checked="true"], .is-on, .is-current, .is-active {
         forced-color-adjust: none;
@@ -31,6 +94,7 @@
         outline: 2px solid HighlightText;
         outline-offset: -3px;
     }
+    [aria-pressed="true"] *, [aria-current="true"] *, [aria-selected="true"] *, [aria-checked="true"] *, .is-on *, .is-current * { color: inherit; }
     [aria-pressed="true"] svg, [aria-current="true"] svg, [aria-selected="true"] svg, [aria-checked="true"] svg, .is-on svg, .is-current svg { color: HighlightText; }
     [disabled], [aria-disabled="true"] { color: GrayText; outline-color: GrayText; }
     /* status chips carry text and an icon already; keep a visible edge and say the state in system colours */
@@ -71,15 +135,18 @@
 .lt-prose th, .lt-prose td { overflow-wrap: anywhere; }
 .lt-seg.br-seg-wrap { flex-wrap: wrap; max-width: 100%; }
 
+/* Always: nothing a person has to hit is smaller than 24 px (WCAG 2.2, 2.5.8). `:root` lifts these above the component and page
+   rules that load after this file. */
+:root .lt-section__head a, :root .lt-contact__name, :root .ac-row__link, :root .lt-form__actions a { display: inline-flex; align-items: center; min-height: 1.5rem; }
+
 @media (pointer: coarse), (max-width: 47.99rem) {
-    .lt-btn, .lt-btn--sm, .lt-chip, .lt-seg > button, .lt-icon-btn, .lt-brand, .as-folder__btn, .st-name, .st-save { min-height: 2.75rem; }
-    .lt-icon-btn, .st-save, .cf-flip .lt-icon-btn { min-width: 2.75rem; }
-    .lt-input[type="color"], .br-addcolor input { min-width: 2.75rem; min-height: 2.75rem; }
-    .br-word button, .br-word .lt-icon-btn { min-width: 2.75rem; min-height: 2.75rem; }
+    :root .lt-btn, :root .lt-btn--sm, :root .lt-chip, :root .lt-seg > button, :root .lt-icon-btn, :root .lt-brand, :root .as-folder__btn,
+    :root .st-name, :root .st-save, :root .sv-tool, :root .lt-input, :root .lt-select { min-height: 2.75rem; }
+    :root .lt-icon-btn, :root .st-save, :root .lt-chip, :root .sv-tool { min-width: 2.75rem; }
+    :root .br-color__hex { min-width: 6rem; }
+    :root .br-word button, :root .br-word .lt-icon-btn { min-width: 2.75rem; min-height: 2.75rem; }
     /* plain text links that stand alone on a line are controls too */
-    .lt-section__head a, .lt-contact__name, .ac-row__link, .lt-small > a, .lt-field > a, .lt-form a:not(.lt-btn), .lt-form__actions a, .lp-nav__link, .lp-foot a, footer a { display: inline-flex; align-items: center; min-height: 2.75rem; }
-    .lt-contact__name, .ac-row__link { display: flex; }
-    .lp-foot a, .lp-nav__link { min-width: 2.75rem; justify-content: center; }
+    :root .lt-section__head a, :root .lt-contact__name, :root .ac-row__link, :root .lt-small > a, :root .lt-field > a, :root .lt-form a:not(.lt-btn), :root .lt-form__actions a, :root .lp-nav__link, :root .lp-foot a, :root footer a { display: inline-flex; align-items: center; min-height: 2.75rem; }
+    :root .lt-contact__name, :root .ac-row__link { display: flex; }
+    :root .lp-foot a, :root .lp-nav__link { min-width: 2.75rem; justify-content: center; }
 }
-/* Even with a mouse: nothing a person has to hit is smaller than 24 px (WCAG 2.2, 2.5.8). */
-.lt-section__head a, .lt-contact__name, .ac-row__link { min-height: 1.5rem; }
