@@ -1,0 +1,78 @@
+/*
+ * LEGACY BRIDGE. Not part of the design system.
+ *
+ * The old editor (resources/views/design/projects/show.blade.php + public/js/design-editor/) and a few older pages were written
+ * against the previous dark theme: custom properties --bg --text --text-dim --text-faint --border --bg-input, the classes
+ * .dot-btn .dot-btn-primary .dot-btn-ghost .dot-card .dot-input .dot-badge .ed-*, and Material Symbols ligature text
+ * (.material-symbols-rounded). This file maps those names onto The Light Table tokens so they stay usable and legible in both themes.
+ *
+ * Wave 2 replaces the editor page; when it does, delete this file, legacy-icons.css and resources/js/ds/legacy-icons.js, and
+ * remove their three imports (docs/R45_DS.md lists the checks).
+ */
+:root, :root[data-theme="dark"] {
+    --bg: var(--lt-panel);
+    --bg-raised: var(--lt-panel);
+    --bg-card: var(--lt-panel);
+    --bg-input: var(--lt-panel-sunk);
+    --text: var(--lt-ink);
+    --text-muted: var(--lt-ink-2);
+    --text-dim: var(--lt-ink-3);
+    --text-faint: var(--lt-ink-3);
+    --border: var(--lt-rule-strong);
+    --border-strong: var(--lt-edge);
+    --accent: var(--lt-accent);
+    --topbar-h: var(--lt-bar-h);
+    --sidebar-w: var(--lt-rail-w);
+    /* names the old welcome/auth/error pages used */
+    --paper: var(--lt-panel); --panel: var(--lt-panel); --ink: var(--lt-ink); --ink-soft: var(--lt-ink-2); --line: var(--lt-rule);
+    --gold: var(--lt-accent); --gold-bright: var(--lt-accent); --periwinkle: var(--lt-accent); --periwinkle-soft: var(--lt-accent);
+    --font-display: var(--lt-font-display); --font-body: var(--lt-font-ui); --font-mono: var(--lt-font-mono); --ease-out: var(--lt-ease);
+    --chrome: var(--lt-ground); --chrome-soft: var(--lt-panel-sunk);
+}
+
+.dot-card { background: var(--lt-panel); border: 1px solid var(--lt-rule-strong); border-radius: var(--lt-radius-2); }
+.dot-card:hover { border-color: var(--lt-edge); }
+.dot-input { width: 100%; min-height: 2.25rem; padding: 0.4rem 0.75rem; font-size: var(--lt-text-md); color: var(--lt-ink); background: var(--lt-panel); border: 1px solid var(--lt-edge); border-radius: var(--lt-radius-2); transition: border-color var(--lt-dur-1) var(--lt-ease), box-shadow var(--lt-dur-1) var(--lt-ease); outline: none; }
+.dot-input:focus { border-color: var(--lt-focus); box-shadow: 0 0 0 3px color-mix(in srgb, var(--lt-focus) 28%, transparent); }
+select.dot-input { appearance: auto; }
+.dot-btn { display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.45rem 0.9rem; min-height: 2.25rem; border-radius: var(--lt-radius-2); font-size: var(--lt-text-md); font-weight: 600; cursor: pointer; border: 1px solid transparent; text-decoration: none; transition: background-color var(--lt-dur-1) var(--lt-ease), border-color var(--lt-dur-1) var(--lt-ease); }
+.dot-btn-primary { background: var(--lt-btn); color: var(--lt-btn-ink); }
+.dot-btn-primary:hover { background: var(--lt-btn-hover); }
+.dot-btn-ghost { background: var(--lt-panel); color: var(--lt-ink); border-color: var(--lt-edge); }
+.dot-btn-ghost:hover { background: var(--lt-panel-sunk); }
+.dot-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+.dot-badge { display: inline-flex; align-items: center; padding: 0.1rem 0.5rem; border-radius: var(--lt-radius-1); font-size: var(--lt-text-xs); font-weight: 600; background: var(--lt-panel-sunk); color: var(--lt-ink-2); }
+.dot-badge-accent { background: var(--lt-accent-wash); color: var(--lt-accent); }
+.metric-val { font-variant-numeric: tabular-nums; font-weight: 600; }
+.skeleton { background: linear-gradient(100deg, var(--lt-rule) 30%, var(--lt-panel-sunk) 50%, var(--lt-rule) 70%); background-size: 200% 100%; animation: lt-sheen 1.4s linear infinite; border-radius: var(--lt-radius-1); }
+
+/* old page scaffolding */
+.page { padding: 2rem var(--lt-gutter) 3rem; max-width: 1400px; }
+.page--narrow { max-width: 640px; }
+.page-head { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem 1rem; flex-wrap: wrap; margin-bottom: 2rem; }
+.page-head > div { min-width: 0; }
+.card-grid { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fill, minmax(min(var(--card-min, 260px), 100%), 1fr)); }
+.kpi-grid { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr)); margin-bottom: 2.25rem; }
+.form-grid-3 { display: grid; gap: 1rem; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.table-scroll { overflow-x: auto; max-width: 100%; }
+.table-scroll > table { min-width: 34rem; }
+.table-scroll:focus-visible { outline: 2px solid var(--lt-focus); outline-offset: 2px; }
+@media (max-width: 559.98px) { .form-grid-3 { grid-template-columns: minmax(0, 1fr); } .page { padding: 1.25rem var(--lt-space-4) 2rem; } }
+@media (max-width: 859.98px) { .page .dot-btn { min-height: 44px; justify-content: center; } .page .dot-input { min-height: 44px; font-size: 16px; } }
+
+/* editor bits */
+.ed-label { font-size: var(--lt-text-xs); font-weight: 700; color: var(--lt-ink-3); margin-bottom: 0.6rem; }
+.ed-root .ed-handle { border-color: var(--lt-accent); background: #fff; }
+.ed-root [role="button"][tabindex]:focus-visible { outline: 2px solid var(--lt-focus) !important; }
+
+/* Material Symbols ligature text -> mask icons. The text is kept (screen readers, Alpine x-text) but clipped away. */
+.material-symbols-rounded {
+    --lt-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.75'%3E%3Ccircle cx='12' cy='12' r='4'/%3E%3C/svg%3E");
+    display: inline-block; width: 1em; height: 1em; font-size: 1.25rem; line-height: 1; overflow: hidden; text-indent: 200%; white-space: nowrap;
+    font-style: normal; user-select: none; vertical-align: middle; flex: none; color: inherit;
+}
+.material-symbols-rounded[data-i] {
+    background-color: currentColor;
+    -webkit-mask: var(--lt-mask) center / contain no-repeat;
+    mask: var(--lt-mask) center / contain no-repeat;
+}

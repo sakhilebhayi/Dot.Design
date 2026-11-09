@@ -1,33 +1,21 @@
-<x-guest-layout>
+<x-guest-layout :title="__('Reset password')">
     <x-authentication-card>
-        <x-slot name="logo">
-            <x-authentication-card-logo />
-        </x-slot>
-
-        <div class="mb-4 text-sm text-[var(--ink-soft)]">
-            {{ __('Forgot your password? No problem. Just let us know your email address and we will email you a password reset link that will allow you to choose a new one.') }}
+        <div style="display: grid; gap: var(--lt-space-2);">
+            <h1 class="lt-auth__title">{{ __('Reset your password') }}</h1>
+            <p class="lt-small">{{ __('Enter your email address and we will send you a link to choose a new password.') }}</p>
         </div>
 
         @session('status')
-            <div class="mb-4 font-medium text-sm text-[var(--gold)]">
-                {{ $value }}
-            </div>
+            <div class="lt-alert lt-alert--ok" role="status"><x-ds.icon name="circle-check" /><div>{{ $value }}</div></div>
         @endsession
+        <x-validation-errors />
 
-        <x-validation-errors class="mb-4" />
-
-        <form method="POST" action="{{ route('password.email') }}">
+        <form method="POST" action="{{ route('password.email') }}" class="lt-form">
             @csrf
-
-            <div class="block">
-                <x-label for="email" value="{{ __('Email') }}" />
-                <x-input id="email" class="block mt-1 w-full" type="email" name="email" :value="old('email')" required autofocus autocomplete="username" />
-            </div>
-
-            <div class="flex items-center justify-end mt-4">
-                <x-button>
-                    {{ __('Email Password Reset Link') }}
-                </x-button>
+            <x-ds.field :label="__('Email')" name="email" type="email" required autofocus autocomplete="username" />
+            <div class="lt-form__actions">
+                <x-ds.button type="submit">{{ __('Email me a reset link') }}</x-ds.button>
+                <x-ds.button :href="route('login')" variant="ghost">{{ __('Back to log in') }}</x-ds.button>
             </div>
         </form>
     </x-authentication-card>

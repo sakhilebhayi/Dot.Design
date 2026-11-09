@@ -28,7 +28,7 @@ class DashboardTest extends TestCase
         $response = $this->actingAs($user)->get('/dashboard');
 
         $response->assertOk();
-        $response->assertSee('Design Studio Dashboard');
+        $response->assertSee('Start something');
     }
 
     public function test_authenticated_user_with_no_team_can_still_view_the_dashboard(): void
@@ -46,7 +46,7 @@ class DashboardTest extends TestCase
         $response = $this->actingAs($user)->get('/dashboard');
 
         $response->assertOk();
-        $response->assertSee('Design Studio Dashboard');
+        $response->assertSee('Start something');
     }
 
     public function test_dashboard_reflects_the_authenticated_users_own_data_only(): void

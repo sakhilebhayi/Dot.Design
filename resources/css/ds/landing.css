@@ -1,0 +1,88 @@
+/*
+ * Public landing page. Same tokens as the app; the page is built on one idea: Dot.Design starts from a size, so the hero is the table
+ * with a real proof frame that takes the true proportions of whichever format you pick.
+ */
+.lp { background: var(--lt-panel); color: var(--lt-ink); min-height: 100vh; overflow-x: clip; }
+.lp-wrap { width: 100%; max-width: 80rem; margin-inline: auto; padding-inline: var(--lt-gutter); }
+
+.lp-nav { display: flex; align-items: center; justify-content: space-between; gap: var(--lt-space-4); min-height: 4.5rem; }
+.lp-nav__links { display: flex; align-items: center; gap: var(--lt-space-2); }
+.lp-nav__link { padding: 0 var(--lt-space-3); min-height: 2.75rem; display: inline-flex; align-items: center; color: var(--lt-ink-2); font-weight: 500; border-radius: var(--lt-radius-2); }
+.lp-nav__link:hover { color: var(--lt-ink); background: var(--lt-panel-sunk); }
+@media (max-width: 40rem) { .lp-nav__link--hide { display: none; } }
+
+/* hero: copy left, table right. Fits 1280x800 without scrolling. */
+.lp-hero { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--lt-space-7) var(--lt-space-7); padding-block: var(--lt-space-6) var(--lt-space-8); align-items: center; }
+@media (min-width: 64rem) { .lp-hero { grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); min-height: calc(100vh - 4.5rem - 3rem); min-height: calc(100dvh - 7.5rem); padding-block: var(--lt-space-5) var(--lt-space-7); } }
+.lp-h1 { font-family: var(--lt-font-display); font-weight: 600; font-size: clamp(2.75rem, 7.2vw, 5.25rem); letter-spacing: -0.035em; line-height: 0.98; text-wrap: balance; overflow-wrap: break-word; min-width: 0; }
+.lp-lede { margin-top: var(--lt-space-5); font-size: clamp(1.0625rem, 1.5vw, 1.25rem); line-height: 1.5; color: var(--lt-ink-2); max-width: 34rem; }
+.lp-actions { display: flex; flex-wrap: wrap; gap: var(--lt-space-3); margin-top: var(--lt-space-6); align-items: center; }
+
+/* the table */
+.lp-table { min-width: 0; }
+.lp-table__stage { background: var(--lt-stage); display: grid; place-items: center; height: clamp(18rem, 46vh, 26rem); padding: var(--lt-space-5); position: relative; }
+.lp-table__ruler { display: flex; align-items: center; justify-content: space-between; gap: var(--lt-space-3); color: var(--lt-ink-3); font-size: var(--lt-text-xs); padding-top: var(--lt-space-2); font-variant-numeric: tabular-nums; }
+.lp-sheet { --fit: 14rem; width: min(100%, calc(var(--fit) * var(--w) / var(--h))); display: grid; align-content: center; justify-items: start; padding: clamp(0.75rem, 3%, 1.5rem); gap: var(--lt-space-2); }
+.lp-sheet.is-swap { animation: lp-swap var(--lt-dur-3) var(--lt-ease); }
+@keyframes lp-swap { from { opacity: 0.2; transform: scale(0.97); } to { opacity: 1; transform: none; } }
+.lp-sheet__name { font-family: var(--lt-font-display); font-weight: 600; letter-spacing: -0.02em; font-size: clamp(1.25rem, 2.6vw, 2rem); line-height: 1; color: #14181c; }
+.lp-sheet__size { font-size: var(--lt-text-sm); color: #4a5159; font-variant-numeric: tabular-nums; }
+.lp-formats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--lt-space-1); padding-block: var(--lt-space-3) var(--lt-space-2); margin-inline: calc(-1 * var(--lt-space-3)); padding-inline: var(--lt-space-3); }
+.lp-formats .lt-fchip[aria-pressed="true"] { background: var(--lt-panel-sunk); box-shadow: inset 0 -2px 0 var(--lt-ink); }
+.lp-formats .lt-fchip[aria-pressed="true"] .lt-fchip__frame { box-shadow: 0 0 0 2px var(--lt-ink); }
+.lp-cta-line { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--lt-space-3); margin-top: var(--lt-space-3); }
+.lp-cta-line p { font-size: var(--lt-text-md); color: var(--lt-ink-2); min-width: 0; }
+
+/* sections */
+.lp-section { padding-block: var(--lt-space-8); }
+.lp-section--sunk { background: var(--lt-ground); }
+.lp-h2 { font-family: var(--lt-font-display); font-weight: 600; font-size: clamp(1.875rem, 4vw, 3rem); letter-spacing: -0.03em; line-height: 1.04; text-wrap: balance; max-width: 22ch; overflow-wrap: break-word; }
+.lp-intro { margin-top: var(--lt-space-4); color: var(--lt-ink-2); font-size: 1.0625rem; line-height: 1.55; max-width: 40rem; }
+.lp-split { display: grid; gap: var(--lt-space-7); grid-template-columns: minmax(0, 1fr); align-items: start; }
+@media (min-width: 60rem) { .lp-split { grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); gap: var(--lt-space-8); } }
+
+/* the sequence: a ruled strip with one tick per step */
+.lp-steps { margin-top: var(--lt-space-7); display: grid; gap: var(--lt-space-6) var(--lt-space-5); grid-template-columns: minmax(0, 1fr); counter-reset: none; }
+@media (min-width: 48rem) { .lp-steps { grid-template-columns: repeat(5, minmax(0, 1fr)); } }
+.lp-step { position: relative; padding-top: var(--lt-space-5); border-top: 1px solid var(--lt-ink); min-width: 0; }
+.lp-step::before { content: ""; position: absolute; left: 0; top: -5px; width: 9px; height: 9px; background: var(--lt-ink); border-radius: 50%; }
+.lp-step h3 { font-family: var(--lt-font-display); font-weight: 600; font-size: 1.25rem; letter-spacing: -0.015em; line-height: 1.15; }
+.lp-step p { margin-top: var(--lt-space-2); color: var(--lt-ink-2); font-size: var(--lt-text-md); line-height: 1.5; }
+
+/* brand kit diagram: three slots feeding a page */
+.lp-kit { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 0.9fr); gap: var(--lt-space-4); align-items: center; background: var(--lt-stage); padding: var(--lt-space-6); }
+.lp-kit__slots { display: grid; gap: var(--lt-space-3); }
+.lp-slot { display: flex; align-items: center; gap: var(--lt-space-3); background: var(--lt-panel); padding: var(--lt-space-3) var(--lt-space-4); box-shadow: 0 0 0 1px var(--lt-rule-strong); min-height: 3.5rem; }
+.lp-slot b { font-weight: 600; display: block; line-height: 1.2; }
+.lp-slot small { display: block; font-size: var(--lt-text-xs); color: var(--lt-ink-3); }
+.lp-slot svg { width: 1.25rem; height: 1.25rem; color: var(--lt-ink-2); flex: none; }
+.lp-kit__arrow { color: var(--lt-ink-2); }
+.lp-kit__arrow svg { width: 1.75rem; height: 1.75rem; }
+.lp-kit .lt-frame { --w: 4; --h: 5; width: 100%; max-width: 9rem; justify-self: center; }
+@media (max-width: 36rem) { .lp-kit { grid-template-columns: minmax(0, 1fr); } .lp-kit__arrow { transform: rotate(90deg); justify-self: center; } }
+
+/* two ways to work */
+.lp-pair { margin-top: var(--lt-space-7); display: grid; gap: var(--lt-space-6); grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 48rem) { .lp-pair { grid-template-columns: 1fr 1fr; } }
+.lp-mode { background: var(--lt-panel); padding: var(--lt-space-6); display: grid; gap: var(--lt-space-3); align-content: start; box-shadow: 0 0 0 1px var(--lt-rule-strong); }
+.lp-mode h3 { font-family: var(--lt-font-display); font-weight: 600; font-size: 1.75rem; letter-spacing: -0.02em; }
+.lp-mode p { color: var(--lt-ink-2); line-height: 1.55; }
+.lp-note { margin-top: var(--lt-space-5); color: var(--lt-ink-2); max-width: 40rem; }
+
+/* share and review: three facts on a ruled list */
+.lp-facts { display: grid; gap: 0; }
+.lp-fact { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--lt-space-2); padding-block: var(--lt-space-5); border-top: 1px solid var(--lt-rule-strong); }
+.lp-fact:last-child { border-bottom: 1px solid var(--lt-rule-strong); }
+.lp-fact h3 { font-family: var(--lt-font-display); font-weight: 600; font-size: 1.375rem; letter-spacing: -0.015em; }
+.lp-fact p { color: var(--lt-ink-2); line-height: 1.55; max-width: 44rem; }
+
+/* close */
+.lp-close { padding-block: var(--lt-space-8); }
+.lp-close .lp-h1 { font-size: clamp(2.5rem, 7vw, 5.5rem); max-width: 14ch; }
+.lp-foot { padding-block: var(--lt-space-6) var(--lt-space-7); }
+.lp-foot__row { display: flex; flex-wrap: wrap; justify-content: space-between; gap: var(--lt-space-4); align-items: center; padding-top: var(--lt-space-5); }
+.lp-foot__links { display: flex; flex-wrap: wrap; gap: var(--lt-space-2) var(--lt-space-5); }
+.lp-foot__links a { color: var(--lt-ink-2); min-height: 2.75rem; display: inline-flex; align-items: center; }
+.lp-foot__links a:hover { color: var(--lt-ink); text-decoration: underline; text-underline-offset: 0.2em; }
+.lp-formats .lt-fchip { width: auto; }
+.lp-sheet__size { white-space: nowrap; font-size: 0.75rem; }

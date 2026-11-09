@@ -1,365 +1,165 @@
+@php
+    $formats = \App\Support\Ui\StartFormats::all();
+    $first = $formats[0];
+    $isGuest = ! auth()->check();
+    $hrefFor = fn (array $f) => $isGuest ? route('login') : route('design.projects.create').'?format='.$f['key'];
+    $primaryHref = $isGuest ? route('login') : route('dashboard');
+@endphp
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="scroll-smooth">
-    <head>
-        <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <title>Dot.Design — The Dot Ecosystem's visual creation platform</title>
-        <meta name="description" content="A canvas-first design editor paired with generative AI, plus the shared token and component library the rest of the Dot Ecosystem draws its UI from.">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <title>Dot.Design | Your ideas. Beautifully designed.</title>
+    <meta name="description" content="Make posters, social posts, flyers and cards for your business on a canvas that already knows your colours, fonts and logo. Start from a size, share a link, get it approved.">
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('favicon-32x32.png') }}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('favicon-16x16.png') }}">
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('apple-touch-icon.png') }}">
+    <link rel="preload" href="{{ asset('fonts/ui/bricolage-grotesque-latin-wght.woff2') }}" as="font" type="font/woff2" crossorigin>
+    <script src="{{ asset('js/ds-theme.js') }}"></script>
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
+</head>
+<body>
+<div class="lp">
+    <a class="lt-skip" href="#main">Skip to content</a>
 
-        <link rel="preconnect" href="https://fonts.googleapis.com">
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,500&family=Instrument+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-
-        @vite(['resources/css/app.css', 'resources/js/app.js'])
-
-        <style>
-            :root {
-                --paper: #faf9f5;
-                --panel: #ffffff;
-                --ink: #221f2b;
-                --ink-soft: #565269;
-                --gold: #d99a1f;
-                --gold-bright: #efb93a;
-                --periwinkle: #6169b8;
-                --periwinkle-soft: #8b93d6;
-                --line: rgba(34, 31, 43, 0.12);
-                --font-display: 'Fraunces', ui-serif, Georgia, serif;
-                --font-body: 'Instrument Sans', system-ui, sans-serif;
-                --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
-                --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
-            }
-            html { background: var(--paper); }
-            body { font-family: var(--font-body); background: var(--paper); color: var(--ink); }
-            .font-display { font-family: var(--font-display); font-optical-sizing: auto; }
-            .font-mono { font-family: var(--font-mono); }
-
-            .press { transition: transform 160ms var(--ease-out); }
-            .press:active { transform: scale(0.97); }
-
-            @media (prefers-motion: no-preference) {}
-            @media (prefers-reduced-motion: no-preference) {
-                .reveal {
-                    opacity: 0;
-                    transform: translateY(14px);
-                    transition: opacity 600ms var(--ease-out), transform 600ms var(--ease-out);
-                }
-                .reveal.is-visible { opacity: 1; transform: translateY(0); }
-                .draw-path {
-                    stroke-dasharray: 900;
-                    stroke-dashoffset: 900;
-                    transition: stroke-dashoffset 1400ms var(--ease-out);
-                }
-                .draw-path.is-visible { stroke-dashoffset: 0; }
-            }
-            @media (prefers-reduced-motion: reduce) {
-                .reveal { opacity: 1; transform: none; }
-                .draw-path { stroke-dashoffset: 0; }
-            }
-
-            @media (hover: hover) and (pointer: fine) {
-                .row-hover:hover { background: rgba(34, 31, 43, 0.025); }
-                .link-underline { background-size: 0% 1px; }
-                .link-underline:hover { background-size: 100% 1px; }
-            }
-            .link-underline {
-                background-image: linear-gradient(currentColor, currentColor);
-                background-position: 0 100%;
-                background-repeat: no-repeat;
-                transition: background-size 220ms var(--ease-out);
-            }
-        </style>
-    </head>
-    <body class="antialiased">
-
-        <!-- Nav -->
-        <header
-            x-data="{ scrolled: false, mobileMenuOpen: false }"
-            @scroll.window="scrolled = window.pageYOffset > 24"
-            :class="scrolled ? 'bg-[#faf9f5]/95 backdrop-blur-md border-b border-[var(--line)]' : 'border-b border-transparent'"
-            class="fixed top-0 left-0 right-0 z-50 transition-colors duration-300"
-        >
-            <nav class="max-w-[1400px] mx-auto px-5 sm:px-8 py-3 flex items-center justify-between">
-                <a href="/" class="flex items-center press">
-                    <img src="{{ asset('images/logo.png') }}" alt="Dot.Design" class="h-14 sm:h-[4.5rem] w-auto">
-                </a>
-
-                <div class="hidden md:flex items-center gap-8 font-mono text-[13px] tracking-wide uppercase text-[var(--ink-soft)]">
-                    <a href="#canvas" class="link-underline hover:text-[var(--ink)] pb-0.5">Canvas</a>
-                    <a href="#system" class="link-underline hover:text-[var(--ink)] pb-0.5">Design system</a>
-                </div>
-
+    <header class="lp-wrap">
+        <nav class="lp-nav" aria-label="Site">
+            <a href="{{ url('/') }}" class="lt-brand" aria-label="Dot.Design, home" style="padding-left: 0;">
+                <span class="lt-mark" role="img" aria-label="Dot.Design mark"></span>
+                <span class="lt-brand__name">Dot.Design</span>
+            </a>
+            <div class="lp-nav__links">
+                <a href="#how" class="lp-nav__link lp-nav__link--hide">How it works</a>
+                <a href="#limits" class="lp-nav__link lp-nav__link--hide">What it does not do</a>
                 @if (Route::has('login'))
-                    <div class="flex items-center gap-3">
-                        @auth
-                            <a href="{{ url('/dashboard') }}" class="press flex items-center gap-2 px-5 py-2.5 bg-[var(--ink)] hover:bg-[var(--periwinkle)] text-white text-sm font-display font-semibold rounded-full transition-colors">
-                                Dashboard
-                            </a>
-                        @else
-                            <a href="{{ route('login') }}" class="hidden sm:block text-sm font-medium text-[var(--ink-soft)] hover:text-[var(--ink)] transition-colors">
-                                Sign in
-                            </a>
-                            @if (Route::has('register'))
-                                <a href="{{ route('register') }}" class="press px-5 py-2.5 bg-[var(--ink)] hover:bg-[var(--periwinkle)] text-white text-sm font-display font-semibold rounded-full transition-colors">
-                                    Create account
-                                </a>
-                            @endif
-                        @endauth
-
-                        <button @click="mobileMenuOpen = !mobileMenuOpen" class="md:hidden press p-2 -mr-2 text-[var(--ink)]" aria-label="Toggle menu">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path x-show="!mobileMenuOpen" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M4 7h16M4 12h16M4 17h16"></path>
-                                <path x-show="mobileMenuOpen" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M6 18L18 6M6 6l12 12"></path>
-                            </svg>
-                        </button>
-                    </div>
+                    <x-ds.button :href="$primaryHref" variant="secondary" size="sm">{{ $isGuest ? 'Log in' : 'Open Home' }}</x-ds.button>
                 @endif
+            </div>
+        </nav>
+    </header>
+
+    <main id="main" tabindex="-1">
+        <section class="lp-wrap lp-hero" aria-labelledby="hero-title">
+            <div>
+                <h1 id="hero-title" class="lp-h1">Your ideas. Beautifully designed.</h1>
+                <p class="lp-lede">Posters, social posts, flyers and business cards, made on a canvas that already knows your colours, fonts and logo.</p>
+                <div class="lp-actions">
+                    <x-ds.button :href="$primaryHref" size="lg" iconEnd="arrow-right">{{ $isGuest ? 'Log in to start designing' : 'Open your designs' }}</x-ds.button>
+                    <x-ds.button href="#how" variant="ghost" size="lg">See how it works</x-ds.button>
+                </div>
+            </div>
+
+            <div class="lp-table" data-lp-table>
+                <div class="lp-table__stage">
+                    <div class="lt-frame lt-crop lp-sheet" data-lp-sheet style="--w: {{ $first['width'] }}; --h: {{ $first['height'] }}; --crop-len: 12px; --crop-gap: 8px; --crop-c: #14181c;">
+                        <span class="lp-sheet__name" data-lp-name>{{ $first['name'] }}</span>
+                        <span class="lp-sheet__size" data-lp-size>{{ $first['width'] }} × {{ $first['height'] }} {{ $first['unit'] }}</span>
+                    </div>
+                </div>
+                <div class="lp-table__ruler lt-ruler" aria-hidden="true" style="margin-top: 0;"></div>
+                <div class="lp-formats" role="group" aria-label="Choose a size">
+                    @foreach ($formats as $format)
+                        <a href="{{ $hrefFor($format) }}" class="lt-fchip" data-lp-format data-name="{{ $format['name'] }}" data-w="{{ $format['width'] }}" data-h="{{ $format['height'] }}" data-size="{{ $format['width'] }} × {{ $format['height'] }} {{ $format['unit'] }}" data-href="{{ $hrefFor($format) }}" aria-pressed="{{ $loop->first ? 'true' : 'false' }}">
+                            <span class="lt-fchip__frame" style="--w: {{ $format['width'] }}; --h: {{ $format['height'] }}" aria-hidden="true"></span>
+                            <span><span class="lt-fchip__name">{{ $format['name'] }}</span><span class="lt-fchip__size">{{ $format['width'] }} × {{ $format['height'] }} {{ $format['unit'] }}</span></span>
+                        </a>
+                    @endforeach
+                </div>
+                <div class="lp-cta-line">
+                    <p>Every design starts from a size. Pick one and see it at its true proportions.</p>
+                    <x-ds.button :href="$hrefFor($first)" variant="secondary" data-lp-cta>{{ $isGuest ? 'Log in to start a' : 'Start a' }} <span data-lp-cta-text>{{ $first['name'] }}</span></x-ds.button>
+                </div>
+            </div>
+        </section>
+
+        <section id="how" class="lp-section lp-section--sunk" aria-labelledby="how-title">
+            <div class="lp-wrap">
+                <h2 id="how-title" class="lp-h2">From a size to a finished file</h2>
+                <p class="lp-intro">Each step is optional except the first. You can skip ahead to a blank page at any point.</p>
+                <ol class="lp-steps">
+                    <li class="lp-step"><h3>Pick a size</h3><p>Social post, poster, flyer, card, or your own measurements. The canvas opens at that size.</p></li>
+                    <li class="lp-step"><h3>Say what it is for</h3><p>A short brief points you to templates that fit. Skip it if you already know what you want.</p></li>
+                    <li class="lp-step"><h3>Start from a template or a blank page</h3><p>A template is a real design you can edit, not a locked picture.</p></li>
+                    <li class="lp-step"><h3>Edit on the canvas</h3><p>Text, shapes, pictures and icons, with guides that snap and undo that goes back as far as you need.</p></li>
+                    <li class="lp-step"><h3>Export or share</h3><p>Download a file, or send a link someone can look at and comment on.</p></li>
+                </ol>
+            </div>
+        </section>
+
+        <section class="lp-section" aria-labelledby="brand-title">
+            <div class="lp-wrap lp-split">
+                <div>
+                    <h2 id="brand-title" class="lp-h2">Set your brand once</h2>
+                    <p class="lp-intro">Add your colours, fonts and logo to a brand kit. New designs start from them. When the kit changes, you choose whether each design follows, so nothing is rewritten behind your back.</p>
+                </div>
+                <div class="lp-kit" role="img" aria-label="Colours, fonts and a logo flow from the brand kit into every new design">
+                    <div class="lp-kit__slots">
+                        <div class="lp-slot"><x-ds.icon name="palette" /><span><b>Colours</b><small>Named, with a role each</small></span></div>
+                        <div class="lp-slot"><x-ds.icon name="text" /><span><b>Fonts</b><small>Heading, body, accent</small></span></div>
+                        <div class="lp-slot"><x-ds.icon name="image" /><span><b>Logo</b><small>Light and dark versions</small></span></div>
+                    </div>
+                    <span class="lp-kit__arrow" aria-hidden="true"><x-ds.icon name="arrow-right" /></span>
+                    <span class="lt-frame lt-frame--blank lt-crop" style="--crop-len: 8px; --crop-gap: 6px;"></span>
+                </div>
+            </div>
+        </section>
+
+        <section class="lp-section lp-section--sunk" aria-labelledby="modes-title">
+            <div class="lp-wrap">
+                <h2 id="modes-title" class="lp-h2">Simple when you are in a hurry, Pro when you are not</h2>
+                <div class="lp-pair">
+                    <div class="lp-mode"><h3>Simple</h3><p>One panel at a time, plain words, and the next sensible step suggested. Made for the person who has a shop to run.</p></div>
+                    <div class="lp-mode"><h3>Pro</h3><p>Layers, alignment, exact measurements and every panel at once. Made for the person who knows what they want.</p></div>
+                </div>
+                <p class="lp-note">It is the same design either way. Switching modes changes what you see, never what is saved.</p>
+            </div>
+        </section>
+
+        <section class="lp-section" aria-labelledby="share-title">
+            <div class="lp-wrap lp-split">
+                <h2 id="share-title" class="lp-h2">Share it, review it, approve it</h2>
+                <div class="lp-facts">
+                    <div class="lp-fact"><h3>A link with limits</h3><p>Send a link that only views, or one that also takes comments. Give it an end date, and switch it off whenever you like.</p></div>
+                    <div class="lp-fact"><h3>Comments on the design itself</h3><p>Leave a note on a page or on one element, and mark it resolved when it is dealt with.</p></div>
+                    <div class="lp-fact"><h3>Approval that stays honest</h3><p>Ask a colleague to review a version. Nobody approves their own request in a team, and if the design changes afterwards, it needs approving again.</p></div>
+                </div>
+            </div>
+        </section>
+
+        <section id="limits" class="lp-section lp-section--sunk" aria-labelledby="limits-title">
+            <div class="lp-wrap lp-split">
+                <h2 id="limits-title" class="lp-h2">What it does not do</h2>
+                <div>
+                    <p class="lp-intro" style="margin-top: 0;">Dot.Design does not post to social networks for you, sell stock photos, or let two people type in the same design at the same moment.</p>
+                    <p class="lp-intro">It works with the pictures you upload, your brand assets, and the shapes and icons that come with it. The assistant only suggests changes. Nothing is applied until you accept it.</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="lp-wrap lp-close" aria-labelledby="close-title">
+            <h2 id="close-title" class="lp-h1">Your ideas. Beautifully designed.</h2>
+            <div class="lp-actions">
+                <x-ds.button :href="$primaryHref" size="lg" iconEnd="arrow-right">{{ $isGuest ? 'Log in to start designing' : 'Open your designs' }}</x-ds.button>
+            </div>
+        </section>
+    </main>
+
+    <footer class="lp-wrap lp-foot">
+        <div class="lt-ruler" aria-hidden="true"></div>
+        <div class="lp-foot__row">
+            <a href="{{ url('/') }}" class="lt-brand" aria-label="Dot.Design, home" style="padding-left: 0;"><span class="lt-mark" role="img" aria-label="Dot.Design mark"></span><span class="lt-brand__name">Dot.Design</span></a>
+            <nav class="lp-foot__links" aria-label="Legal">
+                <a href="{{ route('policy.show') }}">Privacy</a>
+                <a href="{{ route('cookies') }}">Cookies</a>
+                <a href="{{ route('terms.show') }}">Terms</a>
+                @if (Route::has('login') && $isGuest)<a href="{{ route('login') }}">Log in</a>@endif
             </nav>
-
-            <div x-show="mobileMenuOpen"
-                 x-transition:enter="transition ease-out duration-150"
-                 x-transition:enter-start="opacity-0"
-                 x-transition:enter-end="opacity-100"
-                 x-transition:leave="transition ease-in duration-100"
-                 x-transition:leave-start="opacity-100"
-                 x-transition:leave-end="opacity-0"
-                 class="md:hidden border-t border-[var(--line)] bg-[var(--paper)]"
-                 style="display: none;">
-                <div class="flex flex-col px-5 py-4 gap-1 font-mono text-sm uppercase tracking-wide">
-                    <a href="#canvas" class="px-3 py-2.5 text-[var(--ink-soft)] hover:text-[var(--ink)]">Canvas</a>
-                    <a href="#system" class="px-3 py-2.5 text-[var(--ink-soft)] hover:text-[var(--ink)]">Design system</a>
-                    @guest
-                        <a href="{{ route('login') }}" class="px-3 py-2.5 text-[var(--ink-soft)] hover:text-[var(--ink)]">Sign in</a>
-                    @endguest
-                </div>
-            </div>
-        </header>
-
-        <!-- Hero -->
-        <section class="relative pt-32 pb-16 sm:pb-24 px-5 sm:px-8 overflow-hidden">
-            <!-- Photo: colorful 3D generative-art shapes, by Hirzul Maulana (@ijoelpitulikur), unsplash.com/photos/colorful-3d-shapes-arranged-in-a-fun-design-Qjau9gKeJSQ -->
-            <div class="absolute inset-0 bg-cover bg-center" style="background-image: url('https://images.unsplash.com/photo-1751644332113-2004a1b143f1?q=80&w=2400&auto=format&fit=crop');"></div>
-            <div class="absolute inset-0" style="background: linear-gradient(100deg, rgba(34,31,43,0.92) 0%, rgba(34,31,43,0.80) 32%, rgba(34,31,43,0.45) 55%, rgba(34,31,43,0.18) 75%, rgba(34,31,43,0.02) 92%);"></div>
-            <div class="absolute inset-0" style="background: linear-gradient(180deg, rgba(34,31,43,0) 0%, rgba(34,31,43,0.10) 55%, rgba(34,31,43,0.35) 80%, #faf9f5 100%);"></div>
-            <div class="relative z-10 max-w-[1400px] mx-auto">
-                <div class="grid lg:grid-cols-[1.05fr_0.95fr] gap-14 lg:gap-10 items-center">
-                    <div class="reveal" data-reveal>
-                        <p class="font-mono text-xs tracking-[0.18em] uppercase text-[var(--gold)] mb-6">
-                            Visual creation platform
-                        </p>
-                        <h1 class="font-display font-semibold text-4xl sm:text-5xl lg:text-6xl leading-[1.06] tracking-tight text-[var(--paper)] mb-6">
-                            One canvas.<br>Every asset your<br>team ships.
-                        </h1>
-                        <p class="text-lg text-[var(--paper)] leading-relaxed max-w-xl mb-10">
-                            Dot.Design is where projects turn into graphics, social posts, and marketing collateral — a page-based canvas editor with generative AI on tap, backed by the same token and component library the rest of the Dot Ecosystem's interfaces are built from.
-                        </p>
-
-                        @guest
-                            <div class="flex flex-wrap items-center gap-4">
-                                <a href="{{ route('register') }}" class="press px-7 py-3.5 bg-[var(--ink)] hover:bg-[var(--periwinkle)] text-white font-display font-semibold rounded-full transition-colors">
-                                    Create account
-                                </a>
-                                <a href="#canvas" class="press flex items-center gap-2 px-7 py-3.5 text-[var(--paper)] font-medium rounded-full border border-[rgba(250,249,245,0.35)] hover:border-[var(--periwinkle-soft)] transition-colors">
-                                    See what it does
-                                </a>
-                            </div>
-                        @endguest
-                    </div>
-
-                    <!-- Signature element: a canvas/artboard card carrying a hand-drawn bezier path, echoing the pen-tool anchor points and handles in the real Dot.Design logo mark -->
-                    <div class="reveal" data-reveal>
-                        <div class="relative rounded-[2rem] border border-[var(--line)] bg-[var(--panel)] p-6 sm:p-8 shadow-[0_30px_60px_-30px_rgba(34,31,43,0.25)]">
-                            <div class="flex items-center justify-between mb-6 font-mono text-[11px] tracking-[0.12em] uppercase text-[var(--ink-soft)]">
-                                <span>Canvas · Page 1</span>
-                                <span>820 × 1024</span>
-                            </div>
-
-                            <svg viewBox="0 0 400 320" fill="none" xmlns="http://www.w3.org/2000/svg" class="w-full h-auto" aria-hidden="true">
-                                <rect x="0.5" y="0.5" width="399" height="319" rx="14" stroke="var(--line)" stroke-dasharray="4 4"/>
-                                <path
-                                    class="draw-path"
-                                    data-reveal
-                                    d="M40 240 C 90 60, 160 60, 200 160 C 240 260, 310 260, 360 100"
-                                    stroke="var(--periwinkle)"
-                                    stroke-width="2.5"
-                                    stroke-linecap="round"
-                                />
-                                <line x1="40" y1="240" x2="90" y2="60" stroke="var(--ink-soft)" stroke-width="1" opacity="0.35"/>
-                                <line x1="200" y1="160" x2="160" y2="60" stroke="var(--ink-soft)" stroke-width="1" opacity="0.35"/>
-                                <line x1="200" y1="160" x2="240" y2="260" stroke="var(--ink-soft)" stroke-width="1" opacity="0.35"/>
-                                <line x1="360" y1="100" x2="310" y2="260" stroke="var(--ink-soft)" stroke-width="1" opacity="0.35"/>
-
-                                <rect x="34" y="234" width="12" height="12" rx="2" fill="var(--gold-bright)"/>
-                                <rect x="354" y="94" width="12" height="12" rx="2" fill="var(--gold-bright)"/>
-                                <circle cx="90" cy="60" r="5" fill="var(--panel)" stroke="var(--periwinkle)" stroke-width="2"/>
-                                <circle cx="160" cy="60" r="5" fill="var(--panel)" stroke="var(--periwinkle)" stroke-width="2"/>
-                                <circle cx="240" cy="260" r="5" fill="var(--panel)" stroke="var(--periwinkle)" stroke-width="2"/>
-                                <circle cx="310" cy="260" r="5" fill="var(--panel)" stroke="var(--periwinkle)" stroke-width="2"/>
-                                <circle cx="200" cy="160" r="6" fill="var(--ink)"/>
-                            </svg>
-
-                            <div class="flex items-center gap-3 mt-6 pt-6 border-t border-[var(--line)]">
-                                <div class="flex items-center gap-1.5">
-                                    <span class="w-5 h-5 rounded-full border border-[var(--line)]" style="background: var(--gold-bright)"></span>
-                                    <span class="w-5 h-5 rounded-full border border-[var(--line)]" style="background: var(--periwinkle-soft)"></span>
-                                    <span class="w-5 h-5 rounded-full border border-[var(--line)]" style="background: var(--ink)"></span>
-                                </div>
-                                <p class="font-mono text-[11px] tracking-wide text-[var(--ink-soft)]">Token set · Core Palette v1</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Two systems -->
-        <section id="canvas" class="py-24 sm:py-28 px-5 sm:px-8">
-            <div class="max-w-[1400px] mx-auto">
-                <div class="max-w-2xl mb-16 reveal" data-reveal>
-                    <p class="font-mono text-xs tracking-[0.18em] uppercase text-[var(--gold)] mb-4">What it's built from</p>
-                    <h2 class="font-display font-semibold text-3xl sm:text-4xl text-[var(--ink)] leading-tight">
-                        Two systems that share one platform, on purpose
-                    </h2>
-                    <p class="text-[var(--ink-soft)] leading-relaxed mt-4 max-w-xl">
-                        A creation tool for end users, and a token &amp; component library other Dot platforms consume — different tables, different tenancy rules, no shared foreign keys.
-                    </p>
-                </div>
-
-                <div class="grid lg:grid-cols-2 gap-x-16">
-                    <div>
-                        <h3 class="font-display font-semibold text-xl text-[var(--ink)] mb-1">Canvas &amp; creation</h3>
-                        <p class="text-sm text-[var(--ink-soft)] mb-6">Per-user. What you actually open and edit.</p>
-                        <div class="border-t border-[var(--line)]">
-                            @php
-                                $canvasItems = [
-                                    ['tag' => 'Projects', 'title' => 'Design projects', 'body' => 'A canvas project with a type — graphic, social, print — sized to a width, height, and unit of your choosing.'],
-                                    ['tag' => 'Canvases', 'title' => 'Multi-page canvases', 'body' => 'Each project holds one or more ordered pages, with elements, background color, and background image tracked per page.'],
-                                    ['tag' => 'Assets', 'title' => 'Design assets', 'body' => 'Uploaded or generated files — type, file path, size, and freeform metadata kept alongside the project.'],
-                                    ['tag' => 'AI', 'title' => 'AI generation log', 'body' => 'Every AI request recorded — prompt, result, provider, and token usage — across Anthropic, OpenAI, Stability, and Replicate.'],
-                                ];
-                            @endphp
-                            @foreach ($canvasItems as $item)
-                                <div class="row-hover border-b border-[var(--line)] px-1 py-6 transition-colors reveal" data-reveal>
-                                    <p class="font-mono text-[11px] tracking-[0.14em] uppercase text-[var(--periwinkle)] mb-2">{{ $item['tag'] }}</p>
-                                    <h4 class="font-display font-semibold text-lg text-[var(--ink)] mb-1.5">{{ $item['title'] }}</h4>
-                                    <p class="text-[var(--ink-soft)] leading-relaxed text-sm">{{ $item['body'] }}</p>
-                                </div>
-                            @endforeach
-                        </div>
-                    </div>
-
-                    <div id="system" class="mt-14 lg:mt-0">
-                        <h3 class="font-display font-semibold text-xl text-[var(--ink)] mb-1">Design system</h3>
-                        <p class="text-sm text-[var(--ink-soft)] mb-6">Shared. The same catalog every team and platform draws from.</p>
-                        <div class="border-t border-[var(--line)]">
-                            @php
-                                $systemItems = [
-                                    ['tag' => 'Sets', 'title' => 'Token sets', 'body' => 'A versioned group of tokens — colors, type, spacing, motion — that version together as a unit.'],
-                                    ['tag' => 'Tokens', 'title' => 'Design tokens', 'body' => 'Individual values inside a set, each with its own version, addressable by slug within that set.'],
-                                    ['tag' => 'Components', 'title' => 'Components', 'body' => 'Reusable UI definitions, including Brain-surface components like the confidence badge and intent label.'],
-                                    ['tag' => 'Tracking', 'title' => 'Consumption records', 'body' => 'Which platform consumes which token set, pinned to which version — one row per platform, per set.'],
-                                ];
-                            @endphp
-                            @foreach ($systemItems as $item)
-                                <div class="row-hover border-b border-[var(--line)] px-1 py-6 transition-colors reveal" data-reveal>
-                                    <p class="font-mono text-[11px] tracking-[0.14em] uppercase text-[var(--gold)] mb-2">{{ $item['tag'] }}</p>
-                                    <h4 class="font-display font-semibold text-lg text-[var(--ink)] mb-1.5">{{ $item['title'] }}</h4>
-                                    <p class="text-[var(--ink-soft)] leading-relaxed text-sm">{{ $item['body'] }}</p>
-                                </div>
-                            @endforeach
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Ecosystem -->
-        <section class="py-24 sm:py-28 px-5 sm:px-8 bg-[var(--ink)] border-y border-[var(--line)]">
-            <div class="max-w-[1400px] mx-auto">
-                <div class="grid lg:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)] gap-12 lg:gap-20">
-                    <div class="reveal" data-reveal>
-                        <p class="font-mono text-xs tracking-[0.18em] uppercase text-[var(--gold-bright)] mb-4">Part of the Dot Ecosystem</p>
-                        <h2 class="font-display font-semibold text-3xl sm:text-4xl text-white leading-tight mb-5">
-                            One account carries you into every Dot platform
-                        </h2>
-                        <p class="text-[#c9c5d8] leading-relaxed max-w-sm">
-                            Dot.Design authenticates ecosystem users through a shared-token handoff, not a separate signup — the same pattern the rest of the Dot platforms use to link accounts together.
-                        </p>
-                    </div>
-
-                    <div class="grid sm:grid-cols-2 gap-x-10">
-                        @php
-                            $capabilities = [
-                                ['title' => 'Team-based accounts', 'body' => 'Jetstream teams, invitations, and two-factor auth — the same account model across every project you open.'],
-                                ['title' => 'Multi-provider AI', 'body' => 'Generate imagery through Anthropic, OpenAI, Stability, or Replicate, logged per request so usage stays visible.'],
-                                ['title' => 'Ecosystem single sign-on', 'body' => 'A one-time Sanctum token minted elsewhere in the ecosystem logs you straight into your dashboard.'],
-                                ['title' => 'Shared PostgreSQL', 'body' => 'Runs on the same database infrastructure as the rest of the Dot Ecosystem, ready for cross-platform data.'],
-                            ];
-                        @endphp
-                        @foreach ($capabilities as $c)
-                            <div class="py-6 border-t border-[rgba(255,255,255,0.14)] reveal" data-reveal>
-                                <h3 class="font-display font-medium text-base text-white mb-1.5">{{ $c['title'] }}</h3>
-                                <p class="text-sm text-[#c9c5d8] leading-relaxed">{{ $c['body'] }}</p>
-                            </div>
-                        @endforeach
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- CTA -->
-        <section class="relative py-28 sm:py-36 px-5 sm:px-8 overflow-hidden">
-            <div class="relative z-10 max-w-2xl mx-auto text-center reveal" data-reveal>
-                <h2 class="font-display font-semibold text-3xl sm:text-4xl text-[var(--ink)] leading-tight mb-5">
-                    Bring your team's first project in
-                </h2>
-                <p class="text-[var(--ink-soft)] leading-relaxed mb-10 max-w-lg mx-auto">
-                    No install, no separate design-system project to stand up first. Sign in with your Dot Ecosystem account or create one to get started.
-                </p>
-
-                @guest
-                    <div class="flex flex-wrap justify-center gap-4">
-                        <a href="{{ route('register') }}" class="press px-8 py-3.5 bg-[var(--ink)] hover:bg-[var(--periwinkle)] text-white font-display font-semibold rounded-full transition-colors">
-                            Create account
-                        </a>
-                        <a href="{{ route('login') }}" class="press px-8 py-3.5 text-[var(--ink)] font-medium rounded-full border border-[var(--line)] hover:border-[var(--periwinkle-soft)] transition-colors">
-                            Sign in
-                        </a>
-                    </div>
-                @endguest
-            </div>
-        </section>
-
-        <!-- Footer -->
-        <footer class="py-14 px-5 sm:px-8 border-t border-[var(--line)]">
-            <div class="max-w-[1400px] mx-auto flex flex-col sm:flex-row items-center justify-between gap-6">
-                <a href="/" class="flex items-center">
-                    <img src="{{ asset('images/logo.png') }}" alt="Dot.Design" class="h-11 w-auto opacity-90">
-                </a>
-                <div class="flex items-center gap-6 font-mono text-xs tracking-wide uppercase text-[var(--ink-soft)]">
-                    <a href="{{ route('policy.show') }}" class="hover:text-[var(--ink)] transition-colors">Privacy</a>
-                    <a href="{{ route('cookies') }}" class="hover:text-[var(--ink)] transition-colors">Cookies</a>
-                    <a href="{{ route('terms.show') }}" class="hover:text-[var(--ink)] transition-colors">Terms</a>
-                </div>
-                <p class="font-mono text-xs tracking-wide text-[var(--ink-soft)]">
-                    &copy; {{ date('Y') }} Dot.Design. Visual creation platform for the Dot Ecosystem.
-                </p>
-            </div>
-        </footer>
-
-        <script>
-            if (window.matchMedia('(prefers-reduced-motion: no-preference)').matches && 'IntersectionObserver' in window) {
-                const io = new IntersectionObserver((entries) => {
-                    entries.forEach((entry) => {
-                        if (entry.isIntersecting) {
-                            entry.target.classList.add('is-visible');
-                            io.unobserve(entry.target);
-                        }
-                    });
-                }, { threshold: 0.15, rootMargin: '0px 0px -40px 0px' });
-                document.querySelectorAll('[data-reveal]').forEach((el) => io.observe(el));
-            } else {
-                document.querySelectorAll('[data-reveal]').forEach((el) => el.classList.add('is-visible'));
-            }
-        </script>
-    </body>
+            <p class="lt-meta">&copy; {{ date('Y') }} Dot.Design</p>
+        </div>
+    </footer>
+</div>
+<x-ds.toast />
+</body>
 </html>
