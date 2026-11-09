@@ -112,12 +112,16 @@ async function initGoalPreviews() {
     const cards = Array.from(document.querySelectorAll('.cf-goal[data-purpose]')).filter((c) => c.dataset.purpose);
     if (!cards.length) return;
     let previewer = null;
+    const shown = new Set();
     const queue = createRenderQueue();
     for (const card of cards) {
         const frame = card.querySelector('.cf-goal__frame');
         whenVisible(card, async () => {
-            const res = await api.get(`${boot.urls.templates}?${new URLSearchParams({ purpose: card.dataset.purpose, per_page: '1', sort: 'popular', include: 'first_page' })}`);
-            const t = res.ok && res.data && res.data.data && res.data.data[0];
+            const res = await api.get(`${boot.urls.templates}?${new URLSearchParams({ purpose: card.dataset.purpose, per_page: '6', sort: 'popular', include: 'first_page' })}`);
+            // the most popular one that no other card is already showing, so the grid does not repeat itself
+            const found = res.ok && res.data && res.data.data ? res.data.data : [];
+            const t = found.find((x) => !shown.has(x.id)) || found[0];
+            if (t) shown.add(t.id);
             if (!t || !t.preview) return; // nothing to show: the neutral frame stays, which is honest
             try {
                 if (!previewer) previewer = createPreviewer({ manifest: boot.fonts || [], icons: await loadIcons() });
