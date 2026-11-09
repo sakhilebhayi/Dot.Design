@@ -29,6 +29,9 @@ class DeleteUser implements DeletesUsers
             $user->tokens->each->delete();
             $user->delete();
         });
+
+        // For incident response and the data-subject record: the fact of the deletion, with the id only.
+        \Illuminate\Support\Facades\Log::info('security.account_deleted', ['user_id' => $user->id]);
     }
 
     /**
