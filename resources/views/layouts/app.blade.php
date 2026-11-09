@@ -6,6 +6,7 @@
     $hasTeams = $user && \Laravel\Jetstream\Jetstream::hasTeamFeatures();
     $tokenRoute = \Illuminate\Support\Facades\Route::has('api-tokens.index') ? route('api-tokens.index') : null;
     $isAdmin = $user && $team && \Illuminate\Support\Facades\Route::has('design.activity.page') && in_array(\App\Support\Design\DesignAccess::teamRole($user->id, $team->id), ['owner', 'admin'], true);
+    $settingsRoute = \Illuminate\Support\Facades\Route::has('design.settings') ? route('design.settings') : null;
 @endphp
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
@@ -87,6 +88,7 @@
                         <span class="lt-user__name">{{ $user->name }}</span>
                         <x-ds.icon name="chevron-up" size="sm" />
                     </x-slot>
+                    @if ($settingsRoute)<x-ds.menu-item :href="$settingsRoute" icon="settings">Studio settings</x-ds.menu-item>@endif
                     @if ($nav['profile'])<x-ds.menu-item :href="$nav['profile']" icon="user">Profile and security</x-ds.menu-item>@endif
                     @if ($tokenRoute && \Laravel\Jetstream\Jetstream::hasApiFeatures())<x-ds.menu-item :href="$tokenRoute" icon="key">API tokens</x-ds.menu-item>@endif
                     <div class="lt-menu__sep"></div>
@@ -137,6 +139,7 @@
             @endforeach
             @if ($nav['team'])<a href="{{ $nav['team'] }}" class="lt-menu__item"><x-ds.icon name="settings" />Workspace settings</a>@endif
             @if ($isAdmin)<a href="{{ route('design.activity.page', ['team_id' => $team->id]) }}" class="lt-menu__item"><x-ds.icon name="clock" />Activity</a>@endif
+            @if ($settingsRoute)<a href="{{ $settingsRoute }}" class="lt-menu__item"><x-ds.icon name="settings" />Studio settings</a>@endif
             @if ($nav['profile'])<a href="{{ $nav['profile'] }}" class="lt-menu__item"><x-ds.icon name="user" />Profile and security</a>@endif
             @if ($tokenRoute && \Laravel\Jetstream\Jetstream::hasApiFeatures())<a href="{{ $tokenRoute }}" class="lt-menu__item"><x-ds.icon name="key" />API tokens</a>@endif
             <div class="lt-menu__sep"></div>

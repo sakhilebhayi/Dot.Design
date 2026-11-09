@@ -7,6 +7,10 @@ use App\Http\Controllers\Studio\BrandPaletteController;
 use App\Http\Controllers\Studio\BrandProjectController;
 use App\Http\Controllers\Studio\BriefController;
 use App\Http\Controllers\Studio\FormatsController;
+use App\Http\Controllers\Studio\AssetStudioController;
+use App\Http\Controllers\Studio\BrandStudioController;
+use App\Http\Controllers\Studio\SettingsPageController;
+use App\Http\Middleware\JsonApi;
 use App\Http\Controllers\Studio\StartController;
 use App\Http\Controllers\Studio\TemplateBrowserController;
 use App\Http\Controllers\Studio\TemplateController;
@@ -62,4 +66,31 @@ Route::prefix('design')->name('design.')->group(function () {
     // Registered after templates/facets so that fixed path keeps winning over {template}.
     Route::get('templates', [TemplateBrowserController::class, 'index'])->name('templates.index');
     Route::get('templates/{template}', [TemplateBrowserController::class, 'show'])->name('templates.show');
+});
+
+// R-45 brand agent: the Brand Studio pages, the assets library's extra endpoints, the studio settings page.
+// Pages answer HTML; everything they change goes through the JSON routes above and in routes/studio/backend.php.
+Route::prefix('design')->name('design.')->group(function () {
+    // Brand Studio pages. "updates" and "new" are fixed paths registered before the {kit} ones.
+    Route::get('brand', [BrandStudioController::class, 'index'])->name('brand.index');
+    Route::get('brand/new', [BrandStudioController::class, 'create'])->name('brand.create');
+    Route::get('brand/updates', [BrandStudioController::class, 'updates'])->name('brand.updates');
+    Route::get('brand/updates/{project}', [BrandStudioController::class, 'updatesShow'])->whereNumber('project')->name('brand.updates.show');
+    Route::get('brand/{kit}/edit', [BrandStudioController::class, 'edit'])->whereNumber('kit')->name('brand.edit');
+
+    // Studio preferences (the JSON endpoint of the same data is design.settings.show / update).
+    Route::get('studio-settings', [SettingsPageController::class, 'show'])->name('settings');
+
+    // Asset library: richer list, usage, folders, tags and bulk actions. Fixed paths, so they never meet {asset}.
+    Route::middleware(JsonApi::class)->group(function () {
+        Route::get('assets/library', [AssetStudioController::class, 'library'])->name('assets.library');
+        Route::get('assets/meta', [AssetStudioController::class, 'meta'])->name('assets.meta');
+        Route::get('assets/{asset}/usage', [AssetStudioController::class, 'usage'])->whereNumber('asset')->name('assets.usage');
+        Route::post('asset-folders', [AssetStudioController::class, 'createFolder'])->middleware('throttle:60,1')->name('assets.folders.store');
+        Route::put('asset-folders', [AssetStudioController::class, 'renameFolder'])->middleware('throttle:60,1')->name('assets.folders.rename');
+        Route::delete('asset-folders', [AssetStudioController::class, 'deleteFolder'])->middleware('throttle:60,1')->name('assets.folders.destroy');
+        Route::put('asset-tags', [AssetStudioController::class, 'renameTag'])->middleware('throttle:60,1')->name('assets.tags.rename');
+        Route::delete('asset-tags', [AssetStudioController::class, 'deleteTag'])->middleware('throttle:60,1')->name('assets.tags.destroy');
+        Route::post('asset-bulk', [AssetStudioController::class, 'bulk'])->middleware('throttle:60,1')->name('assets.bulk');
+    });
 });

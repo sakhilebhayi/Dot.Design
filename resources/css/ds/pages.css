@@ -104,3 +104,9 @@ a.lt-contact:hover .lt-contact__stage .lt-frame, a.lt-contact:focus-visible .lt-
 .lt-stack > div > :first-child .lt-formsection, .lt-stack > div > .lt-formsection:first-child { border-top: 0; padding-top: 0; }
 .lt-sectionbreak { display: none; }
 [data-view="list"] .lt-views .lt-contact__stage .lt-frame::after { display: none; }
+
+/* status chips under a design tile: Draft, In review, Approved, and the Brand updated marker (R-45 brand agent) */
+.lt-contact__chips { display: flex; flex-wrap: wrap; gap: var(--lt-space-1); margin-top: var(--lt-space-1); }
+.lt-contact__chips:empty { display: none; }
+.lt-contact__chips a { position: relative; z-index: 2; }
+.lt-contact__chips a:hover { text-decoration: underline; text-underline-offset: 0.2em; }

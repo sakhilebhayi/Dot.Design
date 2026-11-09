@@ -7,6 +7,7 @@
     $brand = \App\Support\Ui\BrandStatus::for($user);
     $brandRoute = collect(['design.brand.index', 'brand.index', 'design.brand-kits.index'])->first(fn ($name) => \Illuminate\Support\Facades\Route::has($name));
     $assetRoute = collect(['design.assets.index', 'assets.index'])->first(fn ($name) => \Illuminate\Support\Facades\Route::has($name));
+    $brandUpdated = \App\Support\Ui\ProjectCard::brandUpdatedIds($recent);
 @endphp
 <x-app-layout>
 <div class="lt-page">
@@ -43,11 +44,18 @@
                 <div class="lt-contacts">
                     @foreach ($recent as $project)
                         <a href="{{ route('design.projects.show', $project) }}" class="lt-contact">
-                            <span class="lt-contact__stage"><x-ds.frame :width="$project->width" :height="$project->height" class="lt-crop lt-crop--link" /></span>
+                            <span class="lt-contact__stage"><x-ds.frame :width="$project->width" :height="$project->height" :src="\App\Support\Ui\ProjectCard::thumbnailUrl($project)" class="lt-crop lt-crop--link" /></span>
+                            @php($chip = \App\Support\Ui\ProjectCard::status($project))
                             <span class="lt-contact__meta">
                                 <span class="lt-contact__name">{{ $project->name }}</span>
                                 <span class="lt-contact__sub">{{ \App\Support\Ui\DesignListing::sizeLabel($project) }}</span>
                                 <span class="lt-contact__sub">Edited {{ $project->updated_at?->diffForHumans() ?? 'never' }}</span>
+                                @if (($chip && $chip['label'] !== 'Draft') || in_array($project->id, $brandUpdated, true))
+                                    <span class="lt-contact__chips">
+                                        @if ($chip && $chip['label'] !== 'Draft')<x-ds.tag :kind="$chip['kind']">{{ $chip['label'] }}</x-ds.tag>@endif
+                                        @if (in_array($project->id, $brandUpdated, true))<x-ds.tag kind="warn">Brand updated</x-ds.tag>@endif
+                                    </span>
+                                @endif
                             </span>
                         </a>
                     @endforeach
@@ -59,8 +67,9 @@
             <section aria-labelledby="brand-title">
                 <h2 id="brand-title" class="lt-h3" style="margin-bottom: var(--lt-space-3);">Brand</h2>
                 @if ($brand)
-                    <x-ds.status-line kind="ok" icon="swatch">
+                    <x-ds.status-line :kind="$brand['outdated'] > 0 ? 'warn' : 'ok'" icon="swatch">
                         {{ $brand['name'] }}@if($brand['version']), version {{ $brand['version'] }}@endif
+                        @if ($brand['outdated'] > 0)<br><a href="{{ route('design.brand.updates') }}" style="text-decoration: underline; text-underline-offset: 0.2em;">{{ $brand['outdated'] }} {{ \Illuminate\Support\Str::plural('design', $brand['outdated']) }} to review</a>@endif
                         @if ($brand['colors'])
                             <span style="display: flex; gap: var(--lt-space-1); margin-top: var(--lt-space-2);">@foreach ($brand['colors'] as $hex)<x-ds.swatch :color="$hex" />@endforeach</span>
                         @endif

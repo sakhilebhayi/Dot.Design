@@ -5,6 +5,7 @@
     $query = array_filter(['q' => $listing['q'], 'type' => $listing['type'], 'status' => $listing['status'], 'sort' => $listing['sort'] !== 'recent' ? $listing['sort'] : null]);
     $link = fn (array $change) => route('design.projects.index', array_filter(array_merge($query, $change), fn ($v) => $v !== null && $v !== ''));
     $sortLabels = ['recent' => 'Recently edited', 'name' => 'Name', 'oldest' => 'Oldest first'];
+    $brandUpdated = \App\Support\Ui\ProjectCard::brandUpdatedIds($items);
 @endphp
 <x-app-layout>
 <div class="lt-page">
@@ -75,15 +76,19 @@
         <ul class="lt-contacts lt-views">
             @foreach ($items as $project)
                 <li class="lt-contact">
-                    <a href="{{ route('design.projects.show', $project) }}" class="lt-contact__stage" tabindex="-1" aria-hidden="true"><x-ds.frame :width="$project->width" :height="$project->height" class="lt-crop lt-crop--link" /></a>
+                    <a href="{{ route('design.projects.show', $project) }}" class="lt-contact__stage" tabindex="-1" aria-hidden="true"><x-ds.frame :width="$project->width" :height="$project->height" :src="\App\Support\Ui\ProjectCard::thumbnailUrl($project)" class="lt-crop lt-crop--link" /></a>
                     <div class="lt-contact__meta">
                         <a href="{{ route('design.projects.show', $project) }}" class="lt-contact__name">{{ $project->name }}</a>
                         <span class="lt-contact__sub">{{ \App\Support\Ui\DesignListing::sizeLabel($project) }}</span>
                         <span class="lt-contact__sub">Edited {{ $project->updated_at?->diffForHumans() ?? 'never' }}</span>
+                        @php($chip = \App\Support\Ui\ProjectCard::status($project))
+                        <span class="lt-contact__chips">
+                            @if ($chip)<x-ds.tag :kind="$chip['kind']">{{ $chip['label'] }}</x-ds.tag>@endif
+                            @if (in_array($project->id, $brandUpdated, true))<a href="{{ route('design.brand.updates.show', $project) }}" class="lt-tag lt-tag--warn" title="The brand kit changed. Review what would change.">Brand updated</a>@endif
+                        </span>
                     </div>
                     <div class="lt-contact__extra">
                         <x-ds.tag>{{ \Illuminate\Support\Str::headline($project->type) }}</x-ds.tag>
-                        @if ($project->getAttribute('status'))<x-ds.tag :kind="$project->getAttribute('status') === 'approved' ? 'ok' : ($project->getAttribute('status') === 'in_review' ? 'warn' : 'neutral')">{{ \Illuminate\Support\Str::headline($project->getAttribute('status')) }}</x-ds.tag>@endif
                         <span>{{ $project->canvases_count }} {{ \Illuminate\Support\Str::plural('page', $project->canvases_count) }}</span>
                     </div>
                     <div class="lt-contact__actions">
