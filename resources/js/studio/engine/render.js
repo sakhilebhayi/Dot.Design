@@ -433,7 +433,9 @@ export function elementVNode(el, ctx) {
         return h('g', frameAttrs(el), [...defs, h('g', { class: 'inner', ...innerAttrs }, kids)]);
     }
     const { defs, innerAttrs, nodes } = contentParts(el, ctx);
-    return h('g', frameAttrs(el), [...defs, h('g', { class: 'inner', ...innerAttrs }, nodes)]);
+    // a picture's alternative text travels with the drawing: an exported SVG names the picture (R-45 a11y)
+    const title = el.type === 'image' && typeof el.alt === 'string' && el.alt !== '' ? [h('title', null, [el.alt])] : [];
+    return h('g', frameAttrs(el), [...title, ...defs, h('g', { class: 'inner', ...innerAttrs }, nodes)]);
 }
 
 // ---- page -----------------------------------------------------------------

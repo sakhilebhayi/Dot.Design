@@ -583,4 +583,15 @@ class DocumentSanitiserTest extends TestCase
         $this->assertCount(300, $page->elements);
         $this->assertLessThan(1.5, $elapsed);
     }
+    public function test_a_picture_keeps_its_alternative_text_cleaned_and_capped(): void
+    {
+        $image = ['id' => 'i1', 'type' => 'image', 'x' => 0, 'y' => 0, 'width' => 100, 'height' => 100];
+
+        $this->assertSame('Two pies on a table', $this->first($image + ['alt' => "  Two pies\n on a table "])['alt'] ?? null, 'a line break is not allowed in alt text');
+        $this->assertSame(300, mb_strlen($this->first($image + ['alt' => str_repeat('a', 500)])['alt']), 'capped at 300 characters');
+        $this->assertArrayNotHasKey('alt', $this->first($image), 'no alt, no key');
+        $this->assertArrayNotHasKey('alt', $this->first($image + ['alt' => '   ']), 'blank means none');
+        $this->assertArrayNotHasKey('alt', $this->first($image + ['alt' => ['x']]), 'a wrong type is dropped');
+        $this->assertArrayNotHasKey('alt', $this->first($this->text(['alt' => 'ignored'])), 'only pictures carry alt text');
+    }
 }

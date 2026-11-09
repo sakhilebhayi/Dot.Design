@@ -65,3 +65,21 @@
     [class*="skeleton"], .lt-skel, .lt-sheen { animation: none !important; background-position: 0 0 !important; }
     html { scroll-behavior: auto; }
 }
+
+/* ---- 4. touch and narrow screens: targets of 44 px, content that wraps instead of overflowing ------------------------------ */
+.lt-prose table { table-layout: fixed; width: 100%; }
+.lt-prose th, .lt-prose td { overflow-wrap: anywhere; }
+.lt-seg.br-seg-wrap { flex-wrap: wrap; max-width: 100%; }
+
+@media (pointer: coarse), (max-width: 47.99rem) {
+    .lt-btn, .lt-btn--sm, .lt-chip, .lt-seg > button, .lt-icon-btn, .lt-brand, .as-folder__btn, .st-name, .st-save { min-height: 2.75rem; }
+    .lt-icon-btn, .st-save, .cf-flip .lt-icon-btn { min-width: 2.75rem; }
+    .lt-input[type="color"], .br-addcolor input { min-width: 2.75rem; min-height: 2.75rem; }
+    .br-word button, .br-word .lt-icon-btn { min-width: 2.75rem; min-height: 2.75rem; }
+    /* plain text links that stand alone on a line are controls too */
+    .lt-section__head a, .lt-contact__name, .ac-row__link, .lt-small > a, .lt-field > a, .lt-form a:not(.lt-btn), .lt-form__actions a, .lp-nav__link, .lp-foot a, footer a { display: inline-flex; align-items: center; min-height: 2.75rem; }
+    .lt-contact__name, .ac-row__link { display: flex; }
+    .lp-foot a, .lp-nav__link { min-width: 2.75rem; justify-content: center; }
+}
+/* Even with a mouse: nothing a person has to hit is smaller than 24 px (WCAG 2.2, 2.5.8). */
+.lt-section__head a, .lt-contact__name, .ac-row__link { min-height: 1.5rem; }

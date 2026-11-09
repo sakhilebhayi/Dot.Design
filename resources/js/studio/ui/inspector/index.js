@@ -7,7 +7,7 @@ import { selectionFrame } from '../../engine/selection.js';
 import { applyColour, applyFont } from '../actions.js';
 import { MIXED, common } from '../describe.js';
 import { h, icon } from '../dom.js';
-import { colourField, fieldRow, numberField, segmented, sliderField, toggleButton } from '../fields.js';
+import { altTextField, colourField, fieldRow, numberField, segmented, sliderField, toggleButton } from '../fields.js';
 import { UNITS, displayUnit, formatUnit, parseLength, pxTo } from '../units.js';
 import { change, colourRow, grid, labelled, line, numRow, segRow, selectRow, sliderRow, toggleRow } from './rows.js';
 
@@ -335,6 +335,8 @@ function mountImage(el, ctx) {
     const replace = h('button', { class: 'lt-btn lt-btn--secondary lt-btn--sm', attrs: { type: 'button' }, onClick: () => ctx.pickPicture(ctx.selection().ids[0]) }, icon('image-plus'), 'Replace picture');
     const reposition = h('button', { class: 'lt-btn lt-btn--secondary lt-btn--sm', attrs: { type: 'button' }, onClick: () => ctx.startReposition(ctx.selection().ids[0]) }, icon('move'), 'Move inside frame');
     el.appendChild(h('div', { class: 'st-iconrow' }, replace, reposition));
+    const alt = altTextField({ value: null, onCommit: (v) => ctx.run('element.update', { ids: ctx.selection().ids, changes: { alt: v } }, { key: 'alt:' + ctx.selection().ids.join(',') }) });
+    el.appendChild(alt.el);
     const fit = segRow(ctx, { label: 'Fit', small: true, items: [{ value: 'cover', label: 'Fill the frame', text: 'Fill' }, { value: 'contain', label: 'Show the whole picture', text: 'Contain' }, { value: 'fill', label: 'Stretch to the frame', text: 'Stretch' }], get: (e) => e.fit, set: (e, v) => ({ fit: v }), types: I, key: 'fit' });
     el.appendChild(labelled('Fit', fit.el)); rows.push(fit);
     const zoom = sliderRow(ctx, { label: 'Zoom', get: (e) => e.zoom, set: (e, v) => ({ zoom: v }), min: 1, max: 8, step: 0.05, format: (v) => Math.round(v * 100) + '%', types: I, key: 'zoom' });
@@ -361,7 +363,7 @@ function mountImage(el, ctx) {
     filtBox.appendChild(reset);
     const det = h('details', { class: 'st-details' }, h('summary', { text: 'Filters' }), filtBox);
     el.appendChild(det);
-    return { update(sel) { const e = sel.el; replace.lastChild.textContent = e && e.asset_id ? 'Replace picture' : 'Add a picture'; reposition.hidden = !e || !e.asset_id; for (const r of rows) r.update(sel); } };
+    return { update(sel) { const e = sel.el; replace.lastChild.textContent = e && e.asset_id ? 'Replace picture' : 'Add a picture'; reposition.hidden = !e || !e.asset_id; alt.el.hidden = !e || !e.asset_id; alt.set(e ? e.alt : null); for (const r of rows) r.update(sel); } };
 }
 
 function mountIcon(el, ctx) {

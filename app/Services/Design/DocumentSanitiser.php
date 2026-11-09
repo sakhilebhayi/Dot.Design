@@ -390,7 +390,11 @@ final class DocumentSanitiser
     {
         $raw = $e['text'] ?? '';
 
-        if (is_int($raw) || is_float($raw)) {
+        if (is_float($raw) && ! is_finite($raw)) {
+            // INF and NAN have no text form (PHP 8.5 warns when they are coerced); they are not text.
+            $raw = '';
+            $run->fix('type');
+        } elseif (is_int($raw) || is_float($raw)) {
             $raw = (string) $raw;
             $run->fix('type');
         } elseif (! is_string($raw)) {
@@ -508,7 +512,9 @@ final class DocumentSanitiser
         $fp = $s('filters')['props'] ?? [];
         $defaults = ['brightness' => 1, 'contrast' => 1, 'saturate' => 1, 'blur' => 0, 'grayscale' => 0, 'sepia' => 0, 'hue' => 0];
 
-        return [
+        $alt = $this->altText($e['alt'] ?? null, $run);
+
+        return ($alt === null ? [] : ['alt' => $alt]) + [
             'asset_id' => $assetId,
             'fit' => $this->enum($e['fit'] ?? 'cover', 'image_fit', 'cover', $run),
             'focal' => [
@@ -868,6 +874,29 @@ final class DocumentSanitiser
         if (mb_strlen($clean) > $max) {
             $run->fix($code.'_truncated');
             $clean = mb_substr($clean, 0, $max);
+        }
+
+        return $clean === '' ? null : $clean;
+    }
+
+    /** Alternative text for a picture: one clean line, at most 300 characters; empty means none (the key is then left out). */
+    private function altText(mixed $value, SanitiseRun $run): ?string
+    {
+        if ($value === null || $value === '') {
+            return null;
+        }
+
+        if (! is_string($value)) {
+            $run->fix('type');
+
+            return null;
+        }
+
+        $clean = trim($this->cleanText($value, false, $run));
+
+        if (mb_strlen($clean) > 300) {
+            $run->fix('alt_truncated');
+            $clean = mb_substr($clean, 0, 300);
         }
 
         return $clean === '' ? null : $clean;

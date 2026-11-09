@@ -5,7 +5,7 @@
 import { applyColour } from '../actions.js';
 import { MIXED, announceSelection, common, elementLabel } from '../describe.js';
 import { h, icon } from '../dom.js';
-import { fieldRow, segmented, sliderField, swatch } from '../fields.js';
+import { altTextField, fieldRow, segmented, sliderField, swatch } from '../fields.js';
 import { openFontPopover, opacityOf, textSize, fontLabel } from '../quick.js';
 import { actionButton, group, quickColours, rowOf, wrapRow } from './parts.js';
 
@@ -90,6 +90,7 @@ export function mountSimplePanel(ctx, shell) {
             const move = actionButton('Move the picture inside its frame', 'move', () => ctx.startReposition(el.id));
             out.push({ el: group('Position', move, fieldRow('Zoom', zoom)), update: (s) => zoom.set(s.el ? s.el.zoom : 1) });
         }
+        if (!sel.emptyPicture) { const alt = altTextField({ value: el.alt, onCommit: (v) => ctx.run('element.update', { ids: [el.id], changes: { alt: v } }, { key: 'alt:' + el.id }) }); out.push({ el: group('For screen readers', alt.el), update: (s) => alt.set(s.el ? s.el.alt : null) }); }
         const tr = transparency(sel); out.push(tr);
         const radius = sliderField({ label: 'Rounded corners', min: 0, max: Math.round(Math.min(el.width, el.height) / 2), step: 1, value: el.radius || 0, format: (v) => (v === 0 ? 'Square' : Math.round(v) + ' px'), onInput: (v) => ctx.run('element.update', { ids: [el.id], changes: { radius: v } }, { key: 'radius:' + el.id }) });
         out.push({ el: group('Rounded corners', radius.el), update: (s) => radius.set(s.el ? s.el.radius || 0 : 0) });

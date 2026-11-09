@@ -372,6 +372,8 @@ export function normaliseElement(rawIn, opts = {}) {
         el.radius = num(IMAGE.radius, raw.radius, `${path}.radius`, issues, 0);
         el.border = colorWidth(IMAGE.border, raw.border, `${path}.border`, issues);
         el.filters = normaliseFilters(raw.filters, `${path}.filters`, issues);
+        // alternative text: kept only when the input carries the key, so a document without it round-trips unchanged
+        if ('alt' in raw) el.alt = raw.alt === null || raw.alt === undefined || String(raw.alt).trim() === '' ? null : str(IMAGE.alt, String(raw.alt).trim(), `${path}.alt`, issues, null);
         if (el.asset_id !== null && opts.assetExists && !opts.assetExists(el.asset_id)) {
             report(issues, `${path}.asset_id`, 'Picture is not available here; slot emptied.', 'asset');
             el.asset_id = null;

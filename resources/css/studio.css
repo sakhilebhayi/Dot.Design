@@ -14,7 +14,8 @@
 
 .st-app {
     --st-top-h: 3.25rem; --st-rail-w: 5.25rem; --st-left-w: 19.5rem; --st-right-w: 19rem;
-    position: fixed; inset: 0; display: grid;
+    position: fixed; inset: 0 0 var(--st-kb, 0px) 0; display: grid;
+    padding-left: env(safe-area-inset-left); padding-right: env(safe-area-inset-right); box-sizing: border-box;
     grid-template-columns: var(--st-rail-w) minmax(0, var(--st-left-w)) minmax(0, 1fr) var(--st-right-w);
     grid-template-rows: auto auto minmax(0, 1fr) auto;
     grid-template-areas: "top top top top" "banner banner banner banner" "rail left stage right" "rail left pages right";
@@ -32,6 +33,7 @@
 
 /* ---- top bar ------------------------------------------------------------------------------------ */
 .st-top { grid-area: top; display: flex; align-items: center; gap: var(--lt-space-2); min-height: var(--st-top-h); padding: 0 var(--lt-space-3); background: var(--lt-panel); box-shadow: 0 1px 0 var(--lt-rule-strong); position: relative; z-index: 5; min-width: 0; }
+.st-top { padding-top: env(safe-area-inset-top); min-height: calc(var(--st-top-h) + env(safe-area-inset-top)); }
 .st-top__name { display: flex; align-items: center; gap: var(--lt-space-2); min-width: 0; flex: 0 1 18rem; }
 .st-name__wrap { position: relative; min-width: 4rem; max-width: 100%; display: inline-grid; }
 .st-name__size, .st-name { grid-area: 1 / 1; font: inherit; font-family: var(--lt-font-display); font-weight: 600; font-size: var(--lt-text-lg); letter-spacing: -0.01em; padding: 0.3rem 0.5rem; white-space: pre; }
@@ -481,7 +483,7 @@ button.st-layer__fold:hover { color: var(--lt-ink); background: var(--lt-panel);
         grid-template-rows: auto auto minmax(0, 1fr) auto auto auto auto;
         grid-template-areas: "top" "banner" "stage" "left" "right" "pages" "rail";
     }
-    .st-top { padding: 0 var(--lt-space-2); gap: 2px; }
+    .st-top { padding: env(safe-area-inset-top) var(--lt-space-2) 0; gap: 2px; }
     .st-top__name { flex: 1 1 auto; }
     .st-top__more { display: inline-flex; }
     .st-rail { overflow-x: auto; overflow-y: hidden; padding: 0; box-shadow: 0 -1px 0 var(--lt-rule-strong); padding-bottom: env(safe-area-inset-bottom); }

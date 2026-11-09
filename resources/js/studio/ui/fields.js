@@ -20,6 +20,24 @@ export function fieldRow(label, control, { hint, id, wide } = {}) {
  * numberField({label, value, min, max, step, decimals, suffix, format(v)->string, parse(text)->number|null, onInput(v), onCommit(v)})
  * onInput fires while scrubbing or typing arrows (live); onCommit when the gesture ends.
  */
+/**
+ * altTextField({value, onCommit(text|null)}): the "describe this picture" box. Saves when the person leaves the box or pauses,
+ * never on every keystroke (one undo step per description).
+ */
+export function altTextField({ value, onCommit, label = 'Describe this picture' }) {
+    const lid = uid('f');
+    const ta = h('textarea', { class: 'lt-textarea st-alt', attrs: { id: lid, rows: 3, maxlength: 300, placeholder: 'For example: Two warm pies on a wooden table' } });
+    ta.value = value || '';
+    const hint = h('div', { class: 'lt-hint', id: lid + '-hint', text: 'Read aloud by screen readers and saved in exported SVG files. Leave it empty for a picture that only decorates.' });
+    ta.setAttribute('aria-describedby', hint.id);
+    let last = ta.value;
+    const commit = () => { const v = ta.value.trim(); if (v === last) return; last = v; onCommit(v === '' ? null : v); };
+    ta.addEventListener('change', commit);
+    ta.addEventListener('keydown', (e) => e.stopPropagation());
+    const el = h('div', { class: 'st-field' }, h('label', { class: 'st-field__label', attrs: { for: lid }, text: label }), ta, hint);
+    return { el, set(v) { if (document.activeElement !== ta) { ta.value = v || ''; last = ta.value.trim(); } } };
+}
+
 export function numberField(o) {
     let value = o.value;
     let scrubbing = false;

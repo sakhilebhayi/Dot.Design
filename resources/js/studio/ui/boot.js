@@ -18,6 +18,7 @@ import { createShell } from './shell.js';
 import { installShortcuts } from './shortcuts-install.js';
 import { createStage, textPreset } from './stage.js';
 import { installStageModel } from './stage-model.js';
+import { installKeyboardInset } from './keyboard-inset.js';
 import { describeGeometryChange, activePage } from './describe.js';
 import { displayUnit } from './units.js';
 import { find } from '../doc/tree.js';
@@ -134,6 +135,7 @@ function start(root, config) {
     createTopbar(ctx, shell, { onPreview: () => preview.open(), openShortcuts: openSheet });
     createStage(ctx, shell);
     installStageModel(ctx, shell);
+    installKeyboardInset(ctx, root);
     installReposition(ctx, shell);
     createFloating(ctx, shell);
     installContextMenu(ctx);

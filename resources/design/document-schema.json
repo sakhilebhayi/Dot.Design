@@ -121,6 +121,7 @@
       "d": {"type": "string", "max": 20000, "default": null, "$comment": "path only; SVG path data in the element's own width x height box (viewBox 0 0 width height). Commands M L H V C S Q T Z only (absolute or relative); no arcs, no scripts."}
     },
     "image": {
+      "alt": {"type": "string or null", "max": 300, "default": null, "$comment": "R-45 a11y (D-1801): what the picture shows, for screen readers and for exported SVG and PDF. Optional; the key is omitted when empty."},
       "asset_id": {"type": "integer or null", "default": null, "$comment": "null = an empty picture slot rendered as an 'Add a picture' placeholder; never exported as content."},
       "fit": {"enum": "image_fit", "default": "cover"},
       "focal": {"type": "object", "default": {"x": 0.5, "y": 0.5}, "props": {"x": {"min": 0, "max": 1}, "y": {"min": 0, "max": 1}}},

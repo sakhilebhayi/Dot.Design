@@ -55,3 +55,42 @@ test('the shortcut sheet documents every keyboard path a pointer user has', () =
         assert.ok(rows.some((r) => r.includes(needle)), `missing in the sheet: ${needle}`);
     }
 });
+
+// ---- alternative text for pictures (D-1801) ----
+import { normaliseElement, applyElementChanges } from '../../resources/js/studio/doc/schema.js';
+import { renderPageToSvgString } from '../../resources/js/studio/engine/render.js';
+import { createStubMeasurer } from '../../resources/js/studio/engine/text-layout.js';
+import { coveredByKeyboard, panToReveal } from '../../resources/js/studio/ui/keyboard-inset.js';
+
+const picture = { id: 'p1', type: 'image', x: 0, y: 0, width: 100, height: 80, asset_id: 4 };
+
+test('alt text is optional, trimmed, capped at 300, and only on pictures', () => {
+    const none = normaliseElement(picture, { genId: () => 'p1' });
+    assert.equal('alt' in none, false, 'a document without alt round-trips unchanged');
+    const set = normaliseElement({ ...picture, alt: '  Two pies  ' }, { genId: () => 'p1' });
+    assert.equal(set.alt, 'Two pies');
+    const long = normaliseElement({ ...picture, alt: 'a'.repeat(400) }, { genId: () => 'p1' });
+    assert.equal(long.alt.length, 300);
+    const cleared = applyElementChanges(set, { alt: null });
+    assert.equal(cleared.alt, null);
+    const onText = normaliseElement({ id: 't', type: 'text', x: 0, y: 0, width: 10, height: 10, text: 'x', alt: 'no' }, { genId: () => 't' });
+    assert.equal('alt' in onText, false);
+});
+
+test('an exported page names a picture by its alt text', () => {
+    const page = { id: 1, width: 200, height: 100, background: { type: 'solid', color: '#ffffff' }, elements: [normaliseElement({ ...picture, alt: 'Two <warm> pies' }, { genId: () => 'p1' })] };
+    const svg = renderPageToSvgString(page, { measure: createStubMeasurer(), assetUrl: () => '/img/p.png', assetSize: () => ({ width: 100, height: 80 }) });
+    assert.match(svg, /<title>Two &lt;warm&gt; pies<\/title>/);
+    const plain = renderPageToSvgString({ ...page, elements: [normaliseElement(picture, { genId: () => 'p1' })] }, { measure: createStubMeasurer(), assetUrl: () => '/img/p.png', assetSize: () => ({ width: 100, height: 80 }) });
+    assert.equal(plain.includes('<title>'), false);
+});
+
+test('the keyboard inset only counts a real on-screen keyboard and pans the text into view', () => {
+    assert.equal(coveredByKeyboard(800, 800, 0), 0);
+    assert.equal(coveredByKeyboard(800, 780, 0), 0, 'a small bar is not a keyboard');
+    assert.equal(coveredByKeyboard(800, 480, 0), 320);
+    assert.equal(coveredByKeyboard(800, 480, 40), 280, 'the visual viewport can be scrolled');
+    assert.equal(panToReveal(300, 400), 0);
+    assert.equal(panToReveal(390, 400), -14);
+    assert.equal(panToReveal(520, 400), -144);
+});
