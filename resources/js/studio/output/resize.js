@@ -603,6 +603,29 @@ export function resizePage(page, fromFormat, toFormat, opts = {}) {
         const nearX = Math.min(b.x, W - b.x - b.w) <= 0.25 * W;
         const nearY = Math.min(b.y, H - b.y - b.h) <= 0.25 * H;
         const cxs = b.x + b.w / 2; const cys = b.y + b.h / 2;
+        // an accent line or mark right next to a text block (an underline bar under a headline) stays with that block
+        if (!it.rotated) {
+            const kk0 = Math.min(kx, Math.max(ky, sz)) * usedMult;
+            let near = null;
+            for (const pp of result.placed) {
+                if (pp.kind !== 'text') continue;
+                const sb0 = pp.b.src;
+                const overlapX = Math.min(b.x + b.w, sb0.x + sb0.w) - Math.max(b.x, sb0.x);
+                if (overlapX < 0.3 * Math.min(b.w, sb0.w)) continue;
+                const below = b.y - (sb0.y + sb0.h);
+                const above = sb0.y - (b.y + b.h);
+                const gapMax = Math.max(24, 0.5 * sb0.h);
+                const g = below >= -2 && below <= gapMax ? { side: 'below', gap: Math.max(0, below) } : above >= -2 && above <= gapMax ? { side: 'above', gap: Math.max(0, above) } : null;
+                if (g && (!near || g.gap < near.gap)) near = { ...g, pp };
+            }
+            if (near) {
+                const w4 = b.w * kk0; const h4 = Math.max(1, b.h * kk0);
+                const ny4 = near.side === 'below' ? near.pp.y + near.pp.h + near.gap * kk0 : near.pp.y - near.gap * kk0 - h4;
+                out[idx] = { ...stretchBox(el, w4, h4), x: round(near.pp.x + (b.x - near.pp.b.src.x) * kk0), y: round(ny4) };
+                note(el.id, 'moved'); note(el.id, 'scaled');
+                return;
+            }
+        }
         // sitting on a bleeding panel (a logo disc on a sidebar): follow that panel
         const host = items.findIndex((h2, hi) => h2.kind === 'bleed' && out[hi] && area(box(h2.el)) > area(b) * 1.5 && contains(box(h2.el), { x: cxs, y: cys }));
         if (host >= 0 && !it.rotated) {

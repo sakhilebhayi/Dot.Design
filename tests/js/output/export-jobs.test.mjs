@@ -128,3 +128,15 @@ test('progress and cancel', async () => {
     await assert.rejects(() => runExport(deps, { format: 'bmp', pages: [0] }, { name: 'x' }), (e) => e.code === 'bad-format');
     await assert.rejects(() => runExport(deps, { format: 'png', pages: [99] }, { name: 'x' }), (e) => e.code === 'no-page');
 });
+
+import { webmSupport, recordWebm } from '../../../resources/js/studio/output/webm.js';
+
+test('webm: feature detection says why it is unsupported and never pretends', async () => {
+    assert.equal(webmSupport({}).supported, false);
+    assert.match(webmSupport({}).reason, /GIF/);
+    const env = { MediaRecorder: { isTypeSupported: () => false }, document: { createElement: () => ({ captureStream() {} }) } };
+    assert.equal(webmSupport(env).supported, false);
+    const ok = { MediaRecorder: { isTypeSupported: (m) => m === 'video/webm;codecs=vp8' }, document: { createElement: () => ({ captureStream() {} }) } };
+    assert.deepEqual(webmSupport(ok), { supported: true, mime: 'video/webm;codecs=vp8', reason: '' });
+    await assert.rejects(() => recordWebm({ frames: [], width: 10, height: 10, createCanvas: () => ({}), env: {} }), (e) => e.code === 'webm-unsupported' && /GIF/.test(e.hint));
+});

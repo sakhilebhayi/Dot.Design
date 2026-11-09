@@ -27,6 +27,8 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, Math.max(0, ms)));
 export async function recordWebm({ frames, width, height, fps = 30, createCanvas, mime, signal, onProgress, bitsPerSecond, env = globalThis }) {
     const support = webmSupport(env);
     if (!support.supported) throw new ExportError('webm-unsupported', support.reason, 'Use the GIF option instead.');
+    const hidden = () => typeof document !== 'undefined' && document.hidden === true;
+    if (hidden()) throw new ExportError('webm-hidden', 'The video can only be recorded while this tab is in front.', 'Keep this tab open and visible, then try again.');
     const canvas = createCanvas(width, height);
     const ctx = canvas.getContext('2d');
     ctx.fillStyle = '#ffffff';
@@ -45,6 +47,8 @@ export async function recordWebm({ frames, width, height, fps = 30, createCanvas
     try {
         for (let i = 0; i < frames.length; i += 1) {
             if (signal && signal.aborted) throw new ExportError('cancelled', 'Cancelled.');
+            // a hidden tab slows its timers to one a second, which would stretch the video: stop instead of recording slow motion
+            if (hidden()) throw new ExportError('webm-hidden', 'The recording stopped because this tab was not in front.', 'Keep this tab open and visible until the video is ready, then try again.');
             await sleep(t0 + at - performance.now());
             ctx.drawImage(frames[i].source, 0, 0, width, height);
             at += frames[i].delayMs;

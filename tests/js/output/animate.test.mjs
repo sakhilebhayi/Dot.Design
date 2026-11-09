@@ -200,3 +200,29 @@ test('a frame at t gives the same string every time (export determinism)', () =>
     assert.equal(applyAnimationToSvg(base, pg, evaluate(pg, 777)), applyAnimationToSvg(base, pg, evaluate(pg, 777)));
     assert.notEqual(applyAnimationToSvg(base, pg, evaluate(pg, 777)), applyAnimationToSvg(base, pg, evaluate(pg, 1777)));
 });
+
+import { moveSegment, snap, clampN } from '../../../resources/js/studio/output/anim-edit.js';
+
+test('timeline editing: moving the entrance changes its delay, resizing changes its length, both snap and clamp', () => {
+    const a = { in: { preset: 'fade', delay_ms: 300, duration_ms: 700, easing: 'ease-out' } };
+    assert.equal(moveSegment(a, 'in', 260, 'move', 5000).in.delay_ms, 550);
+    assert.equal(moveSegment(a, 'in', -1000, 'move', 5000).in.delay_ms, 0);
+    assert.equal(moveSegment(a, 'in', 240, 'resize', 5000).in.duration_ms, 950);
+    assert.equal(moveSegment(a, 'in', -2000, 'resize', 5000).in.duration_ms, 100);
+    assert.equal(a.in.delay_ms, 300, 'the input is not modified');
+    assert.equal(moveSegment(a, 'out', 100, 'move', 5000), null);
+    assert.equal(moveSegment(a, 'loop', 100, 'move', 5000), null);
+});
+
+test('timeline editing: the exit is positioned from the end of the page, so moving it right leaves less time after it', () => {
+    const a = { out: { preset: 'fade', delay_ms: 1000, duration_ms: 500, easing: 'linear' } };
+    assert.equal(moveSegment(a, 'out', 400, 'move', 5000).out.delay_ms, 600);
+    assert.equal(moveSegment(a, 'out', -300, 'move', 5000).out.delay_ms, 1300);
+    const longer = moveSegment(a, 'out', 250, 'resize', 5000).out; // right edge later: longer, finishing later, same start
+    assert.equal(longer.duration_ms, 750); assert.equal(longer.delay_ms, 750);
+    const before = elementTimeline({ animation: a }, 5000).out;
+    const after = elementTimeline({ animation: { out: longer } }, 5000).out;
+    assert.equal(after.start, before.start);
+    assert.equal(after.end, before.end + 250);
+    assert.equal(snap(123), 100); assert.equal(snap(126), 150); assert.equal(clampN(5, 1, 3), 3);
+});

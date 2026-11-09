@@ -190,6 +190,7 @@ export function mountExport(root, props, ctx) {
     const previewBox = h('div', { class: 'out-preview' });
     const frameEl = h('div', { class: 'out-preview__frame' });
     const factsEl = h('dl', { class: 'out-facts', 'aria-live': 'polite' });
+    const warnEl = h('p', { class: 'out-note out-note--warn', role: 'status', hidden: true });
     const statusEl = h('div', { class: 'out-status', 'aria-live': 'polite' });
     root.appendChild(body);
 
@@ -242,6 +243,9 @@ export function mountExport(root, props, ctx) {
         else if (state.estimate && (f === 'jpg' || f === 'gif')) add('Size', `about ${formatBytes(state.estimate.bytes)} (estimate)`);
         else add('File size', 'Shown after you prepare the file');
         rows.forEach((r) => factsEl.appendChild(r));
+        const big = f === 'gif' && state.phase !== 'ready' && state.estimate && state.estimate.bytes > 8 * 1024 * 1024;
+        warnEl.hidden = !big;
+        warnEl.textContent = big ? `This GIF will be about ${formatBytes(state.estimate.bytes)}. That is heavy for email and messages. Choose a smaller size or fewer frames per second.` : '';
     }
 
     function paintStatus() {
@@ -272,7 +276,7 @@ export function mountExport(root, props, ctx) {
             if (!fpsList.includes(state.fps)) state.fps = fpsList[1] || fpsList[0];
             return section('Quality', h('div', { class: 'out-row', role: 'group', 'aria-label': 'Frames per second' }, h('span', { class: 'out-muted' }, 'Smoothness'), fpsList.map((v) => chip({ label: `${v} per second`, pressed: state.fps === v, onClick: () => { state.fps = v; resetResult(); render(); refreshEstimate(); } }))),
                 h('div', { class: 'out-row', role: 'group', 'aria-label': 'Picture size' }, h('span', { class: 'out-muted' }, 'Picture size'), EDGE_CHOICES.map((e) => chip({ label: `${e.label} (${e.id})`, pressed: state.maxEdge === e.id, onClick: () => { state.maxEdge = e.id; resetResult(); render(); refreshEstimate(); } }))),
-                f === 'gif' ? h('p', { class: 'out-muted' }, 'GIF files get big quickly. Small and 10 or 15 per second is a good start.') : h('p', { class: 'out-muted' }, 'The video is recorded at real speed, so preparing it takes about as long as the animation.'));
+                f === 'gif' ? h('p', { class: 'out-muted' }, 'GIF files get big quickly. Small and 10 or 15 per second is a good start.') : h('p', { class: 'out-muted' }, 'The video is recorded at real speed, so preparing it takes about as long as the animation. Keep this tab in front until it is ready.'));
         }
         if (f === 'pdf') {
             const choices = kind === 'print' ? DPI_CHOICES : [1, 2, 3];
@@ -363,7 +367,7 @@ export function mountExport(root, props, ctx) {
             h('summary', {}, 'More options', icon('chevron')),
             h('div', { class: 'out-adv__body' },
                 h('div', { class: 'out-options' }, tabs(), state.format === 'webm' && !video.supported ? null : pagesSection(), state.format === 'webm' && !video.supported ? null : sizeSection(), state.format === 'webm' && !video.supported ? null : optionsSection(), ...resultNotes(), h('div', { class: 'out-actions', dataset: { actions: '1' } })),
-                (() => { clear(previewBox); paintPreview(); paintFacts(); previewBox.appendChild(h('div', { class: 'out-preview__stage' }, frameEl)); previewBox.appendChild(factsEl); return previewBox; })()));
+                (() => { clear(previewBox); paintPreview(); paintFacts(); previewBox.appendChild(h('div', { class: 'out-preview__stage' }, frameEl)); previewBox.appendChild(factsEl); previewBox.appendChild(warnEl); return previewBox; })()));
         body.appendChild(adv);
         renderActions();
         if (focusKey) { const t = body.querySelector(`[data-fk="${focusKey}"]`); if (t) t.focus(); }
