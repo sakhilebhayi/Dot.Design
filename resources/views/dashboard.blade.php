@@ -21,9 +21,9 @@
             <h2 id="start-title" class="lt-section__title">Start something</h2>
             <p class="lt-small">Pick a size, then open a blank canvas or a ready-made design.</p>
         </div>
-        <div class="lt-start" role="list">
+        <div class="lt-start" role="group" aria-label="Sizes">
             @foreach ($formats as $format)
-                <x-ds.format-chip role="listitem" :href="$createRoute.'?format='.$format['key']" :name="$format['name']" :width="$format['width']" :height="$format['height']" :size="$format['width'].' × '.$format['height'].' '.$format['unit']" />
+                <x-ds.format-chip :href="$createRoute.'?format='.$format['key']" :name="$format['name']" :width="$format['width']" :height="$format['height']" :size="$format['width'].' × '.$format['height'].' '.$format['unit']" />
             @endforeach
         </div>
         <div class="lt-ruler lt-start__rule" aria-hidden="true"></div>

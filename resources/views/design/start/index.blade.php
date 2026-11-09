@@ -111,10 +111,10 @@
             <h2 id="blank-title" class="lt-section__title">Or start with a blank canvas</h2>
             <p class="lt-small">One click opens the editor at that size.</p>
         </div>
-        <form method="POST" action="{{ route('design.projects.store') }}" class="cf-chips" role="list" aria-label="Common sizes">
+        <form method="POST" action="{{ route('design.projects.store') }}" class="cf-chips" aria-label="Common sizes">
             @csrf
             @foreach ($common as $format)
-                <button type="submit" name="format_key" value="{{ $format['key'] }}" role="listitem" class="lt-fchip" title="{{ $format['label'] }}: {{ $format['size_label'] }}. {{ $format['use'] }}">
+                <button type="submit" name="format_key" value="{{ $format['key'] }}" class="lt-fchip" title="{{ $format['label'] }}: {{ $format['size_label'] }}. {{ $format['use'] }}">
                     <span class="lt-fchip__frame" style="--w: {{ $format['px']['width'] }}; --h: {{ $format['px']['height'] }}" aria-hidden="true"></span>
                     <span>
                         <span class="lt-fchip__name">{{ $format['label'] }}</span>
@@ -122,7 +122,7 @@
                     </span>
                 </button>
             @endforeach
-            <button type="button" role="listitem" class="lt-fchip cf-chips__more" data-lt-dialog-open="size-picker" data-cf-picker-open>
+            <button type="button" class="lt-fchip cf-chips__more" data-lt-dialog-open="size-picker" data-cf-picker-open>
                 <span class="lt-fchip__frame cf-chips__plus" aria-hidden="true"><x-ds.icon name="plus" /></span>
                 <span>
                     <span class="lt-fchip__name">More sizes</span>

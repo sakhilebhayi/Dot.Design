@@ -28,8 +28,8 @@
 .lp-sheet__name { font-family: var(--lt-font-display); font-weight: 600; letter-spacing: -0.02em; font-size: clamp(1.25rem, 2.6vw, 2rem); line-height: 1; color: var(--lt-paper-ink); }
 .lp-sheet__size { font-size: var(--lt-text-sm); color: var(--lt-paper-ink-2); font-variant-numeric: tabular-nums; }
 .lp-formats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--lt-space-1); padding-block: var(--lt-space-3) var(--lt-space-2); margin-inline: calc(-1 * var(--lt-space-3)); padding-inline: var(--lt-space-3); }
-.lp-formats .lt-fchip[aria-pressed="true"] { background: var(--lt-panel-sunk); box-shadow: inset 0 -2px 0 var(--lt-ink); }
-.lp-formats .lt-fchip[aria-pressed="true"] .lt-fchip__frame { box-shadow: 0 0 0 2px var(--lt-ink); }
+.lp-formats .lt-fchip[aria-current="true"] { background: var(--lt-panel-sunk); box-shadow: inset 0 -2px 0 var(--lt-ink); }
+.lp-formats .lt-fchip[aria-current="true"] .lt-fchip__frame { box-shadow: 0 0 0 2px var(--lt-ink); }
 .lp-cta-line { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--lt-space-3); margin-top: var(--lt-space-3); }
 .lp-cta-line p { font-size: var(--lt-text-md); color: var(--lt-ink-2); min-width: 0; }
 

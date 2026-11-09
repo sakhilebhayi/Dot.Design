@@ -41,7 +41,7 @@
     </header>
 
     <main id="main" tabindex="-1">
-        <section class="lp-wrap lp-hero" aria-labelledby="hero-title">
+        <section class="lp-wrap lp-hero">
             <div>
                 <h1 id="hero-title" class="lp-h1">Your ideas. Beautifully designed.</h1>
                 <p class="lp-lede">Posters, social posts, flyers and business cards, made on a canvas that already knows your colours, fonts and logo.</p>
@@ -61,7 +61,7 @@
                 <div class="lp-table__ruler lt-ruler" aria-hidden="true" style="margin-top: 0;"></div>
                 <div class="lp-formats" role="group" aria-label="Choose a size">
                     @foreach ($formats as $format)
-                        <a href="{{ $hrefFor($format) }}" class="lt-fchip" data-lp-format data-name="{{ $format['name'] }}" data-w="{{ $format['width'] }}" data-h="{{ $format['height'] }}" data-size="{{ $format['width'] }} × {{ $format['height'] }} {{ $format['unit'] }}" data-href="{{ $hrefFor($format) }}" aria-pressed="{{ $loop->first ? 'true' : 'false' }}">
+                        <a href="{{ $hrefFor($format) }}" class="lt-fchip" data-lp-format data-name="{{ $format['name'] }}" data-w="{{ $format['width'] }}" data-h="{{ $format['height'] }}" data-size="{{ $format['width'] }} × {{ $format['height'] }} {{ $format['unit'] }}" data-href="{{ $hrefFor($format) }}" aria-current="{{ $loop->first ? 'true' : 'false' }}">
                             <span class="lt-fchip__frame" style="--w: {{ $format['width'] }}; --h: {{ $format['height'] }}" aria-hidden="true"></span>
                             <span><span class="lt-fchip__name">{{ $format['name'] }}</span><span class="lt-fchip__size">{{ $format['width'] }} × {{ $format['height'] }} {{ $format['unit'] }}</span></span>
                         </a>

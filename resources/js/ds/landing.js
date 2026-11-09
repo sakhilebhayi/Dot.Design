@@ -9,7 +9,7 @@ if (table) {
     const chips = Array.from(table.querySelectorAll('[data-lp-format]'));
 
     const choose = (chip) => {
-        chips.forEach((c) => c.setAttribute('aria-pressed', String(c === chip)));
+        chips.forEach((c) => c.setAttribute('aria-current', String(c === chip)));
         sheet.style.setProperty('--w', chip.dataset.w);
         sheet.style.setProperty('--h', chip.dataset.h);
         name.textContent = chip.dataset.name;

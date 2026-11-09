@@ -2,7 +2,8 @@
     $nav = \App\Support\Ui\Navigation::build(request());
     $user = auth()->user();
     $team = $user?->currentTeam;
-    $pageTitle = isset($header) ? trim(strip_tags((string) $header)) : '';
+    // The slot is rendered before this layout, so a page's own heading (x-ds.page-header) has already named the page.
+    $pageTitle = isset($header) ? trim(strip_tags((string) $header)) : (string) request()->attributes->get('page_title', '');
     $hasTeams = $user && \Laravel\Jetstream\Jetstream::hasTeamFeatures();
     $tokenRoute = \Illuminate\Support\Facades\Route::has('api-tokens.index') ? route('api-tokens.index') : null;
     $isAdmin = $user && $team && \Illuminate\Support\Facades\Route::has('design.activity.page') && in_array(\App\Support\Design\DesignAccess::teamRole($user->id, $team->id), ['owner', 'admin'], true);

@@ -12,7 +12,7 @@ Your Dot Ecosystem account is also your identity on Dot.Design. Signing in throu
 
 ## 3. Your content and projects
 
-You keep ownership of the projects, designs, text, and images you create on Dot.Design. You're responsible for having the right to use any content (images, fonts, brand assets) you upload or incorporate into a project. AI-generated imagery is provided as a starting point or tool — you're responsible for reviewing generated content before using it, including for any trademark, copyright, or brand-guideline concerns specific to your use case.
+You keep ownership of the projects, designs, text, and images you create on Dot.Design. You're responsible for having the right to use any content (images, fonts, brand assets) you upload or incorporate into a project. AI-generated imagery is provided as a starting point or tool, you're responsible for reviewing generated content before using it, including for any trademark, copyright, or brand-guideline concerns specific to your use case.
 
 ## 4. Acceptable use
 
@@ -29,7 +29,7 @@ We aim to keep Dot.Design available and reliable, but we don't guarantee uninter
 
 ## 6. Disclaimers and limitation of liability
 
-Dot.Design is provided "as is." AI-generated imagery and layout suggestions may not always be accurate, appropriate, or free of third-party rights concerns — you're responsible for reviewing anything you export and use. To the fullest extent permitted by law, BluePin is not liable for indirect, incidental, or consequential loss arising from your use of Dot.Design.
+Dot.Design is provided "as is." AI-generated imagery and layout suggestions may not always be accurate, appropriate, or free of third-party rights concerns, you're responsible for reviewing anything you export and use. To the fullest extent permitted by law, BluePin is not liable for indirect, incidental, or consequential loss arising from your use of Dot.Design.
 
 ## 7. Termination
 

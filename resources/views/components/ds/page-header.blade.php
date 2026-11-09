@@ -1,4 +1,5 @@
 @props(['title', 'sub' => null])
+@php(request()->attributes->set('page_title', trim(strip_tags((string) $title))))
 <header {{ $attributes->class(['lt-pagehead']) }}>
     <div class="lt-pagehead__text">
         <h1 class="lt-h1">{{ $title }}</h1>

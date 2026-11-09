@@ -123,7 +123,7 @@ class DesignSystemSeeder extends Seeder
                 'category' => 'brain-surface',
                 'is_brain_surface' => true,
                 'version' => 1,
-                'description' => 'Renders a Dot.Brain recommendation confidence score. Not yet certified — comprehension gate is roadmap, not implemented.',
+                'description' => 'Renders a Dot.Brain recommendation confidence score. Not yet certified: comprehension gate is roadmap, not implemented.',
                 'props_schema' => ['score' => 'float(0-1)', 'label' => 'string'],
             ]
         );

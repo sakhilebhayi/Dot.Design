@@ -10,7 +10,7 @@
 <div class="lt-page lt-page--wide br-int">
     <x-ds.page-header title="Connections to other Dot platforms" sub="What Dot.Design is really connected to. A platform is only listed as connected after a real call to it has worked. Turning a connection on is a server setting, so there are no switches on this page." />
 
-    <section aria-labelledby="int-real">
+    <section>
         <h2 id="int-real" class="lt-h2" style="margin-bottom: var(--lt-space-4);">Connections that exist</h2>
         <div class="lt-table-scroll" tabindex="0" role="region" aria-labelledby="int-real">
             <table class="lt-table br-int__table">
