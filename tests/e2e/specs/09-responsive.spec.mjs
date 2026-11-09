@@ -125,4 +125,27 @@ test('tablet 768: the editor shows panels and the design side by side without ov
     assert.ok(m.svg.width >= 300 && m.svg.x + m.svg.width <= 769, `the page is a usable size on a tablet (${Math.round(m.svg.width)} px wide)`);
     assert.deepEqual(log.errors, []);
 });
+test('dark mode: the main screens and the editor really switch and stay readable', async (t) => {
+    const user = makeUser('Night');
+    const p = world('project', { owner: user.email, name: 'Night design', width: 900, height: 600, elements: [{ id: 'h', type: 'text', x: 60, y: 60, width: 600, height: 100, text: 'Night', fontSize: 64, color: '#111111', font: 'inter' }] });
+    const ctx = await contextFor(user, { colorScheme: 'dark' }); t.after(() => ctx.close());
+    const page = await ctx.newPage(); const log = watch(page);
+    const lum = (rgb) => { const [r, g, b] = rgb.match(/\d+(\.\d+)?/g).slice(0, 3).map(Number).map((v) => v / 255).map((v) => (v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4)); return 0.2126 * r + 0.7152 * g + 0.0722 * b; };
+    const ratio = (a, b) => { const [x, y] = [lum(a), lum(b)].sort((m, n) => n - m); return (x + 0.05) / (y + 0.05); };
+    for (const [name, url] of [['home', '/dashboard'], ['start', '/design/new'], ['templates', '/design/templates'], ['brand', '/design/brand'], ['assets', '/design/assets'], ['editor', `/design/projects/${p.id}`]]) {
+        await page.goto(url);
+        await page.waitForLoadState('networkidle').catch(() => {});
+        const m = await page.evaluate(() => {
+            const cs = getComputedStyle(document.body);
+            const h = document.querySelector('h1, h2, .st-top');
+            return { bg: cs.backgroundColor, fg: cs.color, head: h ? getComputedStyle(h).color : cs.color, overflow: document.documentElement.scrollWidth - innerWidth };
+        });
+        await shot(page, `dark-${name}`);
+        assert.ok(lum(m.bg) < 0.2, `${name}: the page background is dark (${m.bg})`);
+        assert.ok(ratio(m.fg, m.bg) >= 4.5, `${name}: body text ${m.fg} on ${m.bg} is readable (${ratio(m.fg, m.bg).toFixed(1)}:1)`);
+        assert.ok(ratio(m.head, m.bg) >= 4.5, `${name}: headings ${m.head} on ${m.bg} are readable`);
+        assert.ok(m.overflow <= 1, `${name}: no sideways scroll`);
+    }
+    assert.deepEqual(log.errors, []);
+});
 test.after(closeBrowser);
