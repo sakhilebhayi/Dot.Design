@@ -688,15 +688,21 @@ export function resizeDocument(pages, fromFormat, toFormat, opts = {}) {
     return resizeDocumentWithReport(pages, fromFormat, toFormat, opts).pages;
 }
 
-/** Formats grouped for the dialog: the current design's aspect family first (sorted by closeness), then the rest by group. */
+/**
+ * Formats for the dialog: the current design's aspect family first, then the closest shapes in the same group of use
+ * (a social post suggests other social formats), popular ones breaking ties. Everything else is returned in `others`.
+ */
 export function suggestTargets(formats, current, { limit = 6 } = {}) {
     if (!current) return { suggested: [], others: formats };
     const ratio = (f) => (f.px ? f.px.width / f.px.height : f.width / f.height);
     const cur = ratio(current);
-    const same = formats.filter((f) => f.key !== current.key && f.family === current.family);
-    const near = formats.filter((f) => f.key !== current.key && f.family !== current.family).sort((a, b) => Math.abs(Math.log(ratio(a) / cur)) - Math.abs(Math.log(ratio(b) / cur)));
-    const suggested = [...same, ...near.filter((f) => f.popular)].slice(0, limit);
-    return { suggested, others: formats.filter((f) => f.key !== current.key && !suggested.includes(f)) };
+    const rest = formats.filter((f) => f.key !== current.key);
+    const same = rest.filter((f) => f.family === current.family);
+    const near = rest
+        .filter((f) => f.family !== current.family && (!current.group || f.group === current.group))
+        .sort((a, b) => Math.abs(Math.log(ratio(a) / cur)) - Math.abs(Math.log(ratio(b) / cur)) || (b.popular ? 1 : 0) - (a.popular ? 1 : 0));
+    const suggested = [...same, ...near].slice(0, limit);
+    return { suggested, others: rest.filter((f) => !suggested.includes(f)) };
 }
 
 export { rectsIntersect };

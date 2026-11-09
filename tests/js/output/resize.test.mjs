@@ -178,4 +178,8 @@ test('suggested targets list the same aspect family first', () => {
     assert.ok(!suggested.some((f) => f.key === 'instagram-post-square') && !others.some((f) => f.key === 'instagram-post-square'));
     const a4 = suggestTargets(formats, F['a4-portrait']);
     assert.ok(a4.suggested.slice(0, 3).every((f) => f.family === 'a-portrait'));
+    // a social post suggests other social formats, closest shape first
+    const sq = suggestTargets(formats, F['instagram-post-square']);
+    assert.ok(sq.suggested.every((f) => f.group === 'social'), sq.suggested.map((f) => f.key).join());
+    assert.equal(sq.suggested[0].key, 'instagram-post-portrait');
 });

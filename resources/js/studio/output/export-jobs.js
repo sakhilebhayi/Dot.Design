@@ -258,3 +258,54 @@ export async function runExport(deps, settings, project, { signal, onProgress, o
 }
 
 export { concat, estimateGifBytes, resolveTarget };
+
+// ---- estimates (shown before anything is made) ------------------------------------------------------------------
+
+/** JPG size estimate: encode a small sample at the chosen quality and scale by pixels. Honest label: "about". */
+export async function estimateJpegBytes(deps, { svg, page, target, quality }) {
+    const size = resolveTarget(page, target);
+    const sampleW = Math.min(640, size.width);
+    const k = sampleW / size.width;
+    const sampleH = Math.max(1, Math.round(size.height * k));
+    const d = await drawSvgToCanvas(deps, svg, { width: sampleW, height: sampleH, flatten: true });
+    const blob = await deps.canvasToBlob(d.canvas, 'image/jpeg', quality);
+    disposeCanvas(d.canvas);
+    if (!blob) return null;
+    // larger pictures compress a little better per pixel than the small sample did
+    return Math.round(blob.size * ((size.width * size.height) / (d.width * d.height)) * 0.8);
+}
+
+/**
+ * GIF size estimate from real frames: one full frame, plus the size of the change between consecutive frames sampled at
+ * several moments of the animation (a still start costs nothing, the middle of an entrance costs a lot), extrapolated to the
+ * frame count. Always shown as "about".
+ */
+export async function estimateGifSize(deps, { indexes, fps, maxEdge }) {
+    const pages = deps.studio.getState().doc.pages;
+    const plan = planAnimation(pages, indexes, { fps, maxEdge });
+    const page = pages[indexes[0]];
+    const prepared = await prepareSvg(deps, { pageIndex: indexes[0], embedFonts: true, inline: true });
+    const D = pageDuration(page);
+    const step = 1000 / fps;
+    const grab = async (t) => {
+        const svg = applyAnimationToSvg(prepared.svg, page, evaluate(page, t));
+        const d = await drawSvgToCanvas(deps, svg, { width: plan.width, height: plan.height, flatten: true });
+        const data = d.canvas.getContext('2d').getImageData(0, 0, d.width, d.height).data;
+        disposeCanvas(d.canvas);
+        return { data };
+    };
+    const fractions = [0.05, 0.2, 0.35, 0.5, 0.65, 0.8, 0.92];
+    const deltas = [];
+    let full = null;
+    for (const f of fractions) {
+        const t = Math.max(0, Math.min(D - 2 * step, D * f));
+        const a = await grab(t);
+        const b = await grab(t + step);
+        const single = encodeGif({ width: plan.width, height: plan.height, frames: [a] }).length;
+        const pair = encodeGif({ width: plan.width, height: plan.height, frames: [a, b] }).length;
+        if (!full || f === 0.5) full = single;
+        deltas.push(Math.max(120, pair - single));
+    }
+    const avg = deltas.reduce((s, v) => s + v, 0) / deltas.length;
+    return { bytes: Math.round(full + avg * Math.max(0, plan.frames - 1)), plan };
+}
