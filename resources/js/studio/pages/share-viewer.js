@@ -34,9 +34,10 @@ function setupTheme() {
     const dark = () => (root.getAttribute('data-theme') || (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')) === 'dark';
     const paint = () => {
         const d = dark();
-        btn.setAttribute('aria-pressed', String(d));
-        $('[data-sv-theme-label]', btn).textContent = d ? 'Light' : 'Dark';
-        btn.setAttribute('aria-label', d ? 'Switch to light mode' : 'Switch to dark mode');
+        // the button names what it will do; the icon shows the same thing (a sun to go light, a moon to go dark)
+        $('[data-sv-theme-label]', btn).textContent = d ? 'Light theme' : 'Dark theme';
+        btn.setAttribute('aria-label', d ? 'Switch to light theme' : 'Switch to dark theme');
+        btn.querySelectorAll('[data-sv-theme-icon]').forEach((i) => i.toggleAttribute('hidden', i.getAttribute('data-sv-theme-icon') !== (d ? 'sun' : 'moon')));
     };
     btn.addEventListener('click', () => {
         const next = dark() ? 'light' : 'dark';

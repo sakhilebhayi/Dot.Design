@@ -26,13 +26,14 @@
     <a class="sv-skip" href="#sv-main">Skip to the design</a>
 
     <header class="sv-bar">
-        <span class="sv-brand"><span class="sv-mark" role="img" aria-label="Dot.Design mark"></span><span class="sv-brand__name">Dot.Design</span></span>
+        <a class="sv-brand" href="{{ url('/') }}" aria-label="Dot.Design, home"><span class="lt-mark" role="img" aria-label="Dot.Design mark"></span><span class="sv-brand__name">Dot.Design</span></a>
         <div class="sv-title">
             <h1>{{ $name }}</h1>
             <p>{{ $sentence }}</p>
         </div>
-        <button type="button" class="sv-theme" data-sv-theme aria-pressed="false" aria-label="Dark mode" hidden>
-            <span data-sv-theme-label>Dark</span>
+        <button type="button" class="sv-theme" data-sv-theme aria-label="Switch to dark theme" hidden>
+            <x-ds.icon name="moon" data-sv-theme-icon="moon" /><x-ds.icon name="sun" data-sv-theme-icon="sun" hidden />
+            <span data-sv-theme-label>Dark theme</span>
         </button>
     </header>
 
@@ -112,5 +113,6 @@
     </div>
 
     <script type="application/json" id="dot-share-document">{!! json_encode($document, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR) !!}</script>
+    <footer class="sv-foot"><a href="{{ url('/') }}">Made with Dot.Design</a></footer>
 </body>
 </html>

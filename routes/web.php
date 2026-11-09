@@ -120,7 +120,7 @@ Route::middleware([
     });
 
     // R-45 studio routes (docs/R45_ARCHITECTURE.md section 6): one file per owner so parallel work does not collide.
-    foreach (['backend', 'business', 'collab', 'ai', 'output', 'integrations', 'editorui', 'privacy'] as $studioRoutes) {
+    foreach (['backend', 'business', 'collab', 'ai', 'output', 'integrations', 'editorui', 'privacy', 'ppages'] as $studioRoutes) {
         require __DIR__.'/studio/'.$studioRoutes.'.php';
     }
 

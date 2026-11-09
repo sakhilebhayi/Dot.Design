@@ -26,12 +26,12 @@
 .cf-chips-on[hidden] { display: none; }
 .cf-count { min-height: 1.25rem; font-variant-numeric: tabular-nums; }
 
-.cf-tgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(12.5rem, 1fr)); gap: var(--lt-space-6) var(--lt-space-5); align-items: start; }
+.cf-tgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(13.5rem, 1fr)); gap: var(--lt-space-5) var(--lt-space-4); align-items: start; }
 @media (max-width: 40rem) { .cf-tgrid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--lt-space-5) var(--lt-space-3); } }
 .cf-tcard { position: relative; display: grid; gap: var(--lt-space-3); min-width: 0; align-content: start; }
 .cf-tcard__open { display: block; width: 100%; padding: 0; text-align: left; border-radius: var(--lt-radius-1); }
-.cf-tcard__stage { display: grid; place-items: center; height: 16rem; padding: var(--lt-space-4); background: var(--lt-stage); transition: background-color var(--lt-dur-2) var(--lt-ease); }
-.cf-tcard__frame { --fit: 12.5rem; width: min(100%, calc(var(--fit) * var(--w) / var(--h))); max-width: 100%; max-height: 100%; transition: transform var(--lt-dur-2) var(--lt-ease); }
+.cf-tcard__stage { display: grid; place-items: center; height: 16rem; padding: var(--lt-space-3); background: var(--lt-stage); transition: background-color var(--lt-dur-2) var(--lt-ease); }
+.cf-tcard__frame { --fit: 14.25rem; width: min(100%, calc(var(--fit) * var(--w) / var(--h))); max-width: 100%; max-height: 100%; transition: transform var(--lt-dur-2) var(--lt-ease); }
 .cf-tcard__sk { width: 55%; height: 85%; }
 .cf-tcard__open:hover .cf-tcard__frame, .cf-tcard__open:focus-visible .cf-tcard__frame { transform: translateY(-3px); }
 .cf-tcard__open:focus-visible { outline-offset: 3px; }

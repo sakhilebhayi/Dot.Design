@@ -8,6 +8,7 @@
     $brandRoute = collect(['design.brand.index', 'brand.index', 'design.brand-kits.index'])->first(fn ($name) => \Illuminate\Support\Facades\Route::has($name));
     $assetRoute = collect(['design.assets.index', 'assets.index'])->first(fn ($name) => \Illuminate\Support\Facades\Route::has($name));
     $brandUpdated = \App\Support\Ui\ProjectCard::brandUpdatedIds($recent);
+    $milestone = app(\App\Support\Ui\Milestones::class)->pending($user);
 @endphp
 <x-app-layout>
 <div class="lt-page">
@@ -15,6 +16,8 @@
     <x-ds.page-header title="Home" :sub="now()->format('l j F').($team ? ', '.$team->name : '')">
         <x-ds.button :href="$createRoute" icon="plus">New design</x-ds.button>
     </x-ds.page-header>
+
+    <x-ds.milestone :milestone="$milestone" />
 
     <section aria-labelledby="start-title">
         <div class="lt-section__head">
@@ -43,21 +46,7 @@
             @else
                 <div class="lt-contacts">
                     @foreach ($recent as $project)
-                        <a href="{{ route('design.projects.show', $project) }}" class="lt-contact">
-                            <span class="lt-contact__stage"><x-ds.frame :width="$project->width" :height="$project->height" :src="\App\Support\Ui\ProjectCard::thumbnailUrl($project)" class="lt-crop lt-crop--link" /></span>
-                            @php($chip = \App\Support\Ui\ProjectCard::status($project))
-                            <span class="lt-contact__meta">
-                                <span class="lt-contact__name">{{ $project->name }}</span>
-                                <span class="lt-contact__sub">{{ \App\Support\Ui\DesignListing::sizeLabel($project) }}</span>
-                                <span class="lt-contact__sub">Edited {{ $project->updated_at?->diffForHumans() ?? 'never' }}</span>
-                                @if (($chip && $chip['label'] !== 'Draft') || in_array($project->id, $brandUpdated, true))
-                                    <span class="lt-contact__chips">
-                                        @if ($chip && $chip['label'] !== 'Draft')<x-ds.tag :kind="$chip['kind']">{{ $chip['label'] }}</x-ds.tag>@endif
-                                        @if (in_array($project->id, $brandUpdated, true))<x-ds.tag kind="warn">Brand updated</x-ds.tag>@endif
-                                    </span>
-                                @endif
-                            </span>
-                        </a>
+                        <x-ds.design-tile :project="$project" :brand-updated="in_array($project->id, $brandUpdated, true)" />
                     @endforeach
                 </div>
             @endif

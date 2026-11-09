@@ -20,13 +20,20 @@
 
 /* the table */
 .lp-table { min-width: 0; }
-.lp-table__stage { background: var(--lt-stage); display: grid; place-items: center; height: clamp(18rem, 46vh, 26rem); padding: var(--lt-space-5); position: relative; }
+.lp-table__stage { background: var(--lt-stage); display: grid; place-items: center; height: clamp(20rem, 52vh, 31rem); padding: var(--lt-space-6) var(--lt-space-5); position: relative; }
 .lp-table__ruler { display: flex; align-items: center; justify-content: space-between; gap: var(--lt-space-3); color: var(--lt-ink-3); font-size: var(--lt-text-xs); padding-top: var(--lt-space-2); font-variant-numeric: tabular-nums; }
-.lp-sheet { --fit: 14rem; width: min(100%, calc(var(--fit) * var(--w) / var(--h))); display: grid; align-content: center; justify-items: start; padding: clamp(0.75rem, 3%, 1.5rem); gap: var(--lt-space-2); }
+.lp-sheet { --fit: 22rem; margin: 0; width: min(100%, calc(var(--fit) * var(--w) / var(--h))); max-height: 100%; transition: opacity var(--lt-dur-2) var(--lt-ease); }
 .lp-sheet.is-swap { animation: lp-swap var(--lt-dur-3) var(--lt-ease); }
-@keyframes lp-swap { from { opacity: 0.2; transform: scale(0.97); } to { opacity: 1; transform: none; } }
-.lp-sheet__name { font-family: var(--lt-font-display); font-weight: 600; letter-spacing: -0.02em; font-size: clamp(1.25rem, 2.6vw, 2rem); line-height: 1; color: var(--lt-paper-ink); }
-.lp-sheet__size { font-size: var(--lt-text-sm); color: var(--lt-paper-ink-2); font-variant-numeric: tabular-nums; }
+@keyframes lp-swap { from { opacity: 0.2; transform: scale(0.98); } to { opacity: 1; transform: none; } }
+/* the drawing fills its frame; its size comes from the frame's true proportions, never from the file */
+.lp-art { display: block; width: 100%; height: 100%; line-height: 0; }
+.lp-art svg { display: block; width: 100%; height: 100%; }
+.lp-proof { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--lt-space-2) var(--lt-space-4); padding-top: var(--lt-space-3); min-height: 3.25rem; }
+.lp-caption { font-size: var(--lt-text-sm); color: var(--lt-ink-2); min-width: 0; flex: 1 1 18rem; line-height: 1.45; }
+.lp-caption b { color: var(--lt-ink); font-weight: 600; }
+.lp-colors { display: flex; gap: 3px; margin: 0; padding: 0; list-style: none; flex: none; }
+.lp-colors li { width: 1.5rem; height: 1.5rem; background: var(--c); box-shadow: inset 0 0 0 1px rgb(20 24 28 / 0.22); border-radius: var(--lt-radius-1); }
+.lp-colors:empty { display: none; }
 .lp-formats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--lt-space-1); padding-block: var(--lt-space-3) var(--lt-space-2); margin-inline: calc(-1 * var(--lt-space-3)); padding-inline: var(--lt-space-3); }
 .lp-formats .lt-fchip[aria-pressed="true"] { background: var(--lt-panel-sunk); box-shadow: inset 0 -2px 0 var(--lt-ink); }
 .lp-formats .lt-fchip[aria-pressed="true"] .lt-fchip__frame { box-shadow: 0 0 0 2px var(--lt-ink); }
@@ -49,17 +56,28 @@
 .lp-step h3 { font-family: var(--lt-font-display); font-weight: 600; font-size: 1.25rem; letter-spacing: -0.015em; line-height: 1.15; }
 .lp-step p { margin-top: var(--lt-space-2); color: var(--lt-ink-2); font-size: var(--lt-text-md); line-height: 1.5; }
 
-/* brand kit diagram: three slots feeding a page */
-.lp-kit { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 0.9fr); gap: var(--lt-space-4); align-items: center; background: var(--lt-stage); padding: var(--lt-space-6); }
-.lp-kit__slots { display: grid; gap: var(--lt-space-3); }
-.lp-slot { display: flex; align-items: center; gap: var(--lt-space-3); background: var(--lt-panel); padding: var(--lt-space-3) var(--lt-space-4); box-shadow: 0 0 0 1px var(--lt-rule-strong); min-height: 3.5rem; }
-.lp-slot b { font-weight: 600; display: block; line-height: 1.2; }
-.lp-slot small { display: block; font-size: var(--lt-text-xs); color: var(--lt-ink-3); }
-.lp-slot svg { width: 1.25rem; height: 1.25rem; color: var(--lt-ink-2); flex: none; }
-.lp-kit__arrow { color: var(--lt-ink-2); }
-.lp-kit__arrow svg { width: 1.75rem; height: 1.75rem; }
-.lp-kit .lt-frame { --w: 4; --h: 5; width: 100%; max-width: 9rem; justify-self: center; }
-@media (max-width: 36rem) { .lp-kit { grid-template-columns: minmax(0, 1fr); } .lp-kit__arrow { transform: rotate(90deg); justify-self: center; } }
+/* set your brand once: the same real template before and after an example kit, on the stage */
+.lp-brand { display: grid; gap: var(--lt-space-7); grid-template-columns: minmax(0, 1fr); align-items: center; }
+@media (min-width: 60rem) { .lp-brand { grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); gap: var(--lt-space-8); } }
+.lp-kitcard { margin-top: var(--lt-space-5); display: grid; gap: var(--lt-space-2); padding: var(--lt-space-4); background: var(--lt-panel-sunk); border-radius: var(--lt-radius-2); max-width: 28rem; }
+.lp-kitcard__title { font-weight: 600; font-size: var(--lt-text-md); }
+.lp-kitcard__colors { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--lt-space-2) var(--lt-space-4); margin: 0; padding: 0; list-style: none; font-size: var(--lt-text-sm); }
+.lp-kitcard__colors li { display: flex; align-items: center; gap: var(--lt-space-2); min-width: 0; flex-wrap: wrap; }
+.lp-ba { margin: 0; display: grid; gap: var(--lt-space-3); min-width: 0; }
+.lp-ba__pair { background: var(--lt-stage); padding: var(--lt-space-6) var(--lt-space-5); display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); gap: var(--lt-space-4); align-items: center; }
+.lp-ba__pair--stack { grid-template-columns: minmax(0, 1fr); justify-items: center; }
+.lp-ba__pair--stack .lp-ba__arrow { transform: rotate(90deg); }
+.lp-ba__pair--stack .lp-ba__cell { width: 100%; }
+.lp-ba__pair--stack .lp-ba__cell .lt-frame { --fit: 12rem; }
+.lp-ba__cell { display: grid; gap: var(--lt-space-3); justify-items: center; min-width: 0; }
+.lp-ba__cell .lt-frame { --fit: 17rem; width: min(100%, calc(var(--fit) * var(--w) / var(--h))); }
+.lp-ba__cap { font-size: var(--lt-text-sm); font-weight: 600; color: var(--lt-ink); text-align: center; }
+.lp-ba__arrow { color: var(--lt-ink-2); }
+.lp-ba__arrow svg { width: 1.75rem; height: 1.75rem; }
+@media (max-width: 36rem) { .lp-ba__pair { padding-inline: var(--lt-space-3); gap: var(--lt-space-2); } .lp-ba__arrow svg { width: 1.25rem; height: 1.25rem; } }
+
+/* below-the-fold sections are drawn when they scroll near, with a reserved height so nothing shifts */
+.lp-section--deferred { content-visibility: auto; contain-intrinsic-size: auto 42rem; }
 
 /* two ways to work */
 .lp-pair { margin-top: var(--lt-space-7); display: grid; gap: var(--lt-space-6); grid-template-columns: minmax(0, 1fr); }
@@ -80,8 +98,9 @@
 .lp-close { padding-block: var(--lt-space-8); display: grid; gap: var(--lt-space-7); grid-template-columns: minmax(0, 1fr); align-items: center; }
 @media (min-width: 60rem) { .lp-close { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } }
 .lp-close__table { background: var(--lt-stage); display: flex; align-items: flex-end; justify-content: center; gap: var(--lt-space-5); padding: var(--lt-space-7) var(--lt-space-5); min-width: 0; }
-.lp-close__table .lt-frame { --fit: 9rem; width: min(30%, calc(var(--fit) * var(--w) / var(--h))); flex: none; }
+.lp-close__table .lt-frame { --fit: 12rem; width: min(30%, calc(var(--fit) * var(--w) / var(--h))); flex: none; height: auto; }
 .lp-close__table .lt-frame:nth-child(3) { width: 38%; }
+.lp-close__table .lt-frame.lp-art { line-height: 0; }
 .lp-close .lp-h1 { font-size: clamp(2.5rem, 7vw, 5.5rem); max-width: 14ch; }
 .lp-foot { padding-block: var(--lt-space-6) var(--lt-space-7); }
 .lp-foot__row { display: flex; flex-wrap: wrap; justify-content: space-between; gap: var(--lt-space-4); align-items: center; padding-top: var(--lt-space-5); }
@@ -89,4 +108,3 @@
 .lp-foot__links a { color: var(--lt-ink-2); min-height: 2.75rem; display: inline-flex; align-items: center; }
 .lp-foot__links a:hover { color: var(--lt-ink); text-decoration: underline; text-underline-offset: 0.2em; }
 .lp-formats .lt-fchip { width: auto; }
-.lp-sheet__size { white-space: nowrap; font-size: 0.75rem; }

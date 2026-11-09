@@ -13,7 +13,7 @@
 <body class="sv sv--gone">
     {{-- One page for every link that cannot be opened (unknown, malformed, expired, turned off) and for the rate limit: nothing here can tell them apart. --}}
     <main class="sv-gone">
-        <span class="sv-brand"><span class="sv-mark" role="img" aria-label="Dot.Design mark"></span><span class="sv-brand__name">Dot.Design</span></span>
+        <a class="sv-brand" href="{{ url('/') }}" aria-label="Dot.Design, home"><span class="lt-mark" role="img" aria-label="Dot.Design mark"></span><span class="sv-brand__name">Dot.Design</span></a>
         <h1>This link is not available</h1>
         <p>It may have expired, or the person who shared it turned it off. Ask them to send you a new one. If you have opened it many times in a short while, wait a minute and try again.</p>
     </main>

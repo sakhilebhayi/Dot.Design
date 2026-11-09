@@ -27,7 +27,7 @@
         @foreach ($switches as $key => [$label, $help])
             <div class="br-pref">
                 <div class="br-pref__text"><label for="pref-{{ $key }}" class="br-pref__name">{{ $label }}</label><span class="lt-small" id="pref-{{ $key }}-h">{{ $help }}</span></div>
-                <span class="br-switch"><input type="checkbox" id="pref-{{ $key }}" data-pref="{{ $key }}" aria-describedby="pref-{{ $key }}-h" @checked($settings[$key])><span class="br-switch__track" aria-hidden="true"></span></span>
+                <input type="checkbox" role="switch" class="lt-switch" id="pref-{{ $key }}" data-pref="{{ $key }}" aria-describedby="pref-{{ $key }}-h" @checked($settings[$key])>
             </div>
         @endforeach
         <div class="br-pref">

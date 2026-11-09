@@ -47,7 +47,7 @@
                         </span>
                         <span class="br-kit__type">
                             <span class="br-kit__aa" data-font="{{ $kf['heading'] ?? 'inter' }}" aria-hidden="true">Aa</span>
-                            <span class="br-kit__fonts" data-font-names="{{ ($kf['heading'] ?? 'inter').'|'.($kf['body'] ?? 'inter') }}">{{ \Illuminate\Support\Str::headline($kf['heading'] ?? 'inter') }} and {{ \Illuminate\Support\Str::headline($kf['body'] ?? 'inter') }}</span>
+                            <span class="br-kit__fonts" data-font-names="{{ ($kf['heading'] ?? 'inter').'|'.($kf['body'] ?? 'inter') }}">{{ \App\Support\Ui\FontManifest::label($kf['heading'] ?? 'inter') }} and {{ \App\Support\Ui\FontManifest::label($kf['body'] ?? 'inter') }}</span>
                         </span>
                     </a>
                     <div class="br-kit__meta">

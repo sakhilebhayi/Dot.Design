@@ -151,7 +151,7 @@ class StudioBrandUiTest extends TestCase
         $page = $this->get(route('design.brand.updates'))->assertOk();
         $page->assertSee($project->name);
         $page->assertSee('moved from version 1 to 2');
-        $page->assertSee('Heading font');
+        $page->assertSee('in this design');
         $page->assertSee(route('design.brand.updates.show', $project->id), false);
 
         $show = $this->get(route('design.brand.updates.show', $project->id))->assertOk();

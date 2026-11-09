@@ -1,0 +1,163 @@
+{
+ "instagram-post": {
+  "template": "ig-post-square-playful",
+  "name": "Quick tip card",
+  "width": 1080,
+  "height": 1080,
+  "colors": [
+   "#1d1d1b",
+   "#ffffff",
+   "#ffd23f",
+   "#ff4f8b",
+   "#3b82f6"
+  ]
+ },
+ "instagram-story": {
+  "template": "event-invitation-playful",
+  "name": "Party invitation story",
+  "width": 1080,
+  "height": 1920,
+  "colors": [
+   "#26124d",
+   "#ffcb2b",
+   "#3dd6c3",
+   "#ffe8f1",
+   "#ff3d81"
+  ]
+ },
+ "poster": {
+  "template": "promo-poster-bold",
+  "name": "Weekend promotion poster",
+  "width": 842,
+  "height": 1191,
+  "colors": [
+   "#141414",
+   "#ffffff",
+   "#ffe14d",
+   "#e4002b",
+   "#fff3b0"
+  ]
+ },
+ "flyer": {
+  "template": "flyer-a5-bold",
+  "name": "Grand opening flyer",
+  "width": 420,
+  "height": 595,
+  "colors": [
+   "#111111",
+   "#ffffff",
+   "#ff5a1f",
+   "#ffe1d0"
+  ]
+ },
+ "presentation": {
+  "template": "brand-guidelines-clean",
+  "name": "Brand guidelines (4 pages)",
+  "width": 1920,
+  "height": 1080,
+  "colors": [
+   "#16181d",
+   "#faf9f7",
+   "#e4572e",
+   "#3a5a40"
+  ]
+ },
+ "banner": {
+  "template": "sale-ad-bold",
+  "name": "Big sale advert",
+  "width": 1200,
+  "height": 630,
+  "colors": [
+   "#ffffff",
+   "#1d3bff",
+   "#ffd400",
+   "#0b0b0b"
+  ]
+ },
+ "business-card": {
+  "template": "business-card-dark",
+  "name": "Dark business card",
+  "width": 241,
+  "height": 156,
+  "colors": [
+   "#121212",
+   "#c9a45c",
+   "#f5efe3",
+   "#a39d90"
+  ]
+ },
+ "logo": {
+  "template": "logo-wordmark-bold",
+  "name": "Bold stacked logo",
+  "width": 1080,
+  "height": 1080,
+  "colors": [
+   "#111111",
+   "#ffd400",
+   "#ffffff"
+  ]
+ },
+ "close-instagram-post": {
+  "template": "ig-post-square-playful",
+  "name": "Quick tip card",
+  "width": 1080,
+  "height": 1080,
+  "colors": [
+   "#1d1d1b",
+   "#ffffff",
+   "#ffd23f",
+   "#ff4f8b",
+   "#3b82f6"
+  ]
+ },
+ "close-poster": {
+  "template": "promo-poster-bold",
+  "name": "Weekend promotion poster",
+  "width": 842,
+  "height": 1191,
+  "colors": [
+   "#141414",
+   "#ffffff",
+   "#ffe14d",
+   "#e4002b",
+   "#fff3b0"
+  ]
+ },
+ "close-presentation": {
+  "template": "brand-guidelines-clean",
+  "name": "Brand guidelines (4 pages)",
+  "width": 1920,
+  "height": 1080,
+  "colors": [
+   "#16181d",
+   "#faf9f7",
+   "#e4572e",
+   "#3a5a40"
+  ]
+ },
+ "brand-before": {
+  "template": "sale-ad-bold",
+  "name": "Big sale advert",
+  "width": 1200,
+  "height": 630,
+  "colors": [
+   "#ffffff",
+   "#1d3bff",
+   "#ffd400",
+   "#0b0b0b"
+  ]
+ },
+ "brand-after": {
+  "template": "sale-ad-bold",
+  "name": "Big sale advert",
+  "width": 1200,
+  "height": 630,
+  "colors": [
+   "#ffffff",
+   "#f0a030",
+   "#0b0b0b",
+   "#1d3bff",
+   "#145a3c"
+  ]
+ }
+}

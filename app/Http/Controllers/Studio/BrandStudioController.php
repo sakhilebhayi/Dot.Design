@@ -66,14 +66,27 @@ class BrandStudioController extends Controller
         $notices = collect($brand->pendingNotices());
         $projects = DesignProject::query()->whereIn('id', $notices->pluck('project_id'))->get()->keyBy('id');
 
-        $rows = $notices->map(function (array $n) use ($projects) {
+        $rows = $notices->map(function (array $n) use ($projects, $brand) {
             $project = $projects->get($n['project_id']);
+            $diff = $project ? $brand->diffAgainst($project) : ['items' => [], 'counts' => ['elements' => 0, 'changes' => 0]];
+
+            // The same list the review page opens with, so the numbers agree. Kit changes that no element of this design uses are
+            // named separately instead of being counted as changes to the design.
+            $usedTokens = collect($diff['items'])->pluck('token')->all();
+            $summary = (array) ($n['summary'] ?? []);
+            $unused = [
+                'colors' => array_values(array_filter((array) ($summary['colors'] ?? []), fn ($c) => ! in_array('brand.colors.'.($c['key'] ?? ''), $usedTokens, true))),
+                'fonts' => array_values(array_filter((array) ($summary['fonts'] ?? []), fn ($f) => ! in_array('brand.fonts.'.($f['slot'] ?? ''), $usedTokens, true))),
+            ];
 
             return $n + [
                 'width' => $project?->width,
                 'height' => $project?->height,
                 'thumbnail_url' => $project ? ProjectCard::thumbnailUrl($project) : null,
                 'review_url' => route('design.brand.updates.show', $n['project_id']),
+                'changes' => $diff['items'],
+                'counts' => $diff['counts'],
+                'unused' => $unused,
             ];
         })->all();
 

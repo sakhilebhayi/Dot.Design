@@ -54,6 +54,10 @@
     --lt-bad: #b3261e;
     --lt-bad-wash: #fbe5e3;
     --lt-focus: #0a6a91;
+    /* the product's own yellow, taken from the logo: a signal for a primary action's focus, a confirmation, a first-time moment. Always filled, never text on paper. */
+    --lt-signal: #f1c82d;
+    --lt-signal-ink: #14181c;
+    --lt-signal-wash: #fdf2c4;
 
     /* the filled primary button is ink on paper, not the accent */
     --lt-btn: #14181c;
@@ -129,6 +133,9 @@
     --lt-bad: #ff8a80;
     --lt-bad-wash: #331816;
     --lt-focus: #5cc3ee;
+    --lt-signal: #f1c82d;
+    --lt-signal-ink: #14181c;
+    --lt-signal-wash: #2c2510;
     --lt-btn: #eceef0;
     --lt-btn-ink: #14181c;
     --lt-btn-hover: #ffffff;
@@ -161,6 +168,9 @@
         --lt-bad: #ff8a80;
         --lt-bad-wash: #331816;
         --lt-focus: #5cc3ee;
+        --lt-signal: #f1c82d;
+        --lt-signal-ink: #14181c;
+        --lt-signal-wash: #2c2510;
         --lt-btn: #eceef0;
         --lt-btn-ink: #14181c;
         --lt-btn-hover: #ffffff;

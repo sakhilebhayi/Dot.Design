@@ -23,7 +23,7 @@ Checked 2026-11-09 on PostgreSQL 16 with 2,000 projects, 2,666 pages, 500 assets
 ## Tables
 
 <!-- BEGIN GENERATED: schema -->
-28 tables, read from the migrations (run on a throw-away SQLite database) by `php scripts/ops/generate-docs.php`. A trailing `?` means nullable. Framework tables (cache, sessions, jobs, failed_jobs, password resets, personal access tokens, migrations) are left out. Types are SQLite's names, normalised: `text` also stands for every `json` column (PostgreSQL keeps `json`), `integer` is `bigint`/`integer`/`smallint` on PostgreSQL, `boolean` and `timestamp` are the same on both.
+29 tables, read from the migrations (run on a throw-away SQLite database) by `php scripts/ops/generate-docs.php`. A trailing `?` means nullable. Framework tables (cache, sessions, jobs, failed_jobs, password resets, personal access tokens, migrations) are left out. Types are SQLite's names, normalised: `text` also stands for every `json` column (PostgreSQL keeps `json`), `integer` is `bigint`/`integer`/`smallint` on PostgreSQL, `boolean` and `timestamp` are the same on both.
 
 - **`ai_generation_logs`**: id integer, user_id integer, design_project_id integer?, prompt text, result_url varchar?, provider varchar, tokens_used integer?, created_at timestamp?, updated_at timestamp?
   - foreign keys: design_project_id -> design_projects.id on delete set null; user_id -> users.id on delete cascade
@@ -61,6 +61,9 @@ Checked 2026-11-09 on PostgreSQL 16 with 2,000 projects, 2,666 pages, 500 assets
 - **`design_file_links`**: id integer, design_project_id integer, team_id integer, user_id integer?, scope varchar, format varchar, files_uuid varchar, version integer?, open_url varchar?, filed_at timestamp, created_at timestamp?, updated_at timestamp?
   - indexes: unique (design_project_id, team_id, scope, format)
   - foreign keys: design_project_id -> design_projects.id on delete cascade; team_id -> teams.id on delete cascade; user_id -> users.id on delete set null
+- **`design_milestones`**: id integer, user_id integer, key varchar, seen_at timestamp
+  - indexes: unique (user_id, key)
+  - foreign keys: user_id -> users.id on delete cascade
 - **`design_project_grants`**: id integer, design_project_id integer, user_id integer, level varchar, granted_by integer?, created_at timestamp?, updated_at timestamp?
   - indexes: (granted_by); (user_id); unique (design_project_id, user_id)
   - foreign keys: design_project_id -> design_projects.id on delete cascade; granted_by -> users.id on delete set null; user_id -> users.id on delete cascade
@@ -103,7 +106,7 @@ Checked 2026-11-09 on PostgreSQL 16 with 2,000 projects, 2,666 pages, 500 assets
 - **`users`**: id integer, name varchar, email varchar, email_verified_at timestamp?, password varchar, remember_token varchar?, current_team_id integer?, profile_photo_path varchar?, created_at timestamp?, updated_at timestamp?, two_factor_secret text?, two_factor_recovery_codes text?, two_factor_confirmed_at timestamp?, is_platform_operator boolean
   - indexes: unique (email)
 
-#### Migration files (32)
+#### Migration files (33)
 
 - `0001_01_01_000000_create_users_table`
 - `0001_01_01_000001_create_cache_table`
@@ -137,4 +140,5 @@ Checked 2026-11-09 on PostgreSQL 16 with 2,000 projects, 2,666 pages, 500 assets
 - `2026_11_10_100200_add_brief_and_brand_columns_to_design_projects`
 - `2026_11_10_300000_create_design_ai_proposals_table`
 - `2026_11_11_900000_create_design_asset_folders_table`
+- `2026_11_12_100000_create_design_milestones_table`
 <!-- END GENERATED: schema -->
