@@ -39,9 +39,11 @@ for (const sig of ['SIGINT', 'SIGTERM', 'SIGHUP']) process.on(sig, () => { clean
 process.on('uncaughtException', (e) => { console.error(e); cleanup(); process.exit(1); });
 
 function freePort(preferred) {
+    const any = () => new Promise((res) => { const t = net.createServer(); t.listen(0, '127.0.0.1', () => { const p = t.address().port; t.close(() => res(p)); }); });
+    if (!preferred) return any();
     return new Promise((res) => {
         const s = net.createServer();
-        s.once('error', () => { const t = net.createServer(); t.listen(0, '127.0.0.1', () => { const p = t.address().port; t.close(() => res(p)); }); });
+        s.once('error', () => any().then(res));
         s.listen(preferred, '127.0.0.1', () => s.close(() => res(preferred)));
     });
 }
@@ -62,7 +64,7 @@ async function waitFor(url, ms = 30000) {
 }
 
 function startServer(port, env, label) {
-    const child = spawn('php', ['artisan', 'serve', '--host=127.0.0.1', `--port=${port}`, '--no-reload'], {
+    const child = spawn('php', ['artisan', 'serve', '--host=127.0.0.1', `--port=${port}`, '--no-reload', '--tries=0'], {
         cwd: root, env: { ...env, PHP_CLI_SERVER_WORKERS: '1' }, detached: true, stdio: ['ignore', 'pipe', 'pipe'],
     });
     child.stdout.on('data', () => {});
@@ -88,10 +90,12 @@ async function main() {
     const out = join(root, 'tests/e2e/out');
     mkdirSync(out, { recursive: true });
 
-    const port = await freePort(Number(process.env.E2E_PORT || 8485));
-    const aiPort = await freePort(port + 1);
+    // The stubs listen first (on ports the OS picks), then the two app ports are chosen, so nothing can collide with them.
     stub = await startAnthropicStub();
     filesStub = await startDotFilesStub();
+    const port = await freePort(Number(process.env.E2E_PORT || 8485));
+    let aiPort = await freePort(port + 1);
+    if (aiPort === port) aiPort = await freePort(0);
 
     const base = {
         ...process.env,
