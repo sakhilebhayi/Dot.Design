@@ -81,6 +81,13 @@ return [
         'ebook' => 'E-book',
         'invitation' => 'Invitation',
         'brochure' => 'Brochure',
+        'logo' => 'Logo',
+        'brand-guidelines' => 'Brand guidelines',
+        'company-profile' => 'Company profile',
+        'product-catalogue' => 'Product catalogue',
+        'service-catalogue' => 'Service catalogue',
+        'quotation' => 'Quotation',
+        'packaging' => 'Packaging',
     ],
 
     // Where a template kind is filed when someone saves their own design as a template.
@@ -89,6 +96,8 @@ return [
         'linkedin-post' => 'social', 'linkedin-banner' => 'social', 'x-post' => 'social', 'tiktok-cover' => 'social',
         'youtube-thumbnail' => 'social', 'whatsapp-status' => 'social', 'pinterest-pin' => 'social',
         'business-card' => 'identity', 'letterhead' => 'identity', 'email-signature' => 'identity', 'label' => 'identity',
+        'logo' => 'identity', 'brand-guidelines' => 'identity', 'company-profile' => 'identity',
+        'product-catalogue' => 'commercial', 'service-catalogue' => 'commercial', 'quotation' => 'commercial', 'packaging' => 'commercial',
         'menu' => 'commercial', 'price-list' => 'commercial', 'voucher' => 'commercial', 'certificate' => 'commercial',
         'report' => 'document', 'newsletter' => 'document', 'ebook' => 'document', 'presentation' => 'document', 'presentation-cover' => 'document',
     ],

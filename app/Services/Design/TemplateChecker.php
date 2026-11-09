@@ -69,7 +69,8 @@ class TemplateChecker
         $this->subset($definition, 'objectives', array_keys((array) ($copy['objectives'] ?? [])));
         $this->subset($definition, 'industries', array_merge(['general'], array_keys((array) ($flow['industries'] ?? []))));
 
-        $platforms = array_unique(array_map(fn (array $format) => $format['platform'], $this->formats->all()));
+        // Format platforms plus the three output-kind words templates use for documents and decks (D-R45 coordinator).
+        $platforms = array_values(array_unique(array_merge(array_map(fn (array $format) => $format['platform'], $this->formats->all()), ['pdf', 'presentation', 'digital'])));
         $this->subset($definition, 'platforms', $platforms);
 
         $format = null;
@@ -97,7 +98,7 @@ class TemplateChecker
             $this->runPages($pages, $width, $height);
 
             if ($format !== null && isset($definition['width'], $definition['height'])
-                && ($definition['width'] !== $format['px']['width'] || $definition['height'] !== $format['px']['height'])) {
+                && ((float) $definition['width'] !== (float) $format['px']['width'] || (float) $definition['height'] !== (float) $format['px']['height'])) {
                 $this->fail('width', "must equal the format's canvas size {$format['px']['width']} x {$format['px']['height']}");
             }
         }

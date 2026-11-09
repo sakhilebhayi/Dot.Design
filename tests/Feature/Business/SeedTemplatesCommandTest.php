@@ -152,11 +152,13 @@ class SeedTemplatesCommandTest extends TestCase
         $this->assertSame('published', $this->fixtureTemplate()->status);
     }
 
-    public function test_the_default_directory_with_no_files_is_a_clean_no_op_and_the_seeder_hook_runs(): void
+    public function test_the_shipped_library_seeds_cleanly_and_the_seeder_hook_is_idempotent(): void
     {
         $this->artisan('design:seed-templates')->assertExitCode(0);
+        $count = $this->templates()->count();
+        $this->assertGreaterThanOrEqual(50, $count);
         $this->seed(DesignTemplateSeeder::class);
 
-        $this->assertSame(count(glob(database_path('templates/[a-z0-9]*.php')) ?: []) > 0, $this->templates()->isNotEmpty());
+        $this->assertSame($count, $this->templates()->count());
     }
 }

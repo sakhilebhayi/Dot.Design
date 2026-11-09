@@ -373,9 +373,7 @@ class BrandKitService
     /** @return list<string> */
     public function fontKeys(): array
     {
-        $keys = array_keys((array) config('design_fonts.fonts', []));
-
-        return $keys !== [] ? array_map('strval', $keys) : (array) config('design_copy.font_keys');
+        return app(DocumentSchema::class)->fontKeys();
     }
 
     /** @param array<string, string> $errors */
