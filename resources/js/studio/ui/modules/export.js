@@ -28,7 +28,34 @@ function auditScale(settings, page) {
     return Math.min(8, Math.max(0.1, Math.round(s * 100) / 100));
 }
 
+/**
+ * `ctx.exports.render({format, scope}) -> Promise<Blob>` for the modules that file an export elsewhere (Save to Dot.Files).
+ * It runs the same job the Download dialog runs, with the dialog's own defaults for that kind of design (print: 300 dpi PDF,
+ * screen: 1x pictures), so what is filed is what would be downloaded. Several files come back as the same ZIP.
+ */
+export function buildExporter(ctx) {
+    return {
+        async render({ format = 'png', scope = 'all' } = {}) {
+            const studio = ctx.studio;
+            const config = ctx.config || {};
+            const project = { name: (config.project && config.project.name) || 'design', unit: (config.project && config.project.unit) || 'px', id: config.project && config.project.id };
+            const kind = kindOf(project, findFormat(config));
+            const pages = studio.getState().doc.pages;
+            const m = /^page-(\d+)$/.exec(String(scope));
+            const indexes = m ? [Number(m[1]) - 1].filter((i) => pages[i]) : pages.map((_, i) => i);
+            if (!indexes.length) throw new Error('That page does not exist.');
+            const res = await runExport(browserDeps(studio), {
+                ...DEFAULT_SETTINGS, format, pages: indexes, quality: 0.92, embedFonts: true, sizes: [{ mode: 'scale', scale: 1 }],
+                pdfTarget: kind === 'print' ? { mode: 'dpi', dpi: 300 } : { mode: 'scale', scale: 2 },
+            }, project);
+            const file = res.files[0];
+            return new Blob([file.bytes], { type: file.mime });
+        },
+    };
+}
+
 export function register(ctx) {
+    if (!ctx.exports) ctx.exports = buildExporter(ctx);
     const open = (c) => (c || ctx).openDialog(EXPORT_DIALOG, {});
     ctx.registerDialog(EXPORT_DIALOG, { title: 'Download', size: 'lg', mount: (el, props, c) => mountExport(el, props, c || ctx) });
     ctx.registerTopbarAction({

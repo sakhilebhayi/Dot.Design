@@ -114,7 +114,7 @@ function mountArrange(el, ctx) {
     }
     function sizeTo(dim, v) {
         const s = ctx.selection(); if (s.count !== 1) return;
-        ctx.run('element.resize', { id: s.ids[0], [dim]: v, keepRatio: state.lock }, { key: key(dim) });
+        ctx.run('element.resize', { id: s.ids[0], [dim]: v, keepRatio: state.lock, anchor: 'topleft' }, { key: key(dim) });
     }
     function rotateTo(v) { const s = ctx.selection(); if (s.count !== 1) return; ctx.run('element.rotate', { ids: s.ids, rotation: v }, { key: key('rot') }); }
 

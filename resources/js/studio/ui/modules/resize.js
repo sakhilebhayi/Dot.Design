@@ -185,6 +185,11 @@ export function mountResize(root, props, ctx) {
     }
 
     render();
+    // The assistant ("Suitable for Instagram") opens this dialog with a size already chosen.
+    if (props && typeof props.format_key === 'string' && formats.some((f) => f.key === props.format_key && (!current || f.key !== current.key))) {
+        state.selected.add(props.format_key);
+        compute();
+    }
     return {
         destroy() { destroyed = true; runToken += 1; urls.forEach((u) => URL.revokeObjectURL(u)); urls.clear(); clear(root); },
     };

@@ -26,3 +26,4 @@ Homestead.json
 Homestead.yaml
 Thumbs.db
 /storage/perf
+/tests/e2e/out

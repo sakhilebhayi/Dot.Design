@@ -444,6 +444,7 @@
 /* ---- keep targets honest on touch and on small screens: 44px ---------------------------------- */
 @media (pointer: coarse), (max-width: 60rem) {
     .st-tog, .st-float__btn, .st-top__btn { min-height: 2.75rem; min-width: 2.75rem; }
+    .st-save:not(:disabled) { min-height: 2.75rem; min-width: 2.75rem; justify-content: center; } /* the chip is the retry and resolve button when saving fails */
     .st-num__input, .st-select { min-height: 2.75rem; font-size: 1rem; }
     .st-seg__btn { min-height: 2.75rem; }
     .st-sw { width: 2.75rem; height: 2.75rem; }

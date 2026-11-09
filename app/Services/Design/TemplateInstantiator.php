@@ -127,8 +127,14 @@ class TemplateInstantiator
             $element['text'] = $text[$bind]['value'];
             $filled[] = $base + ['source' => $text[$bind]['source'], 'type' => 'text'];
 
-            if (($element['autoFit'] ?? 'none') === 'none' && mb_strlen($element['text']) > max(24, (int) (mb_strlen($previous) * 2))) {
-                $warnings[] = 'Some text you added is much longer than the sample text it replaced, so it may not fit. Check the design.';
+            // Words longer than the sample must not run off the page or over their neighbours: the box keeps its size and the
+            // type shrinks to fit it (the engine only shrinks when the text really overflows, so short text is unchanged).
+            if (($element['autoFit'] ?? 'none') === 'none' && mb_strlen($element['text']) > mb_strlen($previous)) {
+                $element['autoFit'] = 'shrink';
+
+                if (mb_strlen($element['text']) > max(24, (int) (mb_strlen($previous) * 2))) {
+                    $warnings[] = 'Some text you added is much longer than the sample text it replaced, so it was made smaller to fit. Check the design.';
+                }
             }
 
             return $element;

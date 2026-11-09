@@ -105,16 +105,6 @@
                 @endif
             </section>
 
-            @if ($aiGenerations > 0)
-            <section aria-labelledby="ai-title" style="margin-top: var(--lt-space-6);">
-                <h2 id="ai-title" class="lt-h3" style="margin-bottom: var(--lt-space-3);">Image requests</h2>
-                <ul style="display: grid; gap: var(--lt-space-2);">
-                    @foreach ($generationsByProvider as $provider => $count)
-                        <li><x-ds.stat-line :value="$count" :label="$provider === 'mock' ? \App\Services\Ai\AiImageResult::PLACEHOLDER_LABEL : \Illuminate\Support\Str::headline($provider)" /></li>
-                    @endforeach
-                </ul>
-            </section>
-            @endif
         </aside>
     </div>
 </div>

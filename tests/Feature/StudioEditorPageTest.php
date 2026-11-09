@@ -6,6 +6,7 @@ use App\Models\BrandKit;
 use App\Models\DesignAsset;
 use App\Models\DesignProject;
 use App\Models\User;
+use App\Services\Design\Assistant\AssistantStatus;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\Support\ReadsEditorBoot;
 use Tests\Support\StudioWorld;
@@ -81,6 +82,30 @@ class StudioEditorPageTest extends TestCase
         $this->assertSame($user->id, $boot['user']['id']);
         $this->assertSame(300, $boot['limits']['max_elements_per_page']);
         $this->assertNull($boot['brand'], 'no kit exists yet');
+    }
+
+    public function test_the_page_has_exactly_one_heading_naming_the_design_outside_the_editor_mount(): void
+    {
+        [$user, $project] = $this->ownerWithProject();
+
+        $html = $this->open($user, $project)->assertOk()->getContent();
+
+        $this->assertSame(1, substr_count($html, '<h1'));
+        $this->assertMatchesRegularExpression('/<h1 class="lt-sr">Spring flyer<\/h1>\s*<div id="studio-app"/', $html);
+    }
+
+    public function test_the_assistant_flag_in_the_boot_json_is_exactly_what_the_assistant_status_says(): void
+    {
+        [$user, $project] = $this->ownerWithProject();
+
+        foreach ([['', true], ['sk-test-not-real', true], ['sk-test-not-real', false], ['', false]] as [$key, $enabled]) {
+            config(['design_ai.api_key' => $key, 'design_ai.enabled' => $enabled, 'services.anthropic.api_key' => $key]);
+
+            $boot = $this->editorBoot($this->open($user, $project)->assertOk()->getContent());
+
+            $this->assertSame(AssistantStatus::enabled(), $boot['flags']['ai'], "key '{$key}', enabled ".var_export($enabled, true));
+            $this->assertSame($key !== '' && $enabled, $boot['flags']['ai']);
+        }
     }
 
     public function test_the_workspace_default_brand_kit_is_included_and_a_linked_kit_wins(): void

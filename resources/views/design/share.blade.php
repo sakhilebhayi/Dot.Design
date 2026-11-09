@@ -52,6 +52,14 @@
                         <button type="button" class="sv-tool" data-sv-zoomin aria-label="Zoom in">+</button>
                         <button type="button" class="sv-tool" data-sv-fit>Fit to screen</button>
                     </div>
+                    @if ($canDownload)
+                        {{-- Only on a link made with "Allow downloads". The buttons stay hidden until the script that makes the file has loaded. --}}
+                        <div class="sv-toolbar__group" data-sv-download-group hidden>
+                            <button type="button" class="sv-tool" data-sv-download="png">Download picture</button>
+                            <button type="button" class="sv-tool" data-sv-download="pdf">Download PDF</button>
+                            <span class="sv-hint" data-sv-download-status role="status" aria-live="polite"></span>
+                        </div>
+                    @endif
                 </div>
                 <nav class="sv-strip" aria-label="Pages" data-sv-strip @if ($count < 2) hidden @endif></nav>
             </div>
