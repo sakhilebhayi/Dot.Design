@@ -96,6 +96,16 @@ test('a failed apply returns to review with the proposal intact so it can be ret
     assert.equal(m.state.phase, 'applying');
 });
 
+test('a failed apply after the decision was recorded is final: the proposal is gone and cannot be retried', () => {
+    const m = working();
+    m.send({ type: 'proposal', token: m.state.token, proposal });
+    m.send({ type: 'apply' });
+    m.send({ type: 'apply-failed', message: 'The design changed. Ask again.', final: true });
+    assert.deepEqual([m.state.phase, m.state.proposal, m.state.retryable], ['error', null, false]);
+    m.send({ type: 'apply' });
+    assert.equal(m.state.phase, 'error');
+});
+
 test('usage survives across proposals; subscribers hear every change but not no-ops', () => {
     const m = createMachine();
     const seen = [];

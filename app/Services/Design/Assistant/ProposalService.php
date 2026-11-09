@@ -34,7 +34,7 @@ class ProposalService
     public function storeAutomatic(User $user, DesignProject $project, DesignCanvas $canvas, array $ops, string $label, array $selection = []): ?DesignAiProposal
     {
         $page = $this->improve->pageArray($project, $canvas);
-        $result = $this->validator->validate($page, $ops, $this->improve->kitFor($project), $selection, $this->improve->pageText($page['elements']));
+        $result = $this->validator->validate($page, $ops, $this->improve->kitFor($project), $selection, $this->improve->pageText($page['elements']), snapToBrand: false);
 
         if ($result->isEmpty()) {
             return null;

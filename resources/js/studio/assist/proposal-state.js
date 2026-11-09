@@ -45,7 +45,11 @@ export function reduce(state, event) {
             return state.phase === 'applying' ? { ...initial(), usage: state.usage, token: state.token, notice: event.notice || 'Applied. You can undo it.' } : state;
 
         case 'apply-failed':
-            return state.phase === 'applying' ? { ...state, phase: 'review', message: event.message } : state;
+            if (state.phase !== 'applying') return state;
+            // final: the server already recorded the decision, so the same proposal cannot be tried again
+            return event.final
+                ? { ...state, phase: 'error', proposal: null, message: event.message, retryable: false }
+                : { ...state, phase: 'review', message: event.message };
 
         case 'dismiss':
             if (state.phase === 'working' || state.phase === 'applying') return state.phase === 'working' ? { ...initial(), usage: state.usage, token: state.token + 1 } : state;

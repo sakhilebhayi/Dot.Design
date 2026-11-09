@@ -40,6 +40,9 @@ class OpValidator
     /** @var list<string> */
     private array $fonts;
 
+    /** Colours and fonts the model proposes are matched to the brand kit; an automatic fix already chose its colours on purpose. */
+    private bool $snap = true;
+
     public function __construct(?DocumentSchema $schema = null)
     {
         $this->fonts = ($schema ?? DocumentSchema::shared())->fontKeys();
@@ -51,8 +54,9 @@ class OpValidator
      * @param  list<string>  $selection  ids the change is limited to (empty = the whole page)
      * @param  string  $source  text a new word on the page may take its facts from (instruction and existing page text)
      */
-    public function validate(array $page, array $rawOps, ?BrandKit $kit = null, array $selection = [], string $source = ''): OpResult
+    public function validate(array $page, array $rawOps, ?BrandKit $kit = null, array $selection = [], string $source = '', bool $snapToBrand = true): OpResult
     {
+        $this->snap = $snapToBrand;
         $index = $this->index($page['elements']);
         $allowed = $selection === [] ? null : $this->selectionScope($index, $selection);
         $width = (float) $page['width'];
@@ -376,7 +380,7 @@ class OpValidator
     /** With a brand kit, a colour is snapped to the nearest brand colour (or black or white). */
     private function brandColour(string $hex, ?BrandKit $kit, array &$notes): string
     {
-        $palette = $this->palette($kit);
+        $palette = $this->snap ? $this->palette($kit) : [];
         if ($palette === []) {
             return $hex;
         }
@@ -426,7 +430,7 @@ class OpValidator
 
     private function brandFont(string $font, array $element, ?BrandKit $kit, array &$notes): string
     {
-        $brand = array_values(array_filter(array_map(fn ($slot) => $kit?->fontKey($slot), ['heading', 'body', 'accent']), fn ($f) => is_string($f) && in_array($f, $this->fonts, true)));
+        $brand = $this->snap ? array_values(array_filter(array_map(fn ($slot) => $kit?->fontKey($slot), ['heading', 'body', 'accent']), fn ($f) => is_string($f) && in_array($f, $this->fonts, true))) : [];
         if ($brand === [] || in_array($font, $brand, true)) {
             return $font;
         }
