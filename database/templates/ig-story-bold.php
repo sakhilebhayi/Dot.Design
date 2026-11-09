@@ -22,10 +22,11 @@ $m = $p->m;
 $cw = $p->cw();
 
 $p->text('Your Business', $m, 250, $cw, ['size' => 34, 'weight' => 700, 'ls' => 0.14, 'case' => 'upper', 'role' => 'logo', 'bind' => 'business_name', 'name' => 'Business name']);
-$p->text("JUST\nLANDED", $m, 320, $cw, ['font' => 'head', 'size' => 218, 'lh' => 0.95, 'ls' => -0.02, 'role' => 'headline', 'bind' => 'headline', 'name' => 'Headline']);
-$p->photo($m, 770, 600, 600, 'photo_1', 'offset', ['name' => 'Product picture', 'accent' => 'extra', 'back' => 'surface']);
-$p->ellipse(640, 1060, 330, 330, 'extra', ['name' => 'Price badge']);
-$p->text("From\nR349", 640, 1060, 330, ['font' => 'head', 'size' => 78, 'lh' => 1.0, 'color' => 'surface', 'align' => 'center', 'valign' => 'middle', 'h' => 330, 'role' => 'price', 'bind' => 'price', 'name' => 'Price']);
+$p->text("JUST\nLANDED", $m, 320, $cw, ['font' => 'head', 'size' => 184, 'lh' => 0.95, 'ls' => -0.02, 'role' => 'headline', 'bind' => 'headline', 'name' => 'Headline']);
+$p->photo($m, 730, 600, 600, 'photo_1', 'offset', ['name' => 'Product picture', 'accent' => 'extra', 'back' => 'surface']);
+$p->ellipse(640, 1010, 330, 330, 'extra', ['name' => 'Price badge']);
+// the text box is the square inside the circle, so a longer price shrinks to stay on the badge
+$p->text("From\nR349", 640 + 48, 1010 + 48, 234, ['font' => 'head', 'size' => 72, 'lh' => 1.0, 'color' => 'surface', 'align' => 'center', 'valign' => 'middle', 'h' => 234, 'role' => 'price', 'bind' => 'price', 'name' => 'Price']);
 $p->button('Shop now', $m, 1430, $cw, 110, 'surface', 'accent', ['size' => 42, 'radius' => 55, 'bind' => 'cta']);
 
 return $t->done();

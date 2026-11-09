@@ -36,7 +36,8 @@ function specOf(el, fontSize) {
     return { font: el.font, fontSize, fontWeight: el.fontWeight, italic: !!el.italic };
 }
 
-function breakLongWord(word, maxW, width) {
+function breakLongWord(word, maxW, width, flag) {
+    if (flag) flag.broken = true;
     const parts = [];
     let cur = '';
     for (const ch of Array.from(word)) {
@@ -46,7 +47,7 @@ function breakLongWord(word, maxW, width) {
     return parts;
 }
 
-function wrapParagraph(text, maxW, width) {
+function wrapParagraph(text, maxW, width, flag) {
     if (text === '') return [''];
     const words = text.split(' ');
     const lines = [];
@@ -54,7 +55,7 @@ function wrapParagraph(text, maxW, width) {
     for (const w of words) {
         if (cur === null) {
             if (width(w) > maxW && w !== '') {
-                const parts = breakLongWord(w, maxW, width);
+                const parts = breakLongWord(w, maxW, width, flag);
                 for (let i = 0; i < parts.length - 1; i += 1) lines.push(parts[i]);
                 cur = parts[parts.length - 1];
             } else cur = w;
@@ -64,7 +65,7 @@ function wrapParagraph(text, maxW, width) {
         if (width(cand) <= maxW) { cur = cand; continue; }
         lines.push(cur.replace(/ +$/, ''));
         if (width(w) > maxW && w !== '') {
-            const parts = breakLongWord(w, maxW, width);
+            const parts = breakLongWord(w, maxW, width, flag);
             for (let i = 0; i < parts.length - 1; i += 1) lines.push(parts[i]);
             cur = parts[parts.length - 1];
         } else cur = w;
@@ -79,12 +80,13 @@ function layoutAt(el, fontSize, boxW, m) {
     const width = (s) => (s === '' ? 0 : m.measure(s, spec) + ls * Array.from(s).length);
     const text = applyCase(el.text || '', el.textCase);
     const rows = [];
+    const flag = { broken: false };
     for (const para of text.split('\n')) {
-        const wrapped = wrapParagraph(para, boxW, width);
+        const wrapped = wrapParagraph(para, boxW, width, flag);
         wrapped.forEach((t, i) => rows.push({ text: t, last: i === wrapped.length - 1 }));
     }
     const lh = fontSize * (el.lineHeight || 1.2);
-    return { rows, lh, width };
+    return { rows, lh, width, broken: flag.broken };
 }
 
 /**
@@ -100,16 +102,20 @@ export function layoutText(el, measurer) {
     let fontSize = el.fontSize;
     let L = layoutAt(el, fontSize, boxW, m);
 
-    if (el.autoFit === 'shrink' && L.rows.length * L.lh > boxH) {
+    // Shrink-to-fit also treats a word that is wider than the box as not fitting: a headline never breaks mid-word
+    // while it can still get smaller (a long word simply makes the whole text smaller).
+    const fits = (t) => t.rows.length * t.lh <= boxH + 0.01 && !t.broken;
+    if (el.autoFit === 'shrink' && !fits(L)) {
         let lo = MIN_FONT_SIZE;
         let hi = fontSize;
         let best = null;
         for (let i = 0; i < 12 && hi - lo > 0.25; i += 1) {
             const mid = (lo + hi) / 2;
             const t = layoutAt(el, mid, boxW, m);
-            if (t.rows.length * t.lh <= boxH) { best = { fs: mid, t }; lo = mid; } else hi = mid;
+            if (fits(t)) { best = { fs: mid, t }; lo = mid; } else hi = mid;
         }
-        if (best) { fontSize = Math.round(best.fs * 4) / 4; L = layoutAt(el, fontSize, boxW, m); }
+        // floor to a quarter: rounding up could step over the size that fits
+        if (best) { fontSize = Math.floor(best.fs * 4) / 4; L = layoutAt(el, fontSize, boxW, m); }
         else { fontSize = MIN_FONT_SIZE; L = layoutAt(el, fontSize, boxW, m); }
     }
 

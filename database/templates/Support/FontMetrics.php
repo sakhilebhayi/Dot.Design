@@ -5,8 +5,17 @@ declare(strict_types=1);
 namespace Database\Templates\Support;
 
 /**
- * Real per-character advance widths (font-advances.json, measured once with canvas measureText on the
- * actual fonts) used to size text boxes and to assert, with 15% headroom, that copy fits.
+ * Text measurement for authoring, calibrated to the real renderer.
+ *
+ * font-metrics.json holds, for every font variant the editor can load (each shipped weight, each italic), the
+ * advance width of every character and the kerning of every ASCII pair, measured with canvas measureText on the
+ * shipped woff2 files (node scripts/dev/measure-fonts.mjs). Weights resolve the way the engine's font manager
+ * does (the nearest shipped weight; a family without an italic draws upright), so a 600 Oswald is measured as the
+ * 700 it will really be drawn in. Widths agree with the engine's own layout to better than 0.2%, and the line
+ * breaks match in every template (scripts/dev/calibrate-metrics.mjs).
+ *
+ * Authoring keeps 15% spare width (HEADROOM) so that a brand font swap or a slightly longer word does not break the
+ * layout; the engine itself wraps at 100% of the box.
  */
 final class FontMetrics
 {
@@ -18,41 +27,62 @@ final class FontMetrics
         'caveat', 'pacifico', 'permanent-marker', 'jetbrains-mono',
     ];
 
-    /** @var array<string,array<string,array<int,float>>>|null */
-    private static ?array $adv = null;
+    /** @var array<string,mixed>|null */
+    private static ?array $data = null;
 
-    /** Per-character advance widths (em), ASCII 32..126, measured from the real fonts at weights 400, 700 and 900. */
-    private static function table(): array
-    {
-        return self::$adv ??= json_decode((string) file_get_contents(__DIR__.'/font-advances.json'), true, 512, JSON_THROW_ON_ERROR);
-    }
+    /** @var array<string,int>|null character => index into the advance arrays */
+    private static ?array $index = null;
 
-    /** Advance of one character in em at the given weight (linear between measured weights). */
-    public static function advance(string $font, int $weight, string $ch): float
+    /** @return array<string,mixed> */
+    private static function data(): array
     {
-        $t = self::table()[$font] ?? self::table()['inter'];
-        $o = ord($ch);
-        $i = ($o >= 32 && $o <= 126 && strlen($ch) === 1) ? $o - 32 : null;
-        $at = static fn (string $w): float => $i === null ? $t[$w][ord('n') - 32] : $t[$w][$i];
-        if ($weight <= 400) {
-            return $at('400');
-        }
-        if ($weight <= 700) {
-            return $at('400') + ($at('700') - $at('400')) * (($weight - 400) / 300);
+        if (self::$data === null) {
+            self::$data = json_decode((string) file_get_contents(__DIR__.'/font-metrics.json'), true, 512, JSON_THROW_ON_ERROR);
+            self::$index = [];
+            foreach (mb_str_split(self::$data['alphabet']) as $i => $ch) {
+                self::$index[$ch] = $i;
+            }
         }
 
-        return $at('700') + ($at('900') - $at('700')) * (min(900, $weight) - 700) / 200;
+        return self::$data;
     }
 
-    /** Width of one (already cased) line in px. Kerning is ignored; a 2% safety factor covers it. */
-    public static function lineWidth(string $line, string $font, float $size, int $weight, float $ls, string $case = 'none'): float
+    /** The shipped variant the engine will draw: [advances, kerning]. */
+    private static function variant(string $font, int $weight, bool $italic): array
     {
-        $sum = 0.0;
+        $fonts = self::data()['fonts'];
+        $f = $fonts[$font] ?? $fonts['inter'];
+        $pool = ($italic && $f['italic_weights'] !== []) ? $f['italic_weights'] : $f['weights'];
+        $best = $pool[0];
+        foreach ($pool as $w) {
+            if (abs($w - $weight) < abs($best - $weight)) {
+                $best = $w;
+            }
+        }
+        $v = $f['variants'][$best.(($italic && $f['italic_weights'] !== []) ? 'i' : '')];
+
+        return [$v['adv'], $v['kern']];
+    }
+
+    /** Width of one (already cased) line in px, kerning included. */
+    public static function lineWidth(string $line, string $font, float $size, int $weight, float $ls, string $case = 'none', bool $italic = false): float
+    {
+        self::data();
+        [$adv, $kern] = self::variant($font, $weight, $italic);
+        $units = 0.0;
+        $prev = null;
+        $count = 0;
         foreach (mb_str_split($line) as $ch) {
-            $sum += self::advance($font, $weight, $ch) + $ls;
+            $i = self::$index[$ch] ?? null;
+            $units += $i === null ? $adv[ord('n') - 32] : $adv[$i];
+            if ($prev !== null) {
+                $units += $kern[$prev.$ch] ?? 0;
+            }
+            $prev = $ch;
+            $count++;
         }
 
-        return $sum * 1.02 * $size;
+        return ($units / 1000) * $size + $ls * $size * $count;
     }
 
     /** Apply the text case the way the renderer will. */
@@ -66,19 +96,19 @@ final class FontMetrics
         };
     }
 
-    /** @return string[] wrapped lines at $maxWidth (explicit newlines honoured). */
-    public static function wrap(string $text, string $font, float $size, int $weight, float $ls, string $case, float $maxWidth): array
+    /** @return string[] wrapped lines at $maxWidth (explicit newlines honoured; a word is never split). */
+    public static function wrap(string $text, string $font, float $size, int $weight, float $ls, string $case, float $maxWidth, bool $italic = false): array
     {
         $out = [];
         foreach (explode("\n", self::cased($text, $case)) as $para) {
-            $words = preg_split('/\s+/u', trim($para)) ?: [];
+            $words = preg_split('/ +/u', trim($para)) ?: [];
             $line = '';
             foreach ($words as $word) {
                 if ($word === '') {
                     continue;
                 }
                 $try = $line === '' ? $word : $line.' '.$word;
-                if ($line !== '' && self::lineWidth($try, $font, $size, $weight, $ls, $case) > $maxWidth) {
+                if ($line !== '' && self::lineWidth($try, $font, $size, $weight, $ls, $case, $italic) > $maxWidth) {
                     $out[] = $line;
                     $line = $word;
                 } else {
@@ -92,19 +122,32 @@ final class FontMetrics
     }
 
     /** Height a text box needs, wrapped at HEADROOM of its width (15% spare). */
-    public static function height(string $text, string $font, float $size, int $weight, float $boxWidth, float $lineHeight, float $ls, string $case, float $headroom = self::HEADROOM): float
+    public static function height(string $text, string $font, float $size, int $weight, float $boxWidth, float $lineHeight, float $ls, string $case, float $headroom = self::HEADROOM, bool $italic = false): float
     {
-        $lines = count(self::wrap($text, $font, $size, $weight, $ls, $case, $boxWidth * $headroom));
+        $lines = count(self::wrap($text, $font, $size, $weight, $ls, $case, $boxWidth * $headroom, $italic));
 
         return round($lines * $size * $lineHeight, 2);
     }
 
-    /** Widest line when wrapped at $boxWidth (used for shrink-to-fit labels). */
-    public static function widest(string $text, string $font, float $size, int $weight, float $ls, string $case): float
+    /** Widest line (explicit lines only) in px, used for shrink-to-fit labels. */
+    public static function widest(string $text, string $font, float $size, int $weight, float $ls, string $case, bool $italic = false): float
     {
         $w = 0.0;
         foreach (explode("\n", self::cased($text, $case)) as $l) {
-            $w = max($w, self::lineWidth($l, $font, $size, $weight, $ls, $case));
+            $w = max($w, self::lineWidth($l, $font, $size, $weight, $ls, $case, $italic));
+        }
+
+        return $w;
+    }
+
+    /** Width of the widest single word: it must stay inside the box or the engine breaks it mid-word. */
+    public static function widestWord(string $text, string $font, float $size, int $weight, float $ls, string $case, bool $italic = false): float
+    {
+        $w = 0.0;
+        foreach (preg_split('/\s+/u', self::cased($text, $case)) ?: [] as $word) {
+            if ($word !== '') {
+                $w = max($w, self::lineWidth($word, $font, $size, $weight, $ls, $case, $italic));
+            }
         }
 
         return $w;

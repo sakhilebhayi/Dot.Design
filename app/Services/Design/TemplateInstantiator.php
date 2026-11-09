@@ -60,9 +60,21 @@ class TemplateInstantiator
             $pages[] = $page;
         }
 
+        $readable = [];
+
+        if ($applyBrand && $kit !== null && $brandApplied !== []) {
+            [$pages, $readable] = ReadableText::ensure($pages);
+
+            if ($readable !== []) {
+                $warnings[] = count($readable) === 1
+                    ? 'One piece of text was changed to black or white so it stays readable on your brand colours.'
+                    : count($readable).' pieces of text were changed to black or white so they stay readable on your brand colours.';
+            }
+        }
+
         $warnings = array_values(array_unique($warnings));
 
-        return new InstantiationResult($pages, (int) $template->width, (int) $template->height, $filled, $left, $brandApplied, $warnings);
+        return new InstantiationResult($pages, (int) $template->width, (int) $template->height, $filled, $left, $brandApplied, $warnings, $readable);
     }
 
     /**
@@ -187,6 +199,10 @@ class TemplateInstantiator
             $values['business_name'] = ['value' => (string) $brief['business_name'], 'source' => 'brief'];
         }
 
+        if (! isset($values['initials']) && isset($values['business_name'])) {
+            $values['initials'] = ['value' => self::initials($values['business_name']['value']), 'source' => 'brief'];
+        }
+
         if (! isset($values['headline']) && ! empty($brief['what'])) {
             $values['headline'] = ['value' => (string) $brief['what'], 'source' => 'brief'];
         }
@@ -207,6 +223,26 @@ class TemplateInstantiator
         }
 
         return $values;
+    }
+
+    /**
+     * The letters of a monogram, made from the business name: the first letters of its first two words
+     * ("Thandi's Bakery" is TB, "Mokoena & Daughters" is MD), or the first two letters of a single word.
+     */
+    public static function initials(string $name): string
+    {
+        $words = preg_split('/[^\p{L}\p{N}\']+/u', trim($name), -1, PREG_SPLIT_NO_EMPTY) ?: [];
+        $words = array_values(array_filter($words, fn (string $w) => ! in_array(mb_strtolower($w), ['and', 'the', 'of', 'cc', 'pty', 'ltd'], true)));
+
+        if (count($words) >= 2) {
+            $letters = mb_substr($words[0], 0, 1).mb_substr($words[1], 0, 1);
+        } elseif (count($words) === 1) {
+            $letters = mb_substr($words[0], 0, 2);
+        } else {
+            return '';
+        }
+
+        return mb_strtoupper($letters);
     }
 
     /** @return array<string, array{asset_id: ?int, source: string, reason: ?string}> */

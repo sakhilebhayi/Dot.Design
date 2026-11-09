@@ -24,19 +24,20 @@ $cw = $p->cw();
 
 $p->text('Your Business', $m, $m, 300, ['font' => 'head', 'size' => 15, 'ls' => 0.1, 'case' => 'upper', 'role' => 'contact', 'bind' => 'business_name', 'name' => 'Business name']);
 $p->text('Spring sale', $p->right() - 200, $m, 200, ['size' => 15, 'color' => 'extra', 'align' => 'right', 'role' => 'subhead', 'bind' => 'tagline', 'name' => 'Tagline']);
-$y = $p->text("Summer\nSale", $m, 110, $cw, ['font' => 'head', 'size' => 104, 'lh' => 0.98, 'ls' => -0.03, 'role' => 'headline', 'bind' => 'headline', 'name' => 'Headline']);
+$y = $p->text("Summer\nSale", $m, 110, $cw - 160, ['font' => 'head', 'size' => 84, 'lh' => 1.0, 'ls' => -0.03, 'role' => 'headline', 'bind' => 'headline', 'name' => 'Headline']);
 $p->text('Save up to 50% on everything we love', $m, $y + 14, 360, ['size' => 20, 'color' => 'accent', 'weight' => 700, 'lh' => 1.3, 'role' => 'subhead', 'bind' => 'offer', 'name' => 'Offer']);
 
 [$x0, $w0] = $p->col(0, 3, 14);
 foreach ([0, 1, 2] as $i) {
     [$x, $w] = $p->col($i, 3, 14);
-    $p->photo($x, 380, $w, 270, 'photo_'.($i + 1), 'plain', ['name' => 'Picture '.($i + 1), 'radius' => 10]);
+    $p->photo($x, 392, $w, 250, 'photo_'.($i + 1), 'plain', ['name' => 'Picture '.($i + 1), 'radius' => 10]);
 }
 $p->ellipse($p->right() - 130, 205, 130, 130, 'accent', ['name' => 'Price badge']);
-$p->text("From\nR99", $p->right() - 130, 205, 130, ['font' => 'head', 'size' => 28, 'lh' => 1.1, 'color' => 'bg', 'align' => 'center', 'valign' => 'middle', 'h' => 130, 'role' => 'badge', 'bind' => 'price', 'name' => 'Price']);
+// the text box is the square inside the circle, so a longer price shrinks to stay on the badge
+$p->text("From\nR99", $p->right() - 130 + 19, 205 + 19, 92, ['font' => 'head', 'size' => 26, 'lh' => 1.1, 'color' => 'bg', 'align' => 'center', 'valign' => 'middle', 'h' => 92, 'role' => 'badge', 'bind' => 'price', 'name' => 'Price']);
 
-$p->text('Treat yourself to a new look for the season. Every piece in store is reduced until stock runs out, so come early for the best choice.', $m, 686, 420, ['size' => 16, 'lh' => 1.6, 'color' => 'ink', 'bind' => 'description', 'name' => 'Description']);
-$p->rect($m, 750, $cw, 1.5, 'surface', ['name' => 'Divider']);
+$p->text('Treat yourself to a new look for the season. Every piece in store is reduced until stock runs out, so come early for the best choice.', $m, 660, 430, ['size' => 16, 'lh' => 1.6, 'color' => 'ink', 'bind' => 'description', 'name' => 'Description']);
+$p->rect($m, 752, $cw, 1.5, 'surface', ['name' => 'Divider']);
 $p->contactList([['pin', Sample::ADDRESS, 'address', 'address'], ['phone', Sample::PHONE, 'phone', 'phone']], $m, 764, 260, 14, 'ink', 'accent');
 $p->contactList([['globe', Sample::WEBSITE, 'website', 'website'], ['clock', 'Open daily, 9am to 6pm', 'hours', 'time']], $m + 280, 764, 230, 14, 'ink', 'accent');
 

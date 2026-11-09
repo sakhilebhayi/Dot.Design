@@ -7,7 +7,9 @@ declare(strict_types=1);
 $root = dirname(__DIR__, 2);
 $filter = $argv[1] ?? null;
 $out = [];
-foreach (glob($root.'/database/templates/*.php') as $file) {
+// QA_TEMPLATES_DIR points the tool at another checkout's database/templates (used to compare against an older library).
+$dir = getenv('QA_TEMPLATES_DIR') ?: $root.'/database/templates';
+foreach (glob($dir.'/*.php') as $file) {
     if (str_starts_with(basename($file), '_')) {
         continue;
     }

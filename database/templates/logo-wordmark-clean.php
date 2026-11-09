@@ -33,7 +33,7 @@ $p->text('Say what you do in one line', $m, 530, $cw, ['size' => 36, 'color' => 
 $p->rect($m, 690, $cw, 300, 'ink', ['name' => 'Reversed version background', 'radius' => 28]);
 $p->rect($cx - 300, 770, 84, 84, 'accent', ['name' => 'Reversed mark: square', 'radius' => 20]);
 $p->ellipse($cx - 278, 792, 40, 40, 'ink', ['name' => 'Reversed mark: circle']);
-$p->text('Your Business', $cx - 190, 770, 520, ['font' => 'head', 'size' => 64, 'ls' => -0.03, 'color' => 'bg', 'valign' => 'middle', 'h' => 84, 'role' => 'logo', 'name' => 'Reversed wordmark', 'lh' => 1.1]);
+$p->text('Your Business', $cx - 190, 770, 520, ['font' => 'head', 'size' => 64, 'ls' => -0.03, 'color' => 'bg', 'valign' => 'middle', 'h' => 84, 'role' => 'logo', 'bind' => 'business_name', 'name' => 'Reversed wordmark', 'lh' => 1.1]);
 $p->text('Primary and reversed versions', $m, 900, $cw, ['size' => 26, 'color' => 'bg', 'align' => 'center', 'role' => 'body', 'name' => 'Caption', 'opacity' => 0.85]);
 
 return $t->done();

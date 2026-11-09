@@ -21,10 +21,10 @@ $p->bg('bg');
 $m = $p->m;
 $cx = $p->w / 2;
 
-$p->rect(240, 230, 600, 440, 'accent', ['name' => 'Logo block']);
-$p->text("YOUR\nBUSINESS", 240, 250, 600, ['font' => 'head', 'size' => 196, 'lh' => 0.92, 'color' => 'bg', 'align' => 'center', 'role' => 'logo', 'bind' => 'business_name', 'name' => 'Wordmark', 'case' => 'upper']);
-$p->rect(240, 700, 600, 8, 'accent', ['name' => 'Underline']);
-$p->text('Say what you do in one line', 240, 740, 600, ['size' => 34, 'weight' => 600, 'ls' => 0.16, 'case' => 'upper', 'color' => 'ink', 'align' => 'center', 'role' => 'body', 'bind' => 'tagline', 'name' => 'Tagline']);
+$p->rect(190, 230, 700, 440, 'accent', ['name' => 'Logo block']);
+$p->text("YOUR\nBUSINESS", 220, 258, 640, ['font' => 'head', 'size' => 170, 'lh' => 0.98, 'color' => 'bg', 'align' => 'center', 'role' => 'logo', 'bind' => 'business_name', 'name' => 'Wordmark', 'case' => 'upper']);
+$p->rect(190, 700, 700, 8, 'accent', ['name' => 'Underline']);
+$p->text('Say what you do in one line', 190, 740, 700, ['size' => 34, 'weight' => 600, 'ls' => 0.16, 'case' => 'upper', 'color' => 'ink', 'align' => 'center', 'role' => 'body', 'bind' => 'tagline', 'name' => 'Tagline']);
 $p->text('Block version on dark', $m, 940, $p->cw(), ['size' => 24, 'color' => 'ink', 'align' => 'center', 'role' => 'body', 'name' => 'Caption', 'opacity' => 0.7]);
 
 return $t->done();

@@ -35,17 +35,17 @@ $p->text(Sample::WEBSITE, $m, 520, 300, ['size' => 12, 'color' => 'extra', 'weig
 $p = $t->page();
 $t->name($p, 'What we do');
 $p->bg('bg');
-$p->text('What we do', $m, 56, 520, ['font' => 'head', 'size' => 46, 'ls' => -0.02, 'role' => 'headline', 'name' => 'Page heading']);
-$p->text('We combine clear thinking with careful delivery, so that every project starts with a plan and ends with a result you can measure.', $m, 124, 460, ['size' => 14, 'lh' => 1.6, 'role' => 'body', 'bind' => 'description', 'name' => 'Introduction']);
+$p->text('What we do', $m, 56, 520, ['font' => 'head', 'size' => 50, 'ls' => -0.02, 'role' => 'headline', 'name' => 'Page heading']);
+$p->text('We combine clear thinking with careful delivery, so that every project starts with a plan and ends with a result you can measure.', $m, 130, 560, ['size' => 18, 'lh' => 1.55, 'role' => 'body', 'bind' => 'description', 'name' => 'Introduction']);
 $cols = [['chart-line', 'Plan', 'We listen first, then agree a clear scope, timeline and budget.'], ['hammer', 'Deliver', 'A dedicated team builds, tests and reports on progress every week.'], ['headset', 'Support', 'When the work is done we stay close and help you keep improving.']];
 foreach ($cols as $i => [$ic, $title, $text]) {
     [$x, $w] = $p->col($i, 3, 28);
-    $p->group($title.' column', $x, 290, function ($g) use ($ic, $title, $text, $w) {
+    $p->group($title.' column', $x, 270, function ($g) use ($ic, $title, $text, $w) {
         $g->rect(0, 0, $w, 5, 'accent', ['name' => 'Top rule']);
         $g->rect(0, 28, 56, 56, 'surface', ['name' => 'Icon disc', 'radius' => 28]);
         $g->icon($ic, 14, 42, 28, 'accent', ['name' => 'Icon']);
         $g->text($title, 0, 104, $w, ['font' => 'head', 'size' => 24, 'role' => 'subhead', 'name' => 'Service title']);
-        $g->text($text, 0, 144, $w, ['size' => 14, 'lh' => 1.6, 'role' => 'body', 'name' => 'Service text']);
+        $g->text($text, 0, 144, $w, ['size' => 15, 'lh' => 1.6, 'role' => 'body', 'name' => 'Service text']);
     });
 }
 $p->text('Your Business', $m, $p->bottom() - 14, 300, ['font' => 'head', 'size' => 11, 'ls' => 0.14, 'case' => 'upper', 'color' => 'accent', 'role' => 'contact', 'bind' => 'business_name', 'name' => 'Business name']);

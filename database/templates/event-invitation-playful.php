@@ -23,9 +23,9 @@ $m = $p->m;
 $cw = $p->cw();
 
 // confetti kept to the edges (decoration only)
-$p->ellipse(-60, 150, 240, 240, 'surface', ['name' => 'Yellow circle (bleeds off the edge)', 'role' => 'background']);
-$p->ellipse(870, 330, 150, 150, 'extra', ['name' => 'Teal circle (bleeds off the edge)', 'role' => 'background']);
-$p->shape('star', 800, 150, 130, 130, 'accent', ['name' => 'Pink star', 'points' => 5, 'inner' => 0.45, 'rotation' => 14]);
+$p->ellipse(-70, 30, 240, 240, 'surface', ['name' => 'Yellow circle (bleeds off the edge)', 'role' => 'background']);
+$p->ellipse(905, 40, 130, 130, 'extra', ['name' => 'Teal circle (bleeds off the edge)', 'role' => 'background']);
+$p->shape('star', 760, 170, 130, 130, 'accent', ['name' => 'Pink star', 'points' => 5, 'inner' => 0.45, 'rotation' => 14]);
 $p->shape('triangle', 90, 1640, 110, 96, 'extra', ['name' => 'Teal triangle', 'rotation' => -16]);
 $p->ellipse(880, 1560, 120, 120, 'surface', ['name' => 'Yellow dot']);
 

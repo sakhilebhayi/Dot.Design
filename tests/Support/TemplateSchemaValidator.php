@@ -14,7 +14,7 @@ namespace Tests\Support;
 final class TemplateSchemaValidator
 {
     public const BIND_KEYS = [
-        'business_name', 'tagline', 'headline', 'subheadline', 'offer', 'price', 'date', 'time', 'venue', 'address', 'phone',
+        'business_name', 'initials', 'tagline', 'headline', 'subheadline', 'offer', 'price', 'date', 'time', 'venue', 'address', 'phone',
         'whatsapp', 'email', 'website', 'social_handle', 'logo', 'photo_1', 'photo_2', 'photo_3', 'cta', 'description',
     ];
 

@@ -21,51 +21,60 @@ $p = $t->page();
 $p->bg('bg');
 $m = $p->m;
 $cw = $p->cw();
-$p->rect($m, $m, 44, 44, 'surface', ['name' => 'Logo backing', 'radius' => 8]);
-$p->image($m, $m, 44, 44, ['bind' => 'logo', 'role' => 'logo', 'name' => 'Logo', 'radius' => 8]);
-$p->text('Your Business', $m + 56, $m, 240, ['font' => 'head', 'size' => 16, 'h' => 22, 'role' => 'logo', 'bind' => 'business_name', 'name' => 'Business name', 'lh' => 1.2]);
-$p->text(Sample::ADDRESS, $m + 56, $m + 24, 240, ['size' => 9, 'color' => 'extra', 'role' => 'contact', 'bind' => 'address', 'name' => 'Address']);
-$p->text('Quotation', $p->right() - 220, $m - 4, 220, ['font' => 'head', 'size' => 38, 'color' => 'accent', 'align' => 'right', 'role' => 'headline', 'bind' => 'headline', 'name' => 'Title', 'lh' => 1.05]);
-$p->text('No. Q-0001   |   12 June', $p->right() - 220, $m + 44, 220, ['size' => 10, 'color' => 'extra', 'align' => 'right', 'role' => 'body', 'bind' => 'date', 'name' => 'Quote number and date']);
+$right = $p->right();
 
-$p->group('Client block', $m, 150, function ($g) use ($cw) {
-    $g->rect(0, 0, $cw, 64, 'surface', ['name' => 'Client panel', 'radius' => 8]);
-    $g->text('Prepared for', 12, 10, 200, ['size' => 9, 'ls' => 0.12, 'case' => 'upper', 'color' => 'extra', 'role' => 'body', 'name' => 'Client label']);
-    $g->text('Client name and address', 12, 28, 300, ['font' => 'head', 'size' => 12, 'role' => 'body', 'name' => 'Client details', 'lh' => 1.3]);
+// letterhead row
+$p->rect($m, $m, 48, 48, 'surface', ['name' => 'Logo backing', 'radius' => 8]);
+$p->image($m, $m, 48, 48, ['bind' => 'logo', 'role' => 'logo', 'name' => 'Logo', 'radius' => 8]);
+$p->text('Your Business', $m + 60, $m, 230, ['font' => 'head', 'size' => 17, 'h' => 24, 'role' => 'logo', 'bind' => 'business_name', 'name' => 'Business name', 'lh' => 1.2]);
+$p->text(Sample::ADDRESS, $m + 60, $m + 27, 230, ['size' => 10, 'color' => 'extra', 'h' => 21, 'role' => 'contact', 'bind' => 'address', 'name' => 'Address']);
+$p->text('Quotation', $right - 220, $m - 6, 220, ['font' => 'head', 'size' => 40, 'h' => 44, 'color' => 'accent', 'align' => 'right', 'role' => 'headline', 'bind' => 'headline', 'name' => 'Title', 'lh' => 1.1]);
+$p->text('No. Q-0001   |   12 June', $right - 220, $m + 42, 220, ['size' => 11, 'color' => 'extra', 'align' => 'right', 'role' => 'body', 'bind' => 'date', 'name' => 'Quote number and date']);
+$p->rule($m, 124, $cw, 2, 'accent', ['name' => 'Header rule']);
+
+$p->group('Client block', $m, 144, function ($g) use ($cw) {
+    $g->rect(0, 0, $cw, 70, 'surface', ['name' => 'Client panel', 'radius' => 8]);
+    $g->text('Prepared for', 14, 12, 200, ['size' => 10, 'ls' => 0.12, 'case' => 'upper', 'color' => 'extra', 'role' => 'body', 'name' => 'Client label']);
+    $g->text('Client name and address', 14, 30, 320, ['font' => 'head', 'size' => 14, 'role' => 'body', 'name' => 'Client details', 'lh' => 1.3]);
 });
 
-$p->group('Table header', $m, 238, function ($g) use ($cw) {
-    $g->rect(0, 0, $cw, 28, 'ink', ['name' => 'Header band']);
-    foreach ([['Description', 12, 230, 'left'], ['Qty', 262, 40, 'right'], ['Unit price', 312, 90, 'right'], ['Amount', 412, 85, 'right']] as [$label, $x, $w, $al]) {
-        $g->text($label, $x, 0, $w, ['size' => 9.5, 'weight' => 700, 'color' => 'bg', 'align' => $al, 'valign' => 'middle', 'h' => 28, 'role' => 'body', 'name' => 'Column: '.$label, 'lh' => 1.1]);
+$cols = [['Description', 14, 236, 'left'], ['Qty', 258, 40, 'right'], ['Unit price', 306, 90, 'right'], ['Amount', 410, 91, 'right']];
+$p->group('Table header', $m, 238, function ($g) use ($cw, $cols) {
+    $g->rect(0, 0, $cw, 30, 'ink', ['name' => 'Header band', 'radius' => 4]);
+    foreach ($cols as [$label, $x, $w, $al]) {
+        $g->text($label, $x, 0, $w, ['size' => 11, 'weight' => 700, 'color' => 'bg', 'align' => $al, 'valign' => 'middle', 'h' => 30, 'role' => 'body', 'name' => 'Column: '.$label, 'lh' => 1.1]);
     }
 });
-$rows = [['Design consultation', '1', 'R 1 200.00', 'R 1 200.00'], ['Materials', '4', 'R 350.00', 'R 1 400.00'], ['Installation', '2', 'R 600.00', 'R 1 200.00']];
-$p->group('Line items', $m, 266, function ($g) use ($rows, $cw) {
-    foreach ($rows as $i => [$d, $q, $u, $a]) {
-        $y = $i * 34;
-        if ($i % 2 === 1) {
-            $g->rect(0, $y, $cw, 34, 'surface', ['name' => 'Row tint']);
+// sample lines: quantity x unit price = amount, the totals add up (VAT at 15%)
+$rows = [['Design consultation', '1', 'R 1 200.00', 'R 1 200.00'], ['Materials', '4', 'R 350.00', 'R 1 400.00'], ['Installation', '2', 'R 600.00', 'R 1 200.00'], ['Site visit and delivery', '1', 'R 700.00', 'R 700.00']];
+$p->group('Line items', $m, 268, function ($g) use ($rows, $cols) {
+    foreach ($rows as $i => $row) {
+        $y = $i * 36;
+        foreach ($row as $k => $value) {
+            [$label, $x, $w, $al] = $cols[$k];
+            $g->text($value, $x, $y, $w, ['size' => 12, 'align' => $al, 'valign' => 'middle', 'h' => 36, 'role' => 'body', 'name' => $label, 'lh' => 1.2]);
         }
-        $g->text($d, 12, $y, 230, ['size' => 11, 'valign' => 'middle', 'h' => 34, 'role' => 'body', 'name' => 'Description', 'lh' => 1.2]);
-        $g->text($q, 262, $y, 40, ['size' => 11, 'align' => 'right', 'valign' => 'middle', 'h' => 34, 'role' => 'body', 'name' => 'Quantity', 'lh' => 1.2]);
-        $g->text($u, 312, $y, 90, ['size' => 11, 'align' => 'right', 'valign' => 'middle', 'h' => 34, 'role' => 'body', 'name' => 'Unit price', 'lh' => 1.2]);
-        $g->text($a, 412, $y, 85, ['size' => 11, 'align' => 'right', 'valign' => 'middle', 'h' => 34, 'role' => 'body', 'name' => 'Amount', 'lh' => 1.2]);
     }
 });
-$p->rule($m, 380, $cw, 1.2, 'surface', ['name' => 'Table rule']);
-$p->group('Totals', $m, 394, function ($g) use ($cw) {
-    foreach ([['Subtotal', 'R 3 800.00'], ['VAT at 15%', 'R 570.00']] as $i => [$l, $v]) {
-        $g->text($l, 300, $i * 22, 100, ['size' => 11, 'color' => 'extra', 'align' => 'right', 'role' => 'body', 'name' => $l.' label', 'lh' => 1.2]);
-        $g->text($v, 412, $i * 22, 85, ['size' => 11, 'align' => 'right', 'role' => 'body', 'name' => $l, 'lh' => 1.2]);
+$p->rule($m, 456, $cw, 1.5, 'surface', ['name' => 'Table rule']);
+$p->group('Totals', $m, 472, function ($g) use ($cw) {
+    foreach ([['Subtotal', 'R 4 500.00'], ['VAT at 15%', 'R 675.00']] as $i => [$l, $v]) {
+        $g->text($l, 270, $i * 24, 130, ['size' => 12, 'color' => 'extra', 'align' => 'right', 'role' => 'body', 'name' => $l.' label', 'lh' => 1.2]);
+        $g->text($v, 410, $i * 24, 91, ['size' => 12, 'align' => 'right', 'role' => 'body', 'name' => $l, 'lh' => 1.2]);
     }
-    $g->rect(290, 52, $cw - 290, 40, 'accent', ['name' => 'Total band', 'radius' => 6]);
-    $g->text('Total', 300, 52, 80, ['font' => 'head', 'size' => 13, 'color' => 'bg', 'align' => 'right', 'valign' => 'middle', 'h' => 40, 'role' => 'price', 'name' => 'Total label', 'lh' => 1.1]);
-    $g->text('R 4 370.00', 392, 52, 100, ['font' => 'head', 'size' => 15, 'color' => 'bg', 'align' => 'right', 'valign' => 'middle', 'h' => 40, 'role' => 'price', 'bind' => 'price', 'name' => 'Total', 'lh' => 1.1]);
+    $g->rect(270, 58, $cw - 270, 46, 'accent', ['name' => 'Total band', 'radius' => 6]);
+    $g->text('Total', 284, 58, 70, ['font' => 'head', 'size' => 14, 'color' => 'bg', 'align' => 'right', 'valign' => 'middle', 'h' => 46, 'role' => 'price', 'name' => 'Total label', 'lh' => 1.1]);
+    $g->text('R 5 175.00', 360, 58, 134, ['font' => 'head', 'size' => 18, 'color' => 'bg', 'align' => 'right', 'valign' => 'middle', 'h' => 46, 'role' => 'price', 'bind' => 'price', 'name' => 'Total', 'lh' => 1.1]);
 });
 
-$p->text("Terms\nThis quotation is valid for 30 days from the date above. A deposit is payable to confirm the order. Please contact us with any questions.", $m, 560, 330, ['size' => 10, 'color' => 'extra', 'lh' => 1.6, 'role' => 'body', 'bind' => 'description', 'name' => 'Terms']);
-$p->rule($m, 740, $cw, 1.2, 'surface', ['name' => 'Footer rule']);
-$p->contactRow([['phone', Sample::PHONE, 'phone', 'phone'], ['mail', Sample::EMAIL, 'email', 'email'], ['globe', Sample::WEBSITE, 'website', 'website']], $m, 754, $cw, 9, 'extra', 'accent');
+// terms on the left, acceptance on the right
+$p->text("Terms\nThis quotation is valid for 30 days from the date above. A deposit is payable to confirm the order. Please contact us with any questions.", $m, 610, 250, ['size' => 10.5, 'color' => 'extra', 'lh' => 1.55, 'role' => 'body', 'bind' => 'description', 'name' => 'Terms']);
+$p->text('Accepted by (signature and date)', $m + 290, 610, 225, ['font' => 'head', 'size' => 12, 'role' => 'body', 'name' => 'Acceptance heading', 'lh' => 1.2]);
+$p->rule($m + 290, 672, 225, 1.2, 'ink', ['name' => 'Signature line']);
+
+$p->rule($m, 748, $cw, 1.5, 'surface', ['name' => 'Footer rule']);
+$p->text(Sample::PHONE, $m, 764, 160, ['size' => 10.5, 'color' => 'extra', 'role' => 'contact', 'bind' => 'phone', 'name' => 'Phone']);
+$p->text(Sample::EMAIL, $m + 160, 764, 195, ['size' => 10.5, 'color' => 'extra', 'align' => 'center', 'role' => 'contact', 'bind' => 'email', 'name' => 'Email']);
+$p->text(Sample::WEBSITE, $m + 355, 764, 160, ['size' => 10.5, 'color' => 'extra', 'align' => 'right', 'role' => 'contact', 'bind' => 'website', 'name' => 'Website']);
 
 return $t->done();

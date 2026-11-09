@@ -35,14 +35,14 @@ $py = 505;
 $p->rect(($p->w - $pw) / 2 - 14, $py - 14, $pw + 28, 372 + 28, null, ['name' => 'Picture outline', 'stroke' => ['accent', 1.2]]);
 $p->photo(($p->w - $pw) / 2, $py, $pw, 372, 'photo_1', 'plain', ['name' => 'Main picture', 'back' => 'surface']);
 
-$p->text('Join us for a private preview this weekend. Tea, coffee and first choice of every piece.', $cx + 110, 945, $cw - 220, ['size' => 17, 'align' => 'center', 'lh' => 1.55, 'bind' => 'description', 'name' => 'Description']);
-$p->text('Saturday and Sunday, 10am to 4pm', $cx, 1022, $cw, ['size' => 16, 'weight' => 600, 'ls' => 0.06, 'align' => 'center', 'role' => 'contact', 'bind' => 'date', 'name' => 'Dates and hours']);
-$p->rule($m, 1074, $cw, 1.5, 'surface', ['name' => 'Footer rule']);
-$p->text('Your Business', $m, 1092, $cw, ['font' => 'head', 'size' => 24, 'align' => 'center', 'case' => 'upper', 'ls' => 0.18, 'role' => 'contact', 'bind' => 'business_name', 'name' => 'Business name']);
+$p->text('Join us for a private preview this weekend. Tea, coffee and first choice of every piece.', $cx + 110, 925, $cw - 220, ['size' => 17, 'align' => 'center', 'lh' => 1.55, 'bind' => 'description', 'name' => 'Description']);
+$p->text('Saturday and Sunday, 10am to 4pm', $cx, 1004, $cw, ['size' => 16, 'weight' => 600, 'ls' => 0.06, 'align' => 'center', 'role' => 'contact', 'bind' => 'date', 'name' => 'Dates and hours']);
+$p->rule($m, 1056, $cw, 1.5, 'surface', ['name' => 'Footer rule']);
+$p->text('Your Business', $m, 1072, $cw, ['font' => 'head', 'size' => 24, 'align' => 'center', 'case' => 'upper', 'ls' => 0.18, 'role' => 'contact', 'bind' => 'business_name', 'name' => 'Business name']);
 $cols = [['phone', Sample::PHONE], ['website', Sample::WEBSITE], ['social_handle', Sample::HANDLE]];
 foreach ($cols as $i => [$bind, $val]) {
     [$x, $w] = $p->col($i, 3);
-    $p->text($val, $x, 1128 - 4, $w, ['size' => 14, 'align' => 'center', 'role' => 'contact', 'bind' => $bind, 'name' => ucfirst(str_replace('_', ' ', $bind))]);
+    $p->text($val, $x, 1112, $w, ['size' => 14, 'align' => 'center', 'role' => 'contact', 'bind' => $bind, 'name' => ucfirst(str_replace('_', ' ', $bind))]);
 }
 
 return $t->done();

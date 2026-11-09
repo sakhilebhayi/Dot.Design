@@ -136,6 +136,17 @@ test('shadow: a drop shadow filter keeps its direction on the page when the elem
     assert.ok(Math.abs(dx) < 1e-6 && Math.abs(dy + 10) < 1e-6); // rotated 90 clockwise: counter-rotate the offset
 });
 
+test('images: an empty slot follows its mask and never spills its label out of a small slot', () => {
+    const round = render([el('image', { id: 'i', width: 200, height: 200, mask: 'ellipse' })]);
+    assert.match(round, /<ellipse[^>]*data-placeholder="1"/);
+    assert.match(render([el('image', { id: 'i', width: 200, height: 300, radius: 100 })]), /<rect[^>]*rx="99.25"[^>]*data-placeholder/);
+    const tiny = render([el('image', { id: 'i', width: 56, height: 56 })]);
+    assert.match(tiny, /data-placeholder="1"/);
+    assert.equal(tiny.includes('Add a picture'), false);
+    const big = render([el('image', { id: 'i', width: 1800, height: 1000 })]);
+    assert.match(big, /font-size="60"/);
+});
+
 test('images: empty slot shows a placeholder on screen and nothing on export', () => {
     const slot = el('image', { id: 'i', width: 200, height: 100 });
     const screen = render([slot]);

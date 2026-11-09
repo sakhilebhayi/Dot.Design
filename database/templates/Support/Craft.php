@@ -6,8 +6,8 @@ namespace Database\Templates\Support;
 
 /**
  * Executable craft rules. Every template must return an empty list from problems().
- * The estimator uses measured per-font average advance widths (FontMetrics), so "fits"
- * means "fits with 15% spare width", not "looks right"; the contact sheet is the second check.
+ * The estimator uses the real measured advance widths and kerning of the shipped fonts (FontMetrics), so "fits"
+ * means "fits with 15% spare width", not "looks right"; scripts/dev/check-templates.mjs (the engine's own layout) is the second check.
  */
 final class Craft
 {
@@ -96,9 +96,14 @@ final class Craft
                         $out[] = $label.': text box outside the safe zone (t'.round($mt).' r'.round($mr).' b'.round($mb).' l'.round($ml).')';
                     }
                     // Fit (with 15% headroom, see FontMetrics::height)
-                    $need = FontMetrics::height($e['text'], $e['font'], $e['fontSize'], $e['fontWeight'], $ew, $e['lineHeight'], $e['letterSpacing'], $e['textCase']);
+                    $need = FontMetrics::height($e['text'], $e['font'], $e['fontSize'], $e['fontWeight'], $ew, $e['lineHeight'], $e['letterSpacing'], $e['textCase'], FontMetrics::HEADROOM, ! empty($e['italic']));
                     if ($need > $eh + 0.5) {
                         $out[] = $label.': text does not fit its box (needs '.$need.', has '.$eh.')';
+                    }
+                    // A word wider than its box is broken mid-word by the renderer.
+                    $word = FontMetrics::widestWord($e['text'], $e['font'], $e['fontSize'], $e['fontWeight'], $e['letterSpacing'], $e['textCase'], ! empty($e['italic']));
+                    if ($word > $ew * 0.97) {
+                        $out[] = $label.': a word is wider than its box ('.round($word).' of '.round($ew).') and would break mid-word';
                     }
                     if (($e['align'] ?? 'left') === 'left') {
                         $leftEdges[(int) round($x)] = true;
@@ -223,7 +228,7 @@ final class Craft
     {
         $size = $e['fontSize'];
         $lh = $size * $e['lineHeight'];
-        $lines = FontMetrics::wrap($e['text'], $e['font'], $size, $e['fontWeight'], $e['letterSpacing'], $e['textCase'], $e['width'] * FontMetrics::HEADROOM);
+        $lines = FontMetrics::wrap($e['text'], $e['font'], $size, $e['fontWeight'], $e['letterSpacing'], $e['textCase'], $e['width'] * FontMetrics::HEADROOM, ! empty($e['italic']));
         $total = count($lines) * $lh;
         $y0 = $e['y'];
         if (($e['valign'] ?? 'top') === 'middle') {
@@ -233,7 +238,7 @@ final class Craft
         }
         $rects = [];
         foreach ($lines as $i => $line) {
-            $lw = min($e['width'], FontMetrics::lineWidth($line, $e['font'], $size, $e['fontWeight'], $e['letterSpacing'], $e['textCase']));
+            $lw = min($e['width'], FontMetrics::lineWidth($line, $e['font'], $size, $e['fontWeight'], $e['letterSpacing'], $e['textCase'], ! empty($e['italic'])));
             $x = match ($e['align'] ?? 'left') {
                 'center' => $e['x'] + ($e['width'] - $lw) / 2,
                 'right' => $e['x'] + $e['width'] - $lw,

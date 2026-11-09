@@ -24,11 +24,11 @@ $m = $p->m;
 $cw = $p->cw();
 
 $p->text('Your Business', $m, 250, $cw, ['size' => 34, 'weight' => 700, 'ls' => 0.16, 'case' => 'upper', 'role' => 'logo', 'bind' => 'business_name', 'name' => 'Business name', 'anim' => ['fade', 0, 600]]);
-$p->text('FLASH', $m, 320, $cw, ['font' => 'head', 'size' => 300, 'lh' => 0.95, 'color' => 'accent', 'role' => 'headline', 'bind' => 'headline', 'name' => 'Headline word one', 'anim' => ['slide-left', 300, 700, 'ease-out']]);
-$p->text('SALE', $m, 590, $cw, ['font' => 'head', 'size' => 300, 'lh' => 0.95, 'role' => 'headline', 'name' => 'Headline word two', 'anim' => ['slide-right', 600, 700, 'ease-out']]);
+$p->text("FLASH\nSALE", $m, 320, $cw, ['font' => 'head', 'size' => 300, 'lh' => 0.95, 'color' => 'accent', 'role' => 'headline', 'bind' => 'headline', 'name' => 'Headline', 'anim' => ['slide-left', 300, 700, 'ease-out']]);
 $p->photo($m, 920, 480, 480, 'photo_1', 'offset', ['name' => 'Product picture', 'accent' => 'surface', 'back' => 'extra', 'anim' => ['zoom-in', 900, 800, 'ease-out']]);
 $p->ellipse(630, 960, 330, 330, 'surface', ['name' => 'Offer badge', 'anim' => ['pop', 1300, 600, 'spring']]);
-$p->text("40%\nOFF", 630, 960, 330, ['font' => 'head', 'size' => 110, 'lh' => 0.95, 'align' => 'center', 'valign' => 'middle', 'h' => 330, 'role' => 'badge', 'bind' => 'offer', 'name' => 'Offer text', 'anim' => ['pop', 1400, 600, 'spring']]);
+// the text box is the square inside the circle, so a longer offer shrinks to stay on the badge
+$p->text("40%\nOFF", 630 + 49, 960 + 49, 232, ['font' => 'head', 'size' => 104, 'lh' => 0.95, 'align' => 'center', 'valign' => 'middle', 'h' => 232, 'role' => 'badge', 'bind' => 'offer', 'name' => 'Offer text', 'anim' => ['pop', 1400, 600, 'spring']]);
 $p->text('Today only. While stock lasts.', $m, 1425, $cw, ['size' => 36, 'weight' => 700, 'role' => 'body', 'bind' => 'description', 'name' => 'Description', 'anim' => ['rise', 2200, 700, 'ease-out']]);
 $p->button('Shop now', $m, 1490, 440, 86, 'accent', 'bg', ['size' => 40, 'radius' => 50, 'bind' => 'cta', 'anim' => ['in' => ['preset' => 'pop', 'delay_ms' => 2800, 'duration_ms' => 500, 'easing' => 'spring'], 'loop' => ['preset' => 'pulse', 'duration_ms' => 1200]]]);
 

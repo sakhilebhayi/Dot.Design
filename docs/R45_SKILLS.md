@@ -74,3 +74,13 @@ Verification actually run for the UI: headless Chrome through the DevTools proto
 | `ui-ux-pro-max`, `emil-design-eng` | UNAVAILABLE | Still dangling symlinks (see above). Not used and not claimed. |
 
 Verification tools actually run for editor-ui: `impeccable detect` (source tier, see above), automated scans in the real browser (every button, link, input and select in all six tabs in both modes has an accessible name: 0 unnamed; horizontal overflow check at 390, 768 and 1440), the contrast of every token pair comes from DESIGN.md (not re-measured), and the browser acceptance in `docs/R45_UI_EDITOR.md`.
+## libqa (wave 3): what was really used
+
+| Skill | Status | How it was used |
+|---|---|---|
+| `impeccable` | available, invoked (Skill tool) | Its principles applied to print and social graphics while judging every template in the real renderer: one focal point, hierarchy by scale, rhythm and alignment on a small number of edges, contrast and zoom stress (the 4.5:1 text check and the long and short copy stress), restraint (decoration moved off type, empty areas kept only where the person fills them), empty and error states (the "Add a picture" slot, an unreadable kit). The skill's setup script (`impeccable context`) and its detector are for web source and were not run; there is no PRODUCT.md for this area. |
+| `design-taste-frontend` | available, invoked (Skill tool) | Its anti-slop rules and "look at the screenshots and fix" loop, applied to the library sheets: no ornament without a job, type scale with a real jump between headline and body, whole fields of colour over many small boxes, real content shapes (a quotation whose totals add up) instead of lorem or grey bars. Its draw and inspect scripts target web pages and were not run. |
+| `ui-ux-pro-max`, `emil-design-eng` | UNAVAILABLE | Dangling symlinks (see above). Not used and not claimed. |
+| `hallmark`, `design-md`, `awesome-design-md`, `open-design`, `gsap-*`, `scroll-world`, `react-bits`, `canvas-ui`, `terminal-dark` | not used | No new page, token file, brand spec or motion work was in scope. |
+
+Verification actually run: every template page, icon, element, pattern, gradient and palette drawn by the real engine in headless Chrome and looked at (with placeholders, without, and with the vivid and dull brand kits); automated checks and counts are in `docs/R45_LIBQA.md`.

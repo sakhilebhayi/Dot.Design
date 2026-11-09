@@ -14,6 +14,7 @@ final class InstantiationResult
      * @param  list<array<string, mixed>>  $left  slot, element_id, page, reason (no_value|no_picture|not_visible|unsupported)
      * @param  list<array<string, mixed>>  $brandApplied  element_id, prop, token, from, to
      * @param  list<string>  $warnings
+     * @param  list<array<string, mixed>>  $readable  text colours changed so text stays readable on the brand colours: element_id, from, to, ratio_before, ratio_after
      */
     public function __construct(
         public readonly array $pages,
@@ -23,6 +24,7 @@ final class InstantiationResult
         public readonly array $left = [],
         public readonly array $brandApplied = [],
         public readonly array $warnings = [],
+        public readonly array $readable = [],
     ) {}
 
     public function toArray(): array
@@ -34,6 +36,7 @@ final class InstantiationResult
             'left' => $this->left,
             'brand_applied' => $this->brandApplied,
             'warnings' => $this->warnings,
+            'readable' => $this->readable,
         ];
     }
 }

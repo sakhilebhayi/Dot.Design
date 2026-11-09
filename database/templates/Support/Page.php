@@ -217,7 +217,7 @@ final class Page
         $ls = $o['ls'] ?? 0.0;
         $case = $o['case'] ?? 'none';
         $role = $o['role'] ?? 'body';
-        $h = $o['h'] ?? FontMetrics::height($text, $fontKey, $size, $weight, $w, $lh, $ls, $case);
+        $h = $o['h'] ?? FontMetrics::height($text, $fontKey, $size, $weight, $w, $lh, $ls, $case, FontMetrics::HEADROOM, ! empty($o['italic']));
         $tok = [];
         if (($ct = $this->pal->tokenFor($o['color'] ?? 'ink')) !== null) {
             $tok['color'] = $ct;
@@ -236,6 +236,11 @@ final class Page
         ];
         if (! empty($o['italic'])) {
             $e['italic'] = true;
+        }
+        if (($o['fit'] ?? 'shrink') !== 'none') {
+            // Every text shrinks to fit its box: replaceable copy survives a longer value, and a wider brand font cannot
+            // push a label out of its card or break a word. Sample copy always fits at its authored size (tested).
+            $e['autoFit'] = $o['fit'] ?? 'shrink';
         }
         if (! empty($o['underline'])) {
             $e['underline'] = true;
