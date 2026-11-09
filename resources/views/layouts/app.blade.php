@@ -5,6 +5,7 @@
     $pageTitle = isset($header) ? trim(strip_tags((string) $header)) : '';
     $hasTeams = $user && \Laravel\Jetstream\Jetstream::hasTeamFeatures();
     $tokenRoute = \Illuminate\Support\Facades\Route::has('api-tokens.index') ? route('api-tokens.index') : null;
+    $settingsRoute = \Illuminate\Support\Facades\Route::has('design.settings') ? route('design.settings') : null;
 @endphp
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
@@ -85,6 +86,7 @@
                         <span class="lt-user__name">{{ $user->name }}</span>
                         <x-ds.icon name="chevron-up" size="sm" />
                     </x-slot>
+                    @if ($settingsRoute)<x-ds.menu-item :href="$settingsRoute" icon="settings">Studio settings</x-ds.menu-item>@endif
                     @if ($nav['profile'])<x-ds.menu-item :href="$nav['profile']" icon="user">Profile and security</x-ds.menu-item>@endif
                     @if ($tokenRoute && \Laravel\Jetstream\Jetstream::hasApiFeatures())<x-ds.menu-item :href="$tokenRoute" icon="key">API tokens</x-ds.menu-item>@endif
                     <div class="lt-menu__sep"></div>
@@ -134,6 +136,7 @@
                 <a href="{{ $item['href'] }}" class="lt-menu__item" @if($item['current']) aria-current="page" @endif><x-ds.icon :name="$item['icon']" />{{ $item['label'] }}</a>
             @endforeach
             @if ($nav['team'])<a href="{{ $nav['team'] }}" class="lt-menu__item"><x-ds.icon name="settings" />Workspace settings</a>@endif
+            @if ($settingsRoute)<a href="{{ $settingsRoute }}" class="lt-menu__item"><x-ds.icon name="settings" />Studio settings</a>@endif
             @if ($nav['profile'])<a href="{{ $nav['profile'] }}" class="lt-menu__item"><x-ds.icon name="user" />Profile and security</a>@endif
             @if ($tokenRoute && \Laravel\Jetstream\Jetstream::hasApiFeatures())<a href="{{ $tokenRoute }}" class="lt-menu__item"><x-ds.icon name="key" />API tokens</a>@endif
             <div class="lt-menu__sep"></div>

@@ -77,12 +77,15 @@ class StudioAssetLibraryTest extends TestCase
         $this->actingAs($user)->getJson(route('design.assets.index', ['per_page' => 1]))->assertJsonCount(1, 'assets')->assertJsonStructure(['next_cursor', 'usage' => ['used', 'quota']]);
     }
 
+    /** R-45 brand agent: the page is now the Assets screen (docs/R45_UI_BRAND.md). It draws its list in the browser from the library endpoints, so the page itself carries the shell and the list comes as JSON. */
     public function test_the_html_list_is_a_working_page(): void
     {
         $user = $this->person();
         $this->upload($user, 1, ['folder' => 'Logos', 'tags' => ['brand']]);
 
-        $this->actingAs($user)->get(route('design.assets.index'))->assertOk()->assertSee('shot1.png')->assertSee('Logos')->assertSee('#brand');
+        $this->actingAs($user)->get(route('design.assets.index'))->assertOk()->assertSee('Upload pictures')->assertSee('data-results', false)->assertSee('needs JavaScript');
+        $this->getJson(route('design.assets.library'))->assertOk()->assertJsonPath('assets.0.name', 'shot1.png')->assertJsonPath('assets.0.folder', 'Logos')->assertJsonPath('assets.0.tags', ['brand']);
+        $this->getJson(route('design.assets.index'))->assertOk()->assertJsonPath('assets.0.name', 'shot1.png');
     }
 
     public function test_folders_are_listed_with_counts(): void
