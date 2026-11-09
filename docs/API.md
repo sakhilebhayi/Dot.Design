@@ -1,5 +1,7 @@
 # API Design Improvements
 
+> **R-45 note (2026-11-09):** this document is a forward-looking design and predates the studio rebuild. The tables and endpoints that actually exist (workspace columns, versions, shares, comments, reviews, activity, settings, the editor JSON API under `design/projects/...`) are documented in `docs/R45_BACKEND.md`; where the two disagree, that file is the truth.
+
 > REST API design guidelines and endpoint specifications for Dot.Design. The current API only exposes `/api/user`. This document defines the full API surface.
 
 ---

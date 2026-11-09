@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use App\Events\DesignCanvasSaved;
 use App\Http\Requests\UpdateDesignCanvasRequest;
 use App\Models\DesignCanvas;
 use App\Models\DesignProject;
+use App\Services\Design\PageStore;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -30,7 +30,7 @@ class DesignCanvasController extends Controller
             ->with('activeCanvasId', $canvas->id);
     }
 
-    public function update(UpdateDesignCanvasRequest $request, DesignProject $project, DesignCanvas $canvas): JsonResponse
+    public function update(UpdateDesignCanvasRequest $request, DesignProject $project, DesignCanvas $canvas, PageStore $pages): JsonResponse
     {
         // The route nests {canvas} under {project}; confirm they actually
         // belong together rather than trusting the URL pairing -- both ids
@@ -45,31 +45,32 @@ class DesignCanvasController extends Controller
         // as JSON itself: bootstrap/app.php's shouldRenderJsonWhen() only treats
         // "api/*" paths as JSON-expecting, so a plain ValidationException here
         // would come back as an HTML redirect to a fetch() caller.
-        // Compare-and-swap: the row is only written if it still carries the
-        // revision the editor loaded, and the same statement bumps it. Checking
-        // first and writing second would leave a window for two saves to both
-        // pass. (Query-builder update, so no model events and no JSON cast:
-        // elements is encoded here.)
+        // The v1 editor's payload is already validated and stays in v1 storage form (text/rectangle/image).
+        // PageStore does the rest in one transaction: compare-and-swap on the revision (a save based on an older
+        // revision is refused with 409, never merged over newer work), the automatic version snapshot, and marking an
+        // approval stale when an approved project is edited.
         $revision = (int) $request->validated('revision');
-        $values = ['elements' => json_encode($request->elementsForStorage()), 'revision' => $revision + 1];
+        $values = ['elements' => $request->elementsForStorage()];
 
         if ($request->validated('background_color') !== null) {
             $values['background_color'] = $request->validated('background_color');
+            // Keep a v2 page's background in step so the new editor shows what the old one set.
+            if (is_array($canvas->background) && ($canvas->background['type'] ?? 'solid') === 'solid') {
+                $values['background'] = ['color' => $request->validated('background_color')] + $canvas->background;
+            }
         }
 
-        $written = DesignCanvas::whereKey($canvas->id)->where('revision', $revision)->update($values);
+        $result = $pages->savePrepared($project, $canvas, $request->user(), $revision, $values);
 
-        if ($written === 0) {
+        if (! $result->saved) {
             return response()->json([
                 'status' => 'conflict',
                 'message' => 'This page was changed somewhere else since you opened it, so your edits were not saved.',
-                'revision' => (int) DesignCanvas::whereKey($canvas->id)->value('revision'),
+                'revision' => $result->revision,
             ], 409);
         }
 
-        $canvas->refresh();
-
-        event(new DesignCanvasSaved($canvas));
+        $canvas = $result->page;
 
         return response()->json(['status' => 'saved', 'revision' => $canvas->revision, 'updated_at' => $canvas->updated_at?->toIso8601String()]);
     }

@@ -2,22 +2,15 @@
 
 namespace App\Events;
 
+use App\Models\DesignReview;
 use Illuminate\Foundation\Events\Dispatchable;
 
 /**
- * STUB owned by the integrations agent (see DesignCommentAdded). Dispatched after a reviewer decides. `decision` is
- * `approved` or `changes_requested`. The requester is the person told. Plain values only.
+ * A reviewer approved or asked for changes; `$review->status` says which.
  */
 class DesignReviewDecided
 {
     use Dispatchable;
 
-    public function __construct(
-        public readonly int $projectId,
-        public readonly int $reviewId,
-        public readonly int $decidedByUserId,
-        public readonly int $requestedByUserId,
-        public readonly string $decision,
-        public readonly ?int $teamId = null,
-    ) {}
+    public function __construct(public readonly DesignReview $review) {}
 }

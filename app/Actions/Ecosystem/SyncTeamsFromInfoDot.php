@@ -118,7 +118,13 @@ class SyncTeamsFromInfoDot
 
     private function localRole(string $infodotRole): string
     {
-        $wanted = in_array($infodotRole, ['owner', 'admin'], true) ? 'admin' : ($infodotRole === 'editor' ? 'editor' : 'viewer');
+        // An ordinary InfoDot member keeps editing here (as before the Reviewer role existed); only an explicit viewer
+        // becomes a Reviewer.
+        $wanted = match (true) {
+            in_array($infodotRole, ['owner', 'admin'], true) => 'admin',
+            in_array($infodotRole, ['editor', 'member'], true) => 'editor',
+            default => 'viewer',
+        };
 
         return Jetstream::findRole($wanted) ? $wanted : 'editor';
     }

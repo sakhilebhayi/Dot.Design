@@ -7,8 +7,12 @@ use App\Events\DesignProjectDeleted;
 use App\Models\AiGenerationLog;
 use App\Models\DesignAsset;
 use App\Models\DesignProject;
+use App\Services\Design\ActivityLog;
+use App\Services\Design\ThumbnailStore;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
 /**
@@ -39,6 +43,8 @@ class DesignProjectController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
+        $this->authorize('create', DesignProject::class);
+
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'type' => ['required', 'string', 'in:'.implode(',', self::TYPES)],
@@ -87,7 +93,13 @@ class DesignProjectController extends Controller
         return view('design.projects.show', compact('project', 'assets', 'assetUsage', 'assetIndex', 'generations'));
     }
 
-    public function destroy(DesignProject $project): RedirectResponse
+    /**
+     * Deleting a project is recorded first: the audit row (who, which project, which workspace) is written in the same
+     * transaction as the delete, and survives it. Versions, shares, comments and reviews go with the project; pictures
+     * filed under it are kept in the library (their project link is cleared), and a picture placed in another project
+     * is untouched.
+     */
+    public function destroy(Request $request, DesignProject $project, ActivityLog $activity, ThumbnailStore $thumbnails): RedirectResponse|JsonResponse
     {
         $this->authorize('delete', $project);
 
@@ -95,9 +107,28 @@ class DesignProjectController extends Controller
         $projectName = $project->name;
         $userId = $project->user_id;
 
-        $project->delete();
+        DB::transaction(function () use ($request, $project, $activity): void {
+            $activity->record($request->user(), $project, 'project.deleted', 'project', $project->id, [
+                'name' => $project->name,
+                'visibility' => $project->visibility,
+                'status' => $project->status,
+                'pages' => $project->canvases()->count(),
+            ]);
+
+            $project->delete();
+        });
+
+        try {
+            $thumbnails->forget($project);
+        } catch (\Throwable $e) {
+            report($e);
+        }
 
         event(new DesignProjectDeleted($projectId, $projectName, $userId));
+
+        if ($request->expectsJson()) {
+            return response()->json(['status' => 'deleted']);
+        }
 
         return redirect()->route('design.projects.index')->with('status', 'Project deleted.');
     }

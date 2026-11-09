@@ -2,27 +2,24 @@
 
 namespace App\Events;
 
+use App\Models\DesignComment;
+use App\Models\DesignProject;
 use Illuminate\Foundation\Events\Dispatchable;
 
 /**
- * STUB owned by the integrations agent: the backend agent's real class of the same name replaces this file at merge time.
- * The integrations listener reads only the public properties below, so the real event must expose them (or the listener's
- * `fromEvent` mapping in App\Listeners\Integrations\SendDesignNotifications is adjusted in that one place).
- *
- * Dispatched after a comment is saved. Plain values only.
+ * A comment (or reply) was posted on a project, by a member or by a guest through a share link. `mentioned` lists the
+ * workspace members it names. Plain event: notification fan-out is wired elsewhere.
  */
 class DesignCommentAdded
 {
     use Dispatchable;
 
     /**
-     * @param  list<int>  $mentionedUserIds  people @-mentioned in the comment (may be empty)
+     * @param  list<int>  $mentioned  user ids
      */
     public function __construct(
-        public readonly int $projectId,
-        public readonly int $commentId,
-        public readonly int $authorUserId,
-        public readonly ?int $teamId = null,
-        public readonly array $mentionedUserIds = [],
+        public readonly DesignComment $comment,
+        public readonly DesignProject $project,
+        public readonly array $mentioned = [],
     ) {}
 }

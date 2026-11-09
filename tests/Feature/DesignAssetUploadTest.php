@@ -371,10 +371,17 @@ class DesignAssetUploadTest extends TestCase
 
     public function test_guests_cannot_upload(): void
     {
+        // R-45: a fetch() caller (Accept: application/json) now gets a JSON 401 it can act on instead of a redirect to the
+        // sign-in page's HTML; a plain browser request still gets the redirect (see test_guests_are_redirected_for_a_browser_request).
         $this->postJson(route('design.assets.store'), ['file' => UploadedFile::fake()->createWithContent('a.png', $this->imageBytes('png'))])
-            ->assertUnauthorized(); // R-45: JSON callers on design/* get 401 (they used to get a redirect to the login page)
+            ->assertUnauthorized();
 
         $this->assertSame([], $this->storedFiles());
+    }
+
+    public function test_guests_are_redirected_for_a_browser_request(): void
+    {
+        $this->post(route('design.assets.store'), [])->assertRedirect(route('login'));
     }
 
     public function test_a_request_with_no_file_is_a_422_not_a_500(): void

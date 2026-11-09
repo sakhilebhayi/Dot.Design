@@ -4,6 +4,7 @@ namespace App\Policies;
 
 use App\Models\DesignAsset;
 use App\Models\User;
+use App\Support\Design\DesignAccess;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
 class DesignAssetPolicy
@@ -12,11 +13,17 @@ class DesignAssetPolicy
 
     public function view(User $user, DesignAsset $asset): bool
     {
-        return $user->id === $asset->user_id;
+        return DesignAccess::canViewAsset($user, $asset);
+    }
+
+    /** Rename, re-file, re-tag: the uploader's call only. */
+    public function update(User $user, DesignAsset $asset): bool
+    {
+        return (int) $asset->user_id === $user->id;
     }
 
     public function delete(User $user, DesignAsset $asset): bool
     {
-        return $user->id === $asset->user_id;
+        return DesignAccess::canDeleteAsset($user, $asset);
     }
 }
