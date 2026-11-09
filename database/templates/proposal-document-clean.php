@@ -72,7 +72,7 @@ $p->text('To go ahead, sign below and return a copy to us. We will confirm the s
 $p->rule($m, 400, 210, 1, 'ink', ['name' => 'Client signature line']);
 $p->text('Client signature and date', $m, 408, 210, ['size' => 10, 'color' => 'extra', 'role' => 'body', 'name' => 'Client signature label']);
 $p->rule($m + 260, 400, 180, 1, 'ink', ['name' => 'Our signature line']);
-$p->text('For Your Business', $m + 260, 408, 180, ['size' => 10, 'color' => 'extra', 'role' => 'body', 'name' => 'Our signature label']);
+$p->text('Authorised signature', $m + 260, 408, 180, ['size' => 10, 'color' => 'extra', 'role' => 'body', 'name' => 'Our signature label']);
 $p->contactList([['phone', Sample::PHONE, 'phone', 'phone'], ['mail', Sample::EMAIL, 'email', 'email'], ['globe', Sample::WEBSITE, 'website', 'website']], $m, 600, $cw, 12, 'ink', 'accent', 0.9);
 
 return $t->done();

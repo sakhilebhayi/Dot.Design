@@ -25,11 +25,10 @@ $cw = $p->cw();
 // confetti (decoration only, kept away from text)
 $p->ellipse(438, 36, 110, 110, 'surface', ['name' => 'Yellow circle']);
 $p->shape('star', 470, 150, 60, 60, 'accent', ['name' => 'Pink star', 'points' => 5, 'inner' => 0.45, 'rotation' => 12]);
-$p->ellipse(482, 764, 58, 58, 'extra', ['name' => 'Teal circle']);
 $p->shape('triangle', 492, 232, 48, 44, 'surface', ['name' => 'Yellow triangle', 'rotation' => -14]);
 
 $p->text('Your Business', $m, $m, 300, ['size' => 12, 'weight' => 600, 'ls' => 0.12, 'case' => 'upper', 'role' => 'contact', 'bind' => 'business_name', 'name' => 'Business name']);
-$p->text("Holiday\nFun Club", $m, 82, 400, ['font' => 'head', 'size' => 62, 'lh' => 1.0, 'ls' => -0.02, 'role' => 'headline', 'bind' => 'headline', 'name' => 'Headline']);
+$p->text("Holiday\nFun Club", $m, 82, 372, ['font' => 'head', 'size' => 62, 'lh' => 1.0, 'ls' => -0.02, 'role' => 'headline', 'bind' => 'headline', 'name' => 'Headline']);
 $p->text('Games, crafts and outdoor adventures every school holiday.', $m, 226, 330, ['size' => 15, 'lh' => 1.5, 'role' => 'body', 'bind' => 'subheadline', 'name' => 'Subheading']);
 $p->photo($m, 300, 360, 250, 'photo_1', 'offset', ['name' => 'Main picture', 'radius' => 40]);
 

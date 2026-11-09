@@ -23,12 +23,15 @@ $t->name($p, 'Cover');
 $p->bg('bg');
 $m = $p->m;
 $cw = $p->cw();
-$p->rect(0, 0, $p->w, 470, 'surface', ['name' => 'Cover picture backing']);
-$p->image(0, 0, $p->w, 470, ['bind' => 'photo_1', 'name' => 'Cover picture']);
-$p->rect($m, 440, 90, 8, 'extra', ['name' => 'Gold bar']);
-$p->text('Company profile', $m, 480, $cw, ['font' => 'head', 'size' => 44, 'lh' => 1.05, 'ls' => -0.02, 'role' => 'headline', 'bind' => 'headline', 'name' => 'Title']);
-$p->text('Your Business', $m, 570, $cw, ['font' => 'head', 'size' => 24, 'color' => 'accent', 'role' => 'logo', 'bind' => 'business_name', 'name' => 'Business name']);
-$p->text('Say what you do in one line', $m, 606, $cw, ['size' => 14, 'role' => 'body', 'bind' => 'tagline', 'name' => 'Tagline']);
+// the picture runs full bleed over a deep green field: until a photo is added the cover is still a finished design
+$p->rect(0, 0, $p->w, 500, 'accent', ['name' => 'Cover picture backing']);
+$p->ellipse(300, 60, 420, 420, null, ['name' => 'Cover ring large', 'role' => 'background', 'stroke' => ['extra', 2]]);
+$p->ellipse(350, 110, 320, 320, null, ['name' => 'Cover ring small', 'role' => 'background', 'stroke' => ['extra', 2]]);
+$p->image(0, 0, $p->w, 500, ['bind' => 'photo_1', 'name' => 'Cover picture']);
+$p->rect($m, 516, 90, 8, 'extra', ['name' => 'Gold bar']);
+$p->text("Company\nprofile", $m, 546, $cw, ['font' => 'head', 'size' => 60, 'lh' => 1.02, 'ls' => -0.02, 'role' => 'headline', 'bind' => 'headline', 'name' => 'Title']);
+$p->text('Your Business', $m, 686, $cw, ['font' => 'head', 'size' => 24, 'color' => 'accent', 'role' => 'logo', 'bind' => 'business_name', 'name' => 'Business name']);
+$p->text('Say what you do in one line', $m, 722, $cw, ['size' => 14, 'role' => 'body', 'bind' => 'tagline', 'name' => 'Tagline']);
 $p->text(Sample::WEBSITE, $m, $p->bottom() - 14, 300, ['size' => 11, 'ls' => 0.1, 'case' => 'upper', 'weight' => 600, 'role' => 'contact', 'bind' => 'website', 'name' => 'Website']);
 
 // 2 About

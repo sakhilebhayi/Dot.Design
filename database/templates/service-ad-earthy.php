@@ -21,8 +21,8 @@ $p = $t->page();
 $p->bg('bg');
 $m = $p->m;
 $p->photo(660, 44, 496, 542, 'photo_1', 'plain', ['name' => 'Main picture', 'radius' => 44, 'back' => 'surface']);
-$p->ellipse(612, 440, 120, 120, 'accent', ['name' => 'Badge disc']);
-$p->icon('leaf', 650, 478, 44, 'bg', ['name' => 'Leaf icon']);
+$p->ellipse(1000, 450, 120, 120, 'accent', ['name' => 'Badge disc']);
+$p->icon('leaf', 1038, 488, 44, 'bg', ['name' => 'Leaf icon']);
 
 $p->text('Your Business', $m, $m, 420, ['size' => 20, 'weight' => 700, 'ls' => 0.12, 'case' => 'upper', 'color' => 'extra', 'role' => 'contact', 'bind' => 'business_name', 'name' => 'Business name']);
 $p->text("Care for your\ngarden, all year", $m, 112, 580, ['font' => 'head', 'size' => 60, 'lh' => 1.04, 'ls' => -0.02, 'role' => 'headline', 'bind' => 'headline', 'name' => 'Headline']);

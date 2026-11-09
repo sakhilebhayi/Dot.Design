@@ -83,6 +83,24 @@ test('autoFit shrink reduces the effective font size to fit the box, never below
     assert.equal(layoutText(t({ text: 'a', autoFit: 'shrink', height: 200 }), m).fontSize, 10);
 });
 
+test('autoFit shrink never breaks a word mid-word while the text can get smaller', () => {
+    // 10 glyphs at 20px = 100px, wider than the 60px box and tall enough for 3 broken rows: the old fit stopped at 20px
+    const el = t({ text: 'OVERPAYING', width: 60, height: 70, autoFit: 'shrink', fontSize: 20, lineHeight: 1.2 });
+    const r = layoutText(el, m);
+    assert.equal(r.lines.length, 1);
+    assert.ok(r.fontSize <= 12 && r.fontSize > 10, `font size ${r.fontSize}`);
+    // without autoFit the engine still breaks by characters (unchanged behaviour)
+    assert.ok(layoutText({ ...el, autoFit: 'none' }, m).lines.length > 1);
+});
+
+test('autoFit shrink always lands on a size that really fits (never rounds up past it)', () => {
+    for (let w = 61; w <= 160; w += 7) {
+        const el = t({ text: 'MOKOENA & DAUGHTERS CATERING CC', width: w, height: 14.3, autoFit: 'shrink', fontSize: 11, lineHeight: 1.3, letterSpacing: 0.14 });
+        const r = layoutText(el, m);
+        assert.equal(r.overflow, false, `width ${w} -> ${r.fontSize}px, ${r.lines.length} lines`);
+    }
+});
+
 test('growHeight returns the content height, at least one line', () => {
     assert.equal(growHeight(t({ text: 'hello world foo bar', width: 60 }), m), 24);
     assert.equal(growHeight(t({ text: '', width: 60 }), m), 12);

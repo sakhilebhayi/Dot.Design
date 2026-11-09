@@ -21,7 +21,7 @@ $p->bg('bg');
 $m = $p->m;
 $cw = $p->cw();
 
-$p->ellipse(-120, 1260, 520, 520, 'extra', ['name' => 'Soft circle (bleeds off the edge)', 'role' => 'background']);
+$p->ellipse(760, -140, 440, 440, 'extra', ['name' => 'Soft circle (bleeds off the edge)', 'role' => 'background']);
 $p->text('Your Business', $m, 250, 800, ['size' => 34, 'weight' => 700, 'ls' => 0.14, 'case' => 'upper', 'role' => 'logo', 'bind' => 'business_name', 'name' => 'Business name']);
 $p->ellipse($m, 340, 300, 300, 'accent', ['name' => 'Number disc']);
 $p->text('3', $m, 340, 300, ['font' => 'head', 'size' => 250, 'lh' => 1.0, 'color' => 'ink', 'align' => 'center', 'valign' => 'middle', 'h' => 300, 'role' => 'badge', 'name' => 'Number']);

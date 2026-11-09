@@ -24,10 +24,10 @@ $cw = $p->cw();
 $p->rect(0, 0, $p->w, 10, 'accent', ['name' => 'Top band']);
 $p->rect($m, 44, 52, 52, 'surface', ['name' => 'Logo backing', 'radius' => 10]);
 $p->image($m, 44, 52, 52, ['bind' => 'logo', 'role' => 'logo', 'name' => 'Logo', 'radius' => 10]);
-$p->text('Your Business', $m + 66, 44, 260, ['font' => 'head', 'size' => 20, 'h' => 28, 'role' => 'logo', 'bind' => 'business_name', 'name' => 'Business name', 'lh' => 1.1]);
-$p->text('Say what you do in one line', $m + 66, 76, 260, ['size' => 9, 'color' => 'extra', 'role' => 'body', 'bind' => 'tagline', 'name' => 'Tagline']);
-$p->text(Sample::ADDRESS, $p->right() - 200, 52, 200, ['size' => 9, 'color' => 'extra', 'align' => 'right', 'role' => 'contact', 'bind' => 'address', 'name' => 'Address']);
-$p->text(Sample::PHONE, $p->right() - 200, 68, 200, ['size' => 9, 'color' => 'extra', 'align' => 'right', 'role' => 'contact', 'bind' => 'phone', 'name' => 'Phone']);
+$p->text('Your Business', $m + 66, 44, 230, ['font' => 'head', 'size' => 20, 'h' => 28, 'role' => 'logo', 'bind' => 'business_name', 'name' => 'Business name', 'lh' => 1.1]);
+$p->text('Say what you do in one line', $m + 66, 76, 230, ['size' => 9, 'color' => 'extra', 'role' => 'body', 'bind' => 'tagline', 'name' => 'Tagline']);
+$p->text(Sample::ADDRESS, $p->right() - 190, 52, 190, ['size' => 9, 'color' => 'extra', 'align' => 'right', 'role' => 'contact', 'bind' => 'address', 'name' => 'Address']);
+$p->text(Sample::PHONE, $p->right() - 190, 68, 190, ['size' => 9, 'color' => 'extra', 'align' => 'right', 'role' => 'contact', 'bind' => 'phone', 'name' => 'Phone']);
 
 $p->text("12 June\n\nDear customer,\n\nThank you for choosing us. Write your letter here, keeping paragraphs short and the first line clear about why you are writing. Delete this sample text when you are ready.\n\nKind regards,\nYour Name", $m, 190, 380, ['size' => 11, 'lh' => 1.65, 'role' => 'body', 'name' => 'Letter body']);
 

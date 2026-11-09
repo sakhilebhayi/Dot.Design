@@ -29,7 +29,7 @@ $p->rect($m + 50, 160, 120, 80, 'ink', ['name' => 'Number tab', 'radius' => 40])
 $p->text('1', $m + 50, 160, 120, ['size' => 56, 'weight' => 800, 'color' => 'surface', 'align' => 'center', 'valign' => 'middle', 'h' => 80, 'role' => 'badge', 'name' => 'Number', 'lh' => 1]);
 $p->text("Reply to every\nmessage within\nan hour", $m + 60, 290, $cw - 120, ['font' => 'head', 'size' => 80, 'lh' => 1.08, 'ls' => -0.02, 'role' => 'headline', 'bind' => 'headline', 'name' => 'Headline']);
 $p->text('Fast replies build trust and turn more enquiries into customers.', $m + 60, 650, $cw - 160, ['size' => 36, 'lh' => 1.35, 'role' => 'body', 'bind' => 'description', 'name' => 'Description']);
-$p->text('Your Business', $m, 920, 520, ['font' => 'head', 'size' => 34, 'role' => 'logo', 'bind' => 'business_name', 'name' => 'Business name']);
+$p->text('Your Business', $m, 920, 470, ['font' => 'head', 'size' => 34, 'role' => 'logo', 'bind' => 'business_name', 'name' => 'Business name']);
 $p->text('Follow for more', $p->right() - 420, 926, 420, ['size' => 30, 'weight' => 600, 'align' => 'right', 'role' => 'contact', 'bind' => 'social_handle', 'name' => 'Social handle']);
 
 return $t->done();

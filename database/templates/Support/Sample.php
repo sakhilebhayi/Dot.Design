@@ -28,7 +28,7 @@ final class Sample
 
     /** Labels and help from the catalogue copy bank (config/design_copy.php), so the library and the UI agree. */
     public const SLOT_LABELS = [
-        'business_name' => 'Business name', 'tagline' => 'Tagline', 'headline' => 'Headline', 'subheadline' => 'Supporting line',
+        'business_name' => 'Business name', 'initials' => 'Monogram letters', 'tagline' => 'Tagline', 'headline' => 'Headline', 'subheadline' => 'Supporting line',
         'offer' => 'Offer', 'price' => 'Price', 'date' => 'Date', 'time' => 'Time', 'venue' => 'Venue', 'address' => 'Address',
         'phone' => 'Phone number', 'whatsapp' => 'WhatsApp number', 'email' => 'Email address', 'website' => 'Website',
         'social_handle' => 'Social media handle', 'cta' => 'Call to action', 'description' => 'Description', 'logo' => 'Logo',
@@ -36,7 +36,7 @@ final class Sample
     ];
 
     public const SLOT_HELP = [
-        'business_name' => 'The name of your business, as customers know it.', 'tagline' => 'A short line that says what you stand for.',
+        'business_name' => 'The name of your business, as customers know it.', 'initials' => 'One to three letters for a monogram. We make them from your business name.', 'tagline' => 'A short line that says what you stand for.',
         'headline' => 'The big words people read first.', 'subheadline' => 'One line under the headline.', 'offer' => 'What the customer gets.',
         'price' => 'Write it exactly as it should print, with the currency.', 'date' => 'The day or dates.', 'time' => 'When it starts and ends.',
         'venue' => 'Where it happens.', 'address' => 'Your street address.', 'phone' => 'The number customers should call.',

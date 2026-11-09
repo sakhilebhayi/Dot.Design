@@ -301,14 +301,16 @@ function imageNodes(el, ctx, defs) {
     const url = el.asset_id !== null && el.asset_id !== undefined ? safeUrl(ctx.assetUrl(el.asset_id)) : null;
     if (!url) {
         if (ctx.forExport) return [];
-        const r = Math.min(8, w / 8, hh / 8);
-        const fs = Math.max(10, Math.min(28, Math.min(w / 9, hh / 4)));
+        // The empty slot follows the slot's own shape (ellipse, star, rounded...) and its label scales with the slot;
+        // a slot too small to hold the words shows only the dashed shape, never text spilling out of it.
+        const r = el.mask === 'rounded' || el.radius ? Math.min(el.radius || Math.min(w, hh) * 0.12, w / 2, hh / 2) : Math.min(8, w / 8, hh / 8);
+        const short = Math.min(w, hh);
         const stack = ctx.fonts && ctx.fonts.stackFor ? ctx.fonts.stackFor('inter') : 'sans-serif';
         const label = el.asset_id ? 'Picture unavailable' : 'Add a picture';
-        return [
-            h('rect', { width: w, height: hh, rx: r, ry: r, fill: '#f4f4f5', stroke: '#a1a1aa', 'stroke-width': 1.5, 'stroke-dasharray': '6 5', 'data-placeholder': '1' }),
-            h('text', { x: w / 2, y: hh / 2 + fs * 0.35, 'text-anchor': 'middle', 'font-size': fs, 'font-family': stack, fill: '#71717a' }, [label]),
-        ];
+        const fs = Math.min(Math.max(28, short * 0.06), w / 9, hh / 4, (w * 0.86) / (label.length * 0.56));
+        const fits = fs >= 7;
+        const shape = outline(maskKind(el), { x: 0.75, y: 0.75, w: Math.max(1, w - 1.5), h: Math.max(1, hh - 1.5) }, { radius: r, points: 5, inner: 0.5, sides: 6 }, { fill: '#f4f4f5', stroke: '#a1a1aa', 'stroke-width': 1.5, 'stroke-dasharray': '6 5', 'data-placeholder': '1' });
+        return fits ? [shape, h('text', { x: w / 2, y: hh / 2 + fs * 0.35, 'text-anchor': 'middle', 'font-size': fs, 'font-family': stack, fill: '#71717a' }, [label])] : [shape];
     }
     const radius = el.mask === 'rounded' && !el.radius ? Math.min(w, hh) * 0.12 : el.radius;
     const box = { x: 0, y: 0, w, h: hh };

@@ -26,7 +26,8 @@ $p->text('Up to 40% off selected lines, this week only.', $m, 450, 700, ['size' 
 $p->button('Shop in store today', $m, 520, 330, 62, 'accent', 'surface', ['size' => 22, 'font' => 'body']);
 
 $p->ellipse(786, 52, 340, 340, 'accent', ['name' => 'Offer badge']);
-$p->text("40%\nOFF", 786, 52, 340, ['font' => 'head', 'size' => 100, 'lh' => 0.95, 'color' => 'surface', 'align' => 'center', 'valign' => 'middle', 'h' => 340, 'role' => 'badge', 'bind' => 'offer', 'name' => 'Offer text']);
+// the text box is the square inside the circle, so a longer offer shrinks to stay on the badge
+$p->text("40%\nOFF", 786 + 50, 52 + 50, 240, ['font' => 'head', 'size' => 88, 'lh' => 0.95, 'color' => 'surface', 'align' => 'center', 'valign' => 'middle', 'h' => 240, 'role' => 'badge', 'bind' => 'offer', 'name' => 'Offer text']);
 $p->text('Ends Sunday', 786, 420, 340, ['font' => 'head', 'size' => 34, 'align' => 'center', 'case' => 'upper', 'role' => 'subhead', 'bind' => 'date', 'name' => 'End date']);
 $p->text('www.yourbusiness.co.za', 786, 505, 340, ['size' => 22, 'weight' => 600, 'align' => 'center', 'role' => 'contact', 'bind' => 'website', 'name' => 'Website']);
 

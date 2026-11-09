@@ -17,6 +17,7 @@ return [
     // Slot keys a template element can be bound to (element.bind). type: text | image.
     'slots' => [
         'business_name' => ['label' => 'Business name', 'type' => 'text', 'example' => 'Thandi\'s Bakery', 'help' => 'The name of your business, as customers know it.'],
+        'initials' => ['label' => 'Monogram letters', 'type' => 'text', 'example' => 'TB', 'help' => 'One to three letters for a monogram. We make them from your business name.'],
         'tagline' => ['label' => 'Tagline', 'type' => 'text', 'example' => 'Fresh bread every morning', 'help' => 'A short line that says what you stand for.'],
         'headline' => ['label' => 'Headline', 'type' => 'text', 'example' => 'Winter special', 'help' => 'The big words people read first.'],
         'subheadline' => ['label' => 'Supporting line', 'type' => 'text', 'example' => 'Warm pies for cold days', 'help' => 'One line under the headline.'],

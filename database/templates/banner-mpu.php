@@ -19,7 +19,7 @@ $t = Template::start([
 $p = $t->page();
 $p->bg('bg');
 $p->text('Your Business', 14, 14, 160, ['size' => 10, 'weight' => 700, 'ls' => 0.14, 'case' => 'upper', 'color' => 'extra', 'role' => 'contact', 'bind' => 'business_name', 'name' => 'Business name']);
-$p->text("WINTER\nWARMERS", 14, 40, 170, ['font' => 'head', 'size' => 40, 'lh' => 1.0, 'case' => 'upper', 'role' => 'headline', 'bind' => 'headline', 'name' => 'Headline']);
+$p->text("WINTER\nWARMERS", 14, 40, 156, ['font' => 'head', 'size' => 40, 'lh' => 1.0, 'case' => 'upper', 'role' => 'headline', 'bind' => 'headline', 'name' => 'Headline']);
 $p->photo(176, 16, 108, 140, 'photo_1', 'offset', ['name' => 'Product picture', 'accent' => 'accent']);
 $p->text('From R129', 14, 148, 150, ['font' => 'head', 'size' => 24, 'color' => 'accent', 'lh' => 1.1, 'role' => 'price', 'bind' => 'price', 'name' => 'Price']);
 $p->button('Shop now', 14, 190, 272, 44, 'accent', 'bg', ['size' => 15, 'radius' => 4, 'weight' => 800]);
