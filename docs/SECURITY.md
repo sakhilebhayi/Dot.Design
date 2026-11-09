@@ -1,3 +1,5 @@
+> R-45 update (2026-11-09): the studio's security review, findings and the enforced Content-Security-Policy are in `docs/R45_SECURITY.md`; the POPIA record is `docs/R45_PRIVACY.md`. Where this older document says the policy is report-only or names the Tailwind CDN, those documents are current.
+
 # Security Improvements
 
 > Security hardening checklist for Dot.Design. Mapped to OWASP Top 10 (2021). Each item is independently applicable.
