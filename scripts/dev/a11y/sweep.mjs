@@ -50,7 +50,8 @@ try {
                 const row = { id: s.id, vp, theme, violations: [], incomplete: 0, error: null, overflowX: false };
                 try {
                     await c.goto(`${base}/login`, { settle: 0 }).catch(() => {});
-                    await c.eval(`try{localStorage.setItem('dot-design-theme','${theme}');localStorage.setItem('dot-design-debug','1')}catch(e){}`);
+                    // every state starts from the same remembered panel state (the editor remembers its open tab per person)
+                    await c.eval(`try{ for (const k of Object.keys(localStorage)) if (/^dot-design-/.test(k) && !/theme|debug/.test(k)) localStorage.removeItem(k); localStorage.setItem('dot-design-theme','${theme}'); localStorage.setItem('dot-design-debug','1') }catch(e){}`);
                     await s.open(ctx);
                     await c.sleep(s.settle ?? 500);
                     if (s.after) await s.after(ctx);

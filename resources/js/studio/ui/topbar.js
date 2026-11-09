@@ -40,6 +40,7 @@ export function createTopbar(ctx, shell, { onPreview, openShortcuts }) {
 
     // The one page heading: the editor has no visible title, the design name field is the visible one.
     const pageHeading = h('h1', { class: 'lt-sr', text: `${project.name}, design editor` });
+    document.querySelector('body > h1.lt-sr')?.remove(); // the server's placeholder heading sits outside every landmark; this one replaces it
 
     // ---- back + name ----------------------------------------------------------------------------
     const back = h('a', { class: 'lt-icon-btn st-top__back', href: ctx.config.urls['design.projects.index'] || '/dashboard', attrs: { 'aria-label': 'Back to your designs', 'data-tip': 'Your designs', 'data-tip-side': 'bottom' } }, icon('arrow-left'));

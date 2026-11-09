@@ -24,7 +24,9 @@ if (table) {
     };
 
     const setColors = (list) => {
-        colors.replaceChildren(...list.map((hex) => { const li = document.createElement('li'); li.setAttribute('role', 'img'); li.setAttribute('aria-label', hex); li.style.setProperty('--c', hex); li.title = hex; return li; }));
+        // the list is one image with one name (a list of images is not valid ARIA)
+        colors.setAttribute('aria-label', `Colours in this template: ${list.join(', ')}`);
+        colors.replaceChildren(...list.map((hex) => { const li = document.createElement('span'); li.style.setProperty('--c', hex); li.title = hex; return li; }));
     };
 
     let token = 0;

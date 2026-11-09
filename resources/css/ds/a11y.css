@@ -137,11 +137,15 @@
 
 /* Always: nothing a person has to hit is smaller than 24 px (WCAG 2.2, 2.5.8). `:root` lifts these above the component and page
    rules that load after this file. */
-:root .lt-section__head a, :root .lt-contact__name, :root .ac-row__link, :root .lt-form__actions a { display: inline-flex; align-items: center; min-height: 1.5rem; }
+:root .lt-section__head a, :root .lt-contact__name, :root .ac-row__link, :root .lt-form__actions a, :root .sv-foot a { display: inline-flex; align-items: center; min-height: 1.5rem; }
+/* a grid column may shrink below its content, so a long label wraps instead of running past the edge (text zoom, Jetstream forms) */
+:root .lt-formsection__body { min-width: 0; }
+:root .lt-formsection__body > * { max-width: 100%; }
+:root .lt-formsection__body .lt-btn { white-space: normal; height: auto; }
 
 @media (pointer: coarse), (max-width: 47.99rem) {
     :root .lt-btn, :root .lt-btn--sm, :root .lt-chip, :root .lt-seg > button, :root .lt-icon-btn, :root .lt-brand, :root .as-folder__btn,
-    :root .st-name, :root .st-save, :root .sv-tool, :root .lt-input, :root .lt-select { min-height: 2.75rem; }
+    :root .st-name, :root .st-save, :root .sv-tool, :root .sv-brand, :root .st-pageadd, :root .sv-foot a, :root .lt-input, :root .lt-select { min-height: 2.75rem; }
     :root .lt-icon-btn, :root .st-save, :root .lt-chip, :root .sv-tool { min-width: 2.75rem; }
     :root .br-color__hex { min-width: 6rem; }
     :root input[type="color"] { min-width: 2.75rem; min-height: 2.75rem; }
