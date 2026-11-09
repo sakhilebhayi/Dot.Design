@@ -35,7 +35,7 @@ final class Craft
             $w = (float) $page['width'];
             $h = (float) $page['height'];
             $short = min($w, $h);
-            $fs = Formats::safe($tpl['format_key']);
+            $fs = Formats::copyZone($tpl['format_key']);
             $floor = $short * 0.04;
             // per-side safe margin: the larger of the format's own safe zone and 4% of the short side
             $mt = max($fs[0], $floor);

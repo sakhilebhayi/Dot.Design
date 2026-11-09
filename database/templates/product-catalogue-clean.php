@@ -24,7 +24,7 @@ $m = $p->m;
 $cw = $p->cw();
 $p->photo($m, 190, $cw - 12, 440, 'photo_1', 'offset', ['name' => 'Cover picture']);
 $p->text('Your Business', $m, $m, $cw, ['size' => 12, 'weight' => 700, 'ls' => 0.18, 'case' => 'upper', 'color' => 'accent', 'role' => 'logo', 'bind' => 'business_name', 'name' => 'Business name']);
-$p->text('Product catalogue', $m, 74, $cw, ['font' => 'head', 'size' => 52, 'ls' => -0.02, 'role' => 'headline', 'bind' => 'headline', 'name' => 'Title', 'lh' => 1.05]);
+$p->text('Product catalogue', $m, 74, $cw, ['font' => 'head', 'size' => 44, 'ls' => -0.02, 'role' => 'headline', 'bind' => 'headline', 'name' => 'Title', 'lh' => 1.05]);
 $p->text('The full range, with prices from', $m, 700, $cw, ['font' => 'head', 'size' => 22, 'italic' => true, 'role' => 'subhead', 'bind' => 'subheadline', 'name' => 'Subtitle']);
 $p->text(Sample::WEBSITE, $m, $p->bottom() - 14, $cw, ['size' => 11, 'color' => 'extra', 'role' => 'contact', 'bind' => 'website', 'name' => 'Website']);
 

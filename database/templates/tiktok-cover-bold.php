@@ -21,13 +21,15 @@ $p->bg('bg');
 $m = $p->m;
 $cw = $p->cw();
 
-$p->ellipse(760, -140, 440, 440, 'extra', ['name' => 'Soft circle (bleeds off the edge)', 'role' => 'background']);
-$p->text('Your Business', $m, 250, 800, ['size' => 34, 'weight' => 700, 'ls' => 0.14, 'case' => 'upper', 'role' => 'logo', 'bind' => 'business_name', 'name' => 'Business name']);
-$p->ellipse($m, 340, 300, 300, 'accent', ['name' => 'Number disc']);
-$p->text('3', $m, 340, 300, ['font' => 'head', 'size' => 250, 'lh' => 1.0, 'color' => 'ink', 'align' => 'center', 'valign' => 'middle', 'h' => 300, 'role' => 'badge', 'name' => 'Number']);
-$p->text("EASY WAYS\nTO GET MORE\nCUSTOMERS", $m, 670, 864, ['font' => 'head', 'size' => 146, 'lh' => 0.98, 'role' => 'headline', 'bind' => 'headline', 'name' => 'Headline']);
-$p->photo($m, 1150, 440, 270, 'photo_1', 'offset', ['name' => 'Main picture', 'accent' => 'accent', 'back' => 'surface']);
-$p->text("Watch to\nthe end", 560, 1160, 380, ['font' => 'head', 'size' => 70, 'lh' => 1.05, 'case' => 'upper', 'role' => 'cta', 'bind' => 'cta', 'name' => 'Hook']);
-$p->text('@yourbusiness', 560, 1340, 380, ['size' => 34, 'weight' => 700, 'role' => 'contact', 'bind' => 'social_handle', 'name' => 'Social handle']);
+// Big numeral and hook above, the headline in the middle, a full-bleed picture running under the caption band.
+$p->ellipse(740, -160, 520, 520, 'extra', ['name' => 'Soft circle (bleeds off the edge)', 'role' => 'background']);
+$p->text('Your Business', $m, 290, 800, ['size' => 34, 'weight' => 700, 'ls' => 0.14, 'case' => 'upper', 'role' => 'logo', 'bind' => 'business_name', 'name' => 'Business name']);
+$p->ellipse($m, 360, 340, 340, 'accent', ['name' => 'Number disc']);
+$p->text('3', $m, 360, 340, ['font' => 'head', 'size' => 290, 'lh' => 1.0, 'color' => 'ink', 'align' => 'center', 'valign' => 'middle', 'h' => 340, 'role' => 'badge', 'name' => 'Number']);
+$p->text("Watch to\nthe end", 470, 470, 470, ['font' => 'head', 'size' => 84, 'lh' => 1.05, 'case' => 'upper', 'role' => 'cta', 'bind' => 'cta', 'name' => 'Hook']);
+$p->text('@yourbusiness', 470, 646, 470, ['size' => 38, 'weight' => 700, 'role' => 'contact', 'bind' => 'social_handle', 'name' => 'Social handle']);
+$p->text("EASY WAYS\nTO GET MORE\nCUSTOMERS", $m, 750, 864, ['font' => 'head', 'size' => 140, 'lh' => 0.98, 'role' => 'headline', 'bind' => 'headline', 'name' => 'Headline']);
+$p->rect(0, 1228, 1080, 18, 'accent', ['name' => 'Picture accent strip']);
+$p->photo(0, 1246, 1080, 674, 'photo_1', 'plain', ['name' => 'Main picture', 'back' => 'surface']);
 
 return $t->done();

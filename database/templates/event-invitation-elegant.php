@@ -32,7 +32,7 @@ $p->text('6.30pm for 7pm', $m, $y + 84, $cw, ['size' => 13, 'ls' => 0.12, 'case'
 $p->text("The Garden Room\n12 Main Street, Your Town", $m, $y + 122, $cw, ['size' => 13, 'lh' => 1.6, 'align' => 'center', 'color' => 'ink', 'role' => 'body', 'bind' => 'venue', 'name' => 'Venue']);
 $p->text('Dinner will be served. Smart casual.', $m, $y + 186, $cw, ['font' => 'head', 'size' => 17, 'italic' => true, 'align' => 'center', 'color' => 'accent', 'role' => 'body', 'bind' => 'description', 'name' => 'Note']);
 $p->rect(($p->w - 250) / 2, 488, 250, 56, 'surface', ['name' => 'RSVP panel']);
-$p->text('RSVP by 30 May', ($p->w - 250) / 2, 494, 250, ['size' => 11, 'ls' => 0.14, 'case' => 'upper', 'weight' => 600, 'align' => 'center', 'role' => 'body', 'name' => 'RSVP label']);
+$p->text('Kindly reply to', ($p->w - 250) / 2, 494, 250, ['size' => 11, 'ls' => 0.14, 'case' => 'upper', 'weight' => 600, 'align' => 'center', 'role' => 'body', 'name' => 'RSVP label']);
 $p->text(Sample::PHONE, ($p->w - 250) / 2, 512, 250, ['font' => 'head', 'size' => 20, 'align' => 'center', 'role' => 'contact', 'bind' => 'phone', 'name' => 'RSVP phone']);
 
 return $t->done();

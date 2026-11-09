@@ -4,13 +4,14 @@ Owner: the library agent. Branch `feat/r45-library`. Content only: no app code, 
 
 | What | Where | Count |
 |---|---|---|
-| Templates | `database/templates/<slug>.php` | 58 (`_index.php` lists them) |
+| Templates | `database/templates/<slug>.php` | 64 (`_index.php` lists them) |
 | Template builder DSL and craft checker | `database/templates/Support/` | 11 classes |
 | Icons | `resources/design/icons.json` | 178 |
 | Design elements (50), 12 patterns, 12 gradient presets, 20 palettes | `resources/design/elements.json` | 94 entries |
 | Strict schema validator (tests) | `tests/Support/TemplateSchemaValidator.php` | |
-| Tests | `tests/Unit/Library{Templates,Icons,Elements}Test.php` | 478 cases |
+| Tests | `tests/Unit/Library{Templates,Icons,Elements}Test.php` | 526 cases |
 | Dev tools | `scripts/dev/` (see section 6) | |
+| Polish pass (jury findings, safe zones, 6 new templates, empty picture slots) | `docs/R45_POLISH_TEMPLATES.md` | |
 
 ## 1. Catalogue
 
@@ -34,8 +35,10 @@ Every template is a real, editable document (text, shapes, icons, groups and emp
 | `email-signature-clean` | email-signature | email-signature (600x200) | clean, corporate | 1 | identity | email signature |
 | `event-invitation-elegant` | invitation | a5-portrait (420x595) | elegant | 1 | marketing | event invitation; invitation |
 | `event-invitation-playful` | invitation | instagram-story (1080x1920) | playful, bold | 1 | marketing | event invitation; instagram story |
+| `event-post-square-date` | instagram-post | instagram-post-square (1080x1080) | dark, bold | 1 | social | event post square |
 | `event-poster-dark` | poster | a3-portrait (842x1191) | dark, bold | 1 | marketing | promotional poster; event poster |
 | `facebook-cover-corporate` | facebook-cover | facebook-cover (1640x924) | corporate | 1 | social | facebook cover |
+| `facebook-event-ticket` | facebook-post | facebook-post (1200x630) | playful, bold | 1 | social | event post facebook |
 | `facebook-post-clean` | facebook-post | facebook-post (1200x630) | clean | 1 | social | facebook post |
 | `flyer-a4-corporate` | flyer | a4-portrait (595x842) | corporate | 1 | marketing | flyer a4 |
 | `flyer-a4-playful` | flyer | a4-portrait (595x842) | playful | 1 | marketing | flyer a4 |
@@ -62,6 +65,7 @@ Every template is a real, editable document (text, shapes, icons, groups and emp
 | `product-ad-clean` | instagram-post | instagram-post-portrait (1080x1350) | clean | 1 | marketing | product advertisement; instagram post portrait |
 | `product-ad-dark` | poster | a4-portrait (595x842) | dark | 1 | marketing | product advertisement |
 | `product-catalogue-clean` | product-catalogue | a4-portrait (595x842) | clean, earthy | 2 | commercial | product catalogue |
+| `product-post-square-framed` | instagram-post | instagram-post-square (1080x1080) | clean, earthy | 1 | marketing | product advertisement; instagram post square |
 | `promo-poster-bold` | poster | a3-portrait (842x1191) | bold | 1 | marketing | promotional poster |
 | `promo-poster-elegant` | poster | a3-portrait (842x1191) | elegant | 1 | marketing | promotional poster |
 | `proposal-document-clean` | report | report-a4 (595x842) | clean, corporate | 4 | document | multi-page document |
@@ -69,9 +73,12 @@ Every template is a real, editable document (text, shapes, icons, groups and emp
 | `report-corporate` | report | report-a4 (595x842) | corporate, clean | 3 | document | report |
 | `sale-ad-bold` | facebook-post | facebook-post (1200x630) | bold | 1 | marketing | sale advertisement; facebook post |
 | `sale-ad-clean` | flyer | a4-portrait (595x842) | clean | 1 | marketing | sale advertisement |
+| `sale-post-square-bold` | instagram-post | instagram-post-square (1080x1080) | bold | 1 | marketing | sale advertisement; instagram post square |
 | `service-ad-corporate` | flyer | a4-portrait (595x842) | corporate | 1 | marketing | service advertisement |
 | `service-ad-earthy` | facebook-post | facebook-post (1200x630) | earthy | 1 | marketing | service advertisement |
 | `service-catalogue-corporate` | service-catalogue | a4-portrait (595x842) | corporate | 1 | commercial | service catalogue |
+| `story-announcement-clean` | instagram-story | instagram-story (1080x1920) | clean | 1 | social | announcement story; instagram story |
+| `story-coupon-sale` | instagram-story | instagram-story (1080x1920) | bold, playful | 1 | social | coupon story; instagram story |
 | `tiktok-cover-bold` | tiktok-cover | tiktok-cover (1080x1920) | bold | 1 | social | tiktok cover |
 | `voucher-gift-dl` | voucher | voucher-dl (595x281) | bold, playful | 1 | commercial | promotional voucher |
 | `whatsapp-status-playful` | whatsapp-status | whatsapp-status (1080x1920) | playful, earthy | 1 | social | whatsapp status |
@@ -111,7 +118,7 @@ Each template must return an empty list from `Craft::problems()`; `LibraryTempla
 1. A single focal point: the largest text is the headline, price, logo or badge, and the headline is at least 2x the largest body or contact text.
 2. At most 5 colours per template (all hex literals) and at most 2 font families from the allowlist.
 3. Text contrast of at least 4.5:1 against what is directly behind it, computed from the page colour, gradients (every stop) and every shape under each line of text, with opacity.
-4. Text, icons and logo slots stay inside the format's own safe zone (stories 250/340 px top/bottom, TikTok 480 px bottom, roll-up 150 mm bottom, 3 to 6 mm print margins) and never less than 4% of the short side; nothing sits off the page except shapes marked `role: background`.
+4. Text, icons and logo slots stay inside the format's own safe zone (stories and WhatsApp statuses: the top 14% and bottom 22% of the screen stay free of copy, TikTok keeps its 25% caption band, roll-up 150 mm bottom, 3 to 6 mm print margins; pictures and colour may still run into those bands) and never less than 4% of the short side; nothing sits off the page except shapes marked `role: background`.
 5. Consistent alignment grid: at most 6 distinct left edges per page.
 6. Text fits its box by the real-metrics estimator with 15% headroom; no word is wider than 97% of its box (it would break mid-word); no two lines of text collide; no text overlaps a picture slot or an icon. The same rules are re-checked against the engine's own layout for the sample copy and for much longer and shorter copy by `tests/js/library/templates-real.test.mjs`.
 7. Every picture slot is empty and has a vector backing behind it; every element is named in plain language; every text element has a role; replaceable copy has a `bind` from the owner vocabulary and a matching slot.
@@ -120,7 +127,7 @@ Each template must return an empty list from `Craft::problems()`; `LibraryTempla
 
 ## 4. Icons and elements
 
-- **Icons**: 178 own-drawn icons (six added in the QA pass for words owners search for: tree, bed, wifi, crown, printer, paperclip; search tags added so microphone, doctor, graduate, family, wedding, birthday find an icon)
+- **Icons**: 178 own-drawn icons (R-45 polish: the file now lists them grouped in the picker's own chip order with the most useful first, `leaf` and `flame` moved to symbols, 70 search words added: certificate, winner, beauty, tablet, tv, language, battery, hide, show, unlock, speech, sports, loan, compass, bread, chicken, vegetable and more; 10 groups of 10 to 29 icons) (six added in the QA pass for words owners search for: tree, bed, wifi, crown, printer, paperclip; search tags added so microphone, doctor, graduate, family, wedding, birthday find an icon)
 - **Elements** (`elements.json`): dividers (8), corners and marks (6), badges and ribbons (8), speech bubbles (6), frames with picture slots (6), price tags (4), star bursts (4), arrows and callouts (8), 12 geometric patterns (dots, stripes, checks, waves, grid, confetti, contours, halftone, triangles, zigzag, rings, plus) as 16 to 130 element groups on a 600 by 600 tile, 12 gradient presets and 20 brand-neutral palettes whose colours use the Brand Studio roles (primary, secondary, accent, neutral, extra) with a use note and the best text colour on the main colour with its contrast ratio. Each element is a schema-valid group that the editor inserts as is; colours carry brand tokens. `scripts/dev/build-elements.php` regenerates the file.
 
 ## 5. Skills
@@ -140,7 +147,8 @@ Everything below runs headless Chrome with its own throw-away profile (never the
 - `node scripts/dev/check-templates.mjs [slug]`: the engine's own text layout with the real font metrics, for the sample copy and for long and short copy (`tests/js/library/templates-real.test.mjs` asserts the same).
 - `node scripts/dev/check-recolour.mjs [slug] [--kits vivid,dull,navy,pastel] [--briefs full,long]`: instantiates through the real PHP `TemplateInstantiator` with brand kits and checks the result.
 - `node scripts/dev/check-instantiation.mjs --out <dir>`: full and empty briefs, exported to PNG with the product's output module.
-- `node scripts/dev/sheet.mjs --out <dir> [--only a,b] [--kit vivid] [--kind icons|elements] [--no-placeholders]`: PNG contact sheets drawn by the real renderer (`--serve` prints a URL to open in any browser). This replaces the old standalone approximation sheet.
+- `node scripts/dev/sheet.mjs --out <dir> [--only a,b] [--kit vivid] [--kind icons|elements] [--no-placeholders] [--placeholders preview]`: PNG contact sheets drawn by the real renderer (`--serve` prints a URL to open in any browser). This replaces the old standalone approximation sheet.
+- `node scripts/dev/hug-report.mjs [slug]` lists text boxes taller than 1.35x the text they hold (real engine layout).
 - `node scripts/dev/measure-fonts.mjs` regenerates `Support/font-metrics.json`; `node scripts/dev/calibrate-metrics.mjs` proves it against Chrome; `node scripts/dev/qa-report.mjs --base <old database/templates>` prints the before and after table.
 - `php scripts/dev/build-icons.php`, `php scripts/dev/build-elements.php`: regenerate the JSON files. `php scripts/dev/contrast.php 'fg:bg'`: contrast of colour pairs. `php scripts/dev/dump-templates.php`: all templates as JSON. `php artisan design:export-templates --json`: the stored rows as JSON.
 
@@ -162,6 +170,6 @@ Everything below runs headless Chrome with its own throw-away profile (never the
 - Sample dishes, services and prices (menus, price list, quotation, catalogues) are plausible examples, flagged as such in each description; replace them. The quotation figures add up (VAT at 15%: 4 500.00 plus 675.00 is 5 175.00) but any real use needs the user's own rate and terms.
 - No template uses a gradient (flat fields only); gradients appear in the `elements.json` presets, and the engine's angle convention (0 = towards the top, 90 = towards the right, 180 = towards the bottom, the CSS convention) matches the presets, checked by a test and by eye.
 - Brand colours can no longer make text illegible: after a kit is applied, `ReadableText` swaps any text that falls under 4.5:1 against its backdrop to white or near-black and lists the change (`readable` in the result, a plain-language warning). It only trusts a shape that fully holds the text box, so it is conservative: text that sits across the edge of a decorative shape is left alone. It runs at template instantiation; the later "apply brand update" flow (`BrandService`) does not run it yet.
-- An exported design with an empty picture slot shows the slot's backing colour (a pale tint in most templates, a dark panel in `ig-story-bold`, `animated-story-flash-sale`, `banner-mpu` and the dark templates). The editor shows the dashed "Add a picture" placeholder in the same place.
+- An exported design with an empty picture slot shows the slot's backing colour (a pale tint in most templates, a dark panel in the dark templates): exports never contain placeholder art. The editor canvas shows a tonal prompt (gradient, thin picture glyph, "Add a picture") and template cards show abstract tonal art, see `docs/R45_POLISH_TEMPLATES.md`. That art is not content and not a photograph.
 - Print templates are layouts at 72 dpi page units, not press-ready files: no bleed is built into the canvas (the exporter adds bleed from the format), so full-bleed backgrounds run exactly to the page edge.
 - Brand logos (Instagram, Facebook and similar) are deliberately not in the icon set: they are trademarks. WhatsApp and generic chat, mail, phone and share icons are.

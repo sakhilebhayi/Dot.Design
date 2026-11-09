@@ -50,7 +50,7 @@ $p = $t->page();
 $t->name($p, 'Chapter opener');
 $p->bg('bg');
 $p->text('1', $m, 70, $cw, ['font' => 'head', 'size' => 190, 'lh' => 1.0, 'color' => 'accent', 'role' => 'other', 'name' => 'Chapter number']);
-$p->text('Know your customer', $m, 296, $cw, ['font' => 'head', 'size' => 34, 'lh' => 1.1, 'h' => 78, 'ls' => -0.01, 'role' => 'headline', 'name' => 'Chapter title']);
+$p->text('Know your customer', $m, 296, $cw, ['font' => 'head', 'size' => 30, 'lh' => 1.1, 'h' => 44, 'ls' => -0.01, 'role' => 'headline', 'name' => 'Chapter title']);
 $p->rect($m, 386, 64, 5, 'accent', ['name' => 'Accent bar']);
 $p->text('Every good business starts with a simple question: who are we here to help? Write a short opening for your chapter here, then follow it with the detail. Keep sentences short and speak to one reader.', $m, 412, $cw, ['size' => 12, 'lh' => 1.75, 'color' => 'ink', 'role' => 'body', 'bind' => 'description', 'name' => 'Opening paragraph']);
 

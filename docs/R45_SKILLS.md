@@ -84,3 +84,15 @@ Verification tools actually run for editor-ui: `impeccable detect` (source tier,
 | `hallmark`, `design-md`, `awesome-design-md`, `open-design`, `gsap-*`, `scroll-world`, `react-bits`, `canvas-ui`, `terminal-dark` | not used | No new page, token file, brand spec or motion work was in scope. |
 
 Verification actually run: every template page, icon, element, pattern, gradient and palette drawn by the real engine in headless Chrome and looked at (with placeholders, without, and with the vivid and dull brand kits); automated checks and counts are in `docs/R45_LIBQA.md`.
+
+## ptpl (R-45 template artwork polish): what was really used
+
+| Skill | Status | How it was used |
+|---|---|---|
+| `impeccable` | available, invoked (Skill tool) | Loaded, but its setup (`impeccable context`, PRODUCT.md, a web page to inspect) and its detector target web source, so they were not run. Applied as principles to print and social artwork: one focal point per piece (the date, the offer, the headline), a real jump in scale between headline and support text, centred, split, framed, diagonal and full-bleed-type compositions instead of one left-aligned recipe, restraint (no ornament without a job), and the "look at the result, fix, look again" rule on contact sheets from the real renderer. |
+| `design-taste-frontend` | available, invoked (Skill tool) | Its anti-slop rules (no decoration standing in for content, whole fields of colour over many small boxes, nothing empty by accident) shaped the story rebalancing and the placeholder art: no invented photography, only tonal fields derived from the template's own palette. Its draw and inspect scripts are for web pages and were not run. |
+| `open-design` | available, invoked (Skill tool) | Invoked; its content catalogue (a clone of the Open Design repository at `~/.open-design-skill/repo`) is not installed and cloning needs approval, so no brand spec, template or craft file from it was used and nothing from it is claimed. |
+| `ui-ux-pro-max`, `emil-design-eng` | UNAVAILABLE | Empty or dangling folders (see above). Not used and not claimed. |
+| `hallmark`, `design-md`, `awesome-design-md`, `gsap-*`, `scroll-world`, `react-bits`, `canvas-ui`, `terminal-dark` | not used | No new web page, token file or motion work was in scope. |
+
+Verification actually run: contact sheets of all 64 templates in the real renderer (card look and editor look, before and after, `docs/R45_screens/polish-templates/`), the craft gate, the real-metrics tests with long and short copy, brand recolour with four kits, and the new placeholder tests.

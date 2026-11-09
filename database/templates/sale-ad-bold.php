@@ -19,16 +19,15 @@ $t = Template::start([
 $p = $t->page();
 $p->bg('bg');
 $m = $p->m;
+$cw = $p->cw();
 
-$p->text('Your Business', $m, $m, 400, ['size' => 22, 'weight' => 700, 'ls' => 0.12, 'case' => 'upper', 'role' => 'contact', 'bind' => 'business_name', 'name' => 'Business name']);
-$p->text("BIG\nSALE", $m, 100, 640, ['font' => 'head', 'size' => 190, 'lh' => 0.9, 'role' => 'headline', 'bind' => 'headline', 'name' => 'Headline']);
-$p->text('Up to 40% off selected lines, this week only.', $m, 450, 700, ['size' => 28, 'weight' => 600, 'lh' => 1.3, 'role' => 'subhead', 'bind' => 'subheadline', 'name' => 'Subheading']);
-$p->button('Shop in store today', $m, 520, 330, 62, 'accent', 'surface', ['size' => 22, 'font' => 'body']);
-
-$p->ellipse(786, 52, 340, 340, 'accent', ['name' => 'Offer badge']);
-// the text box is the square inside the circle, so a longer offer shrinks to stay on the badge
-$p->text("40%\nOFF", 786 + 50, 52 + 50, 240, ['font' => 'head', 'size' => 88, 'lh' => 0.95, 'color' => 'surface', 'align' => 'center', 'valign' => 'middle', 'h' => 240, 'role' => 'badge', 'bind' => 'offer', 'name' => 'Offer text']);
-$p->text('Ends Sunday', 786, 420, 340, ['font' => 'head', 'size' => 34, 'align' => 'center', 'case' => 'upper', 'role' => 'subhead', 'bind' => 'date', 'name' => 'End date']);
-$p->text('www.yourbusiness.co.za', 786, 505, 340, ['size' => 22, 'weight' => 600, 'align' => 'center', 'role' => 'contact', 'bind' => 'website', 'name' => 'Website']);
+// Big numerals: the offer itself is the picture. A yellow ticker band on top, the number across the middle.
+$p->rect(0, 0, 1200, 110, 'accent', ['name' => 'Top band']);
+$p->text('Your Business', $m, 40, 520, ['size' => 22, 'weight' => 800, 'ls' => 0.12, 'case' => 'upper', 'color' => 'surface', 'role' => 'contact', 'bind' => 'business_name', 'name' => 'Business name']);
+$p->text('Ends Sunday', 1200 - $m - 400, 40, 400, ['font' => 'head', 'size' => 26, 'align' => 'right', 'case' => 'upper', 'color' => 'surface', 'role' => 'contact', 'bind' => 'date', 'name' => 'End date']);
+$p->text('BIG SALE', $m, 126, $cw, ['font' => 'head', 'size' => 64, 'ls' => 0.04, 'align' => 'center', 'role' => 'subhead', 'bind' => 'headline', 'name' => 'Headline']);
+$p->text('40% OFF', $m, 196, $cw, ['font' => 'head', 'size' => 172, 'lh' => 0.95, 'ls' => -0.02, 'color' => 'accent', 'align' => 'center', 'role' => 'price', 'bind' => 'offer', 'name' => 'Offer text']);
+$p->text('Up to 40% off selected lines, this week only.', $m, 388, $cw, ['size' => 30, 'weight' => 600, 'align' => 'center', 'role' => 'body', 'bind' => 'subheadline', 'name' => 'Subheading']);
+$p->button('Shop in store today', (1200 - 380) / 2, 470, 380, 70, 'accent', 'surface', ['size' => 24, 'font' => 'body', 'bind' => 'cta']);
 
 return $t->done();

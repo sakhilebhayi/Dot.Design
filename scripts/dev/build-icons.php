@@ -272,8 +272,49 @@ ic('crown', 'symbols', 'king,queen,premium,royal,best', 'M4 18L3 7L8 11L12 5L16 
 ic('printer', 'business', 'print,printing,copy,paper,office', 'M7 8V3H17V8M7 17H4V9H20V17H17M7 14H17V21H7Z');
 ic('paperclip', 'business', 'attach,attachment,clip,file', 'M19 11L12 18C9.8 20.2 6.2 20.2 4.3 18.3C2.4 16.4 2.4 12.8 4.6 10.6L12.6 2.6C14 1.2 16.3 1.2 17.7 2.6C19.1 4 19.1 6.3 17.7 7.7L9.7 15.7C8.9 16.5 7.6 16.5 6.8 15.7C6 14.9 6 13.6 6.8 12.8L13.5 6.1');
 
+// ---- R-45 polish (ptpl): search words, two category moves and the order the picker shows ------------------
+// The jury called the icon grid "an unsorted wall of glyphs". The file now lists icons grouped in the picker's own chip order,
+// the most useful ones first inside each group, so the "All" view reads as sections instead of an alphabet.
+$moreTags = [
+    'document' => 'agreement,contract,form,paperwork', 'award' => 'certificate,medal,winner', 'trophy' => 'winner,champion,competition',
+    'brush' => 'beauty,makeup,artist', 'scissors' => 'beauty,haircut,barber,salon', 'play' => 'game,start,watch', 'smartphone' => 'tablet,device,app',
+    'monitor' => 'tv,television,screen,display', 'globe' => 'language,translate,world,international', 'bolt' => 'battery,charge,electric,energy',
+    'eye' => 'hide,show,view,visible', 'lock' => 'unlock,closed,secure', 'chat-bubble' => 'speech,quote,say', 'megaphone' => 'speech,announce,promote,shout',
+    'dumbbell' => 'sports,run,training,exercise,workout', 'bike' => 'sports,run,cycle,ride', 'fork-knife' => 'chicken,fish,meal,dinner,lunch', 'bowl' => 'soup,vegetable,salad,rice',
+    'apple' => 'vegetable,healthy,fruit,grocer', 'cupcake' => 'bread,bakery,dessert,treat', 'house' => 'door,property,estate,rent', 'bank' => 'loan,savings,finance',
+    'coin' => 'loan,change,saving', 'location-arrow' => 'compass,navigate,direction,gps', 'users' => 'handshake,meeting,partners,community', 'smile' => 'kids,happy,baby,friendly',
+    'gift' => 'toy,present,birthday,surprise', 'paw' => 'dog,cat,pet,animal,vet',
+];
+foreach ($moreTags as $key => $list) {
+    if (isset($I[$key])) {
+        $I[$key]['tags'] = array_values(array_unique([...$I[$key]['tags'], ...array_map('trim', explode(',', $list))]));
+    }
+}
+foreach (['leaf' => 'symbols', 'flame' => 'symbols'] as $key => $cat) {
+    $I[$key]['category'] = $cat;
+}
+$groupOrder = ['business', 'services', 'arrows', 'symbols', 'contact', 'food', 'commerce', 'social', 'shapes', 'checks'];
+$first = [
+    'business' => ['users', 'user', 'briefcase', 'building', 'store', 'chart-line', 'target', 'lightbulb', 'rocket', 'trophy'],
+    'services' => ['house', 'car', 'wrench', 'hammer', 'scissors', 'brush', 'laptop', 'graduation-cap', 'tooth', 'dumbbell'],
+    'arrows' => ['arrow-right', 'arrow-left', 'arrow-up', 'arrow-down', 'chevron-right', 'chevron-down'],
+    'symbols' => ['star', 'sparkle', 'crown', 'search', 'plus', 'close', 'info', 'question', 'alert', 'leaf', 'flame'],
+    'contact' => ['phone', 'mail', 'chat-whatsapp', 'pin', 'globe', 'clock', 'calendar', 'at-sign'],
+    'food' => ['fork-knife', 'coffee-cup', 'pizza', 'burger', 'cake', 'cupcake', 'wine-glass', 'beer'],
+    'commerce' => ['cart', 'bag', 'tag', 'percent', 'gift', 'credit-card', 'receipt', 'truck'],
+    'social' => ['heart', 'thumbs-up', 'camera', 'share', 'megaphone', 'play', 'message-circle', 'video'],
+    'shapes' => ['shape-circle', 'shape-square', 'shape-triangle', 'shape-rounded-square', 'shape-diamond', 'shape-burst'],
+    'checks' => ['check', 'check-circle', 'x-circle', 'shield-check', 'badge-check', 'list-check'],
+];
+$rank = static function (string $key) use ($I, $first, $groupOrder): array {
+    $cat = $I[$key]['category'];
+    $pos = array_search($key, $first[$cat] ?? [], true);
+
+    return [array_search($cat, $groupOrder, true), $pos === false ? 999 : $pos, $key];
+};
+uksort($I, static fn ($a, $b) => $rank($a) <=> $rank($b));
+
 // ---------------------------------------------------------------------------------------------
-ksort($I);
 $out = ['$comment' => 'Dot.Design built-in icon set. Own-drawn for this repository on a 24x24 grid in a stroke style (stroke-linecap/linejoin round, no fill). Path data uses only the commands M L H V C S Q T Z. Licence: MIT, drawn for this repo (see LICENSE); no third-party artwork. Regenerate with scripts/dev/build-icons.php.'] + $I;
 file_put_contents(dirname(__DIR__, 2).'/resources/design/icons.json', json_encode($out, JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT)."\n");
 fwrite(STDOUT, count($I)." icons written\n");
