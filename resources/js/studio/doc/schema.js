@@ -388,14 +388,13 @@ export function normaliseElement(rawIn, opts = {}) {
             report(issues, `${path}.children`, `Groups nest at most ${LIMITS.max_group_depth} deep; deeper groups were flattened.`, 'limit');
         }
         for (let i = 0; i < list.length; i += 1) {
-            let childRaw = list[i];
+            const childRaw = list[i];
             if (depth + 1 >= LIMITS.max_group_depth && isObj(childRaw) && childRaw.type === 'group') {
-                // flatten the too-deep group: lift its children one level, keeping them where they were
-                const lifted = Array.isArray(childRaw.children) ? childRaw.children : [];
-                for (const g of lifted) {
-                    const moved = isObj(g) ? { ...g, x: (Number(g.x) || 0) + (Number(childRaw.x) || 0), y: (Number(g.y) || 0) + (Number(childRaw.y) || 0) } : g;
-                    if (isObj(moved) && moved.type === 'group') continue;
-                    const c = normaliseElement(moved, { ...opts, path: `${path}.children[${i}]`, depth: depth + 1, taken, genId });
+                // too deep: lift every leaf of that group up one level, keeping it where it was
+                const leaves = [];
+                liftLeaves(childRaw, 0, 0, leaves);
+                for (const leaf of leaves) {
+                    const c = normaliseElement(leaf, { ...opts, path: `${path}.children[${i}]`, depth: depth + 1, taken, genId });
                     if (c) el.children.push(c);
                 }
                 continue;
@@ -409,6 +408,17 @@ export function normaliseElement(rawIn, opts = {}) {
         return refitGroup({ ...el, width: Math.max(LIMITS.min_size, round(b.right - b.left)), height: Math.max(LIMITS.min_size, round(b.bottom - b.top)) });
     }
     return el;
+}
+
+/** Collect the non-group descendants of `group`, offsetting them by the groups they sat in (rotation of the lifted groups is dropped). */
+function liftLeaves(group, dx, dy, out) {
+    const gx = dx + (Number(group.x) || 0);
+    const gy = dy + (Number(group.y) || 0);
+    for (const c of Array.isArray(group.children) ? group.children : []) {
+        if (!isObj(c)) continue;
+        if (c.type === 'group') liftLeaves(c, gx, gy, out);
+        else out.push({ ...c, x: (Number(c.x) || 0) + gx, y: (Number(c.y) || 0) + gy });
+    }
 }
 
 function round(v) {
