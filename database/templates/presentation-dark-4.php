@@ -27,7 +27,7 @@ $p->rect(1100, 0, 820, $p->h, 'surface', ['name' => 'Picture backing']);
 $p->image(1100, 0, 820, $p->h, ['bind' => 'photo_1', 'name' => 'Cover picture']);
 $p->rect(1076, 0, 24, $p->h, 'accent', ['name' => 'Accent stripe']);
 $p->text('Your Business', $m, $m, 700, ['font' => 'head', 'size' => 34, 'ls' => 0.14, 'case' => 'upper', 'color' => 'accent', 'role' => 'logo', 'bind' => 'business_name', 'name' => 'Business name']);
-$p->text("A clearer way\nto grow", $m, 320, 900, ['font' => 'head', 'size' => 120, 'lh' => 1.04, 'ls' => -0.03, 'role' => 'headline', 'bind' => 'headline', 'name' => 'Title']);
+$p->text("A clearer way\nto grow", $m, 320, 900, ['font' => 'head', 'size' => 98, 'lh' => 1.04, 'ls' => -0.03, 'role' => 'headline', 'bind' => 'headline', 'name' => 'Title']);
 $p->text('Presented by Your Name', $m, 720, 800, ['size' => 40, 'color' => 'extra', 'role' => 'body', 'bind' => 'subheadline', 'name' => 'Presenter']);
 
 // Approach

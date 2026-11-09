@@ -19,12 +19,15 @@ $t = Template::start([
 $p = $t->page();
 $p->bg('bg');
 $m = $p->m;
-$p->rect(0, 0, 760, $p->h, 'ink', ['name' => 'Message panel']);
+
+// A round team picture breaks out of the dark panel; the accent quarter circle ties them together.
+$p->rect(0, 0, 720, $p->h, 'ink', ['name' => 'Message panel']);
+$p->ellipse(900, 330, 560, 560, 'surface', ['name' => 'Soft circle (bleeds off the edge)', 'role' => 'background']);
 $p->text('Your Business', $m, $m, 500, ['font' => 'head', 'size' => 20, 'color' => 'bg', 'ls' => 0.14, 'case' => 'upper', 'role' => 'logo', 'bind' => 'business_name', 'name' => 'Business name']);
 $p->text('Now hiring', $m, 150, 400, ['font' => 'head', 'size' => 28, 'color' => 'extra', 'role' => 'subhead', 'bind' => 'tagline', 'name' => 'Label']);
-$p->text("Join our\ngrowing team", $m, 196, 640, ['font' => 'head', 'size' => 76, 'lh' => 1.06, 'ls' => -0.02, 'color' => 'bg', 'role' => 'headline', 'bind' => 'headline', 'name' => 'Headline']);
+$p->text("Join our\ngrowing team", $m, 196, 640, ['font' => 'head', 'size' => 70, 'lh' => 1.06, 'ls' => -0.02, 'color' => 'bg', 'role' => 'headline', 'bind' => 'headline', 'name' => 'Headline']);
 $p->button('Apply today', $m, 470, 250, 62, 'extra', 'ink', ['size' => 24, 'radius' => 8, 'font' => 'head', 'bind' => 'cta']);
 $p->text('www.yourbusiness.co.za/careers', $m + 280, 470, 380, ['size' => 22, 'color' => 'bg', 'valign' => 'middle', 'h' => 62, 'role' => 'contact', 'bind' => 'website', 'name' => 'Website']);
-$p->photo(800, 60, 340, 507, 'photo_1', 'offset', ['name' => 'Team picture', 'accent' => 'extra', 'radius' => 0]);
+$p->photo(770, 110, 390, 390, 'photo_1', 'ring', ['name' => 'Team picture', 'back' => 'surface', 'accent' => 'extra']);
 
 return $t->done();

@@ -19,12 +19,16 @@ $t = Template::start([
 
 $p = $t->page();
 $p->bg('bg');
+
+// Concentric rings give the empty left side a shape (the profile picture sits over it); the words are centred in the safe middle;
+// the picture is a framed panel in the right safe edge.
+$p->ellipse(-260, 220, 780, 780, null, ['name' => 'Ring outer (bleeds off the edge)', 'role' => 'background', 'stroke' => ['surface', 3]]);
+$p->ellipse(-120, 360, 500, 500, null, ['name' => 'Ring inner (bleeds off the edge)', 'role' => 'background', 'stroke' => ['surface', 3]]);
 $p->rect(0, 0, 16, $p->h, 'accent', ['name' => 'Accent edge']);
-$p->rect(1180, 0, 460, $p->h, 'surface', ['name' => 'Picture backing']);
-$p->image(1180, 0, 460, $p->h, ['bind' => 'photo_1', 'name' => 'Cover picture']);
-$p->text('Your Business', 540, 300, 580, ['font' => 'head', 'size' => 68, 'lh' => 1.08, 'ls' => -0.02, 'role' => 'headline', 'bind' => 'business_name', 'name' => 'Business name']);
-$p->rect(540, 412, 90, 8, 'accent', ['name' => 'Accent bar']);
-$p->text('Practical help for growing businesses', 540, 456, 580, ['size' => 34, 'color' => 'extra', 'lh' => 1.35, 'role' => 'body', 'bind' => 'tagline', 'name' => 'Tagline']);
-$p->text(Sample::WEBSITE, 540, 622, 500, ['size' => 28, 'weight' => 600, 'role' => 'contact', 'bind' => 'website', 'name' => 'Website']);
+$p->text('Your Business', 520, 300, 600, ['font' => 'head', 'size' => 62, 'lh' => 1.08, 'ls' => -0.02, 'role' => 'headline', 'bind' => 'business_name', 'name' => 'Business name']);
+$p->rect(520, 412, 90, 8, 'accent', ['name' => 'Accent bar']);
+$p->text('Practical help for growing businesses', 520, 456, 560, ['size' => 30, 'color' => 'extra', 'lh' => 1.35, 'role' => 'body', 'bind' => 'tagline', 'name' => 'Tagline']);
+$p->text(Sample::WEBSITE, 520, 622, 500, ['size' => 28, 'weight' => 600, 'role' => 'contact', 'bind' => 'website', 'name' => 'Website']);
+$p->photo(1130, 150, 260, 624, 'photo_1', 'offset', ['name' => 'Cover picture', 'accent' => 'accent', 'back' => 'surface']);
 
 return $t->done();

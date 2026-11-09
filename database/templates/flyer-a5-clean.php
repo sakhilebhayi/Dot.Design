@@ -22,21 +22,22 @@ $p->bg('bg');
 $m = $p->m;
 $cw = $p->cw();
 
-$p->text('Your Business', $m, $m, 240, ['font' => 'head', 'size' => 11, 'ls' => 0.12, 'case' => 'upper', 'color' => 'accent', 'role' => 'contact', 'bind' => 'business_name', 'name' => 'Business name']);
-$y = $p->text("Fresh. Local.\nDelivered.", $m, 62, $cw, ['font' => 'head', 'size' => 44, 'lh' => 1.04, 'ls' => -0.02, 'role' => 'headline', 'bind' => 'headline', 'name' => 'Headline']);
-$p->text('Order by noon and get it to your door the same day.', $m, $y + 8, 300, ['size' => 14, 'color' => 'extra', 'lh' => 1.5, 'role' => 'body', 'bind' => 'subheadline', 'name' => 'Subheading']);
-$p->photo($m, 218, $cw, 130, 'photo_1', 'tab', ['name' => 'Main picture']);
-$points = ['Free delivery within 10 km', 'Pay by card or on delivery', 'Cancel or change any time'];
-$py = 372;
-foreach ($points as $pt) {
-    $p->icon('check-circle', $m, $py - 2, 18, 'accent', ['name' => 'Tick']);
-    $p->text($pt, $m + 28, $py, $cw - 28, ['size' => 13, 'weight' => 600, 'role' => 'body', 'name' => 'Benefit', 'lh' => 1.3]);
-    $py += 28;
+// Centred editorial: a full-width picture on top, then a centred column of words, three short points in a row, one button.
+$p->rect(0, 246, 420, 5, 'accent', ['name' => 'Picture accent strip']);
+$p->photo(0, 0, 420, 246, 'photo_1', 'plain', ['name' => 'Main picture']);
+$p->text('Your Business', $m, 270, $cw, ['font' => 'head', 'size' => 10.5, 'ls' => 0.14, 'case' => 'upper', 'color' => 'accent', 'align' => 'center', 'role' => 'contact', 'bind' => 'business_name', 'name' => 'Business name']);
+$y = $p->text("Fresh. Local.\nDelivered.", $m, 288, $cw, ['font' => 'head', 'size' => 38, 'lh' => 1.04, 'ls' => -0.02, 'align' => 'center', 'role' => 'headline', 'bind' => 'headline', 'name' => 'Headline']);
+$p->text('Order today and we will take care of the rest.', 60, $y + 6, 300, ['size' => 13, 'color' => 'extra', 'lh' => 1.45, 'align' => 'center', 'role' => 'body', 'bind' => 'subheadline', 'name' => 'Subheading']);
+$points = [['check-circle', 'Easy to order'], ['check-circle', 'Clear prices'], ['check-circle', 'Friendly service']];
+[$c0, $cwid] = $p->col(0, 3, 8);
+foreach ($points as $i => [$ic, $pt]) {
+    [$px, $pw] = $p->col($i, 3, 8);
+    $p->icon($ic, $px + ($pw - 18) / 2, 436, 18, 'accent', ['name' => 'Tick']);
+    $p->text($pt, $px, 460, $pw, ['size' => 11.5, 'weight' => 600, 'align' => 'center', 'role' => 'body', 'name' => 'Benefit', 'lh' => 1.3]);
 }
-$p->button('Order now', $m, 468, 150, 40, 'accent', 'bg', ['size' => 14, 'bind' => 'cta']);
-$p->text(Sample::PHONE, $m + 168, 468, 180, ['font' => 'head', 'size' => 16, 'valign' => 'middle', 'h' => 40, 'role' => 'contact', 'bind' => 'phone', 'name' => 'Phone number']);
-$p->rect($m, 526, $cw, 1.5, 'surface', ['name' => 'Footer rule']);
-$p->text(Sample::WEBSITE, $m, 536, 220, ['size' => 11, 'color' => 'extra', 'role' => 'contact', 'bind' => 'website', 'name' => 'Website']);
-$p->text(Sample::HANDLE, $p->right() - 140, 536, 140, ['size' => 11, 'color' => 'extra', 'align' => 'right', 'role' => 'contact', 'bind' => 'social_handle', 'name' => 'Social handle']);
+$p->button('Order now', 135, 492, 150, 38, 'accent', 'bg', ['size' => 14, 'bind' => 'cta']);
+$p->text(Sample::PHONE, $m, 538, $cw, ['font' => 'head', 'size' => 15, 'align' => 'center', 'role' => 'contact', 'bind' => 'phone', 'name' => 'Phone number']);
+$p->text(Sample::WEBSITE, $m, 560, 200, ['size' => 10.5, 'color' => 'extra', 'role' => 'contact', 'bind' => 'website', 'name' => 'Website']);
+$p->text(Sample::HANDLE, $p->right() - 140, 560, 140, ['size' => 10.5, 'color' => 'extra', 'align' => 'right', 'role' => 'contact', 'bind' => 'social_handle', 'name' => 'Social handle']);
 
 return $t->done();

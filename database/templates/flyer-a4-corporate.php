@@ -30,7 +30,7 @@ $p->photo(330, 60, 224, 220, 'photo_1', 'offset', ['name' => 'Main picture', 'ac
 
 $p->text('Who we are', $m, 372, 260, ['font' => 'head', 'size' => 18, 'role' => 'subhead', 'name' => 'About heading']);
 $p->text('We help growing businesses get the basics right and then go further. Our team brings practical experience, clear advice and dependable delivery to every project we take on.', $m, 402, 250, ['size' => 12, 'lh' => 1.65, 'role' => 'body', 'bind' => 'description', 'name' => 'Description']);
-$pts = [['users', 'Experienced team'], ['clock', 'On time delivery'], ['shield-check', 'Fixed, honest pricing']];
+$pts = [['users', 'Clear communication'], ['clock', 'Reliable service'], ['shield-check', 'Honest advice']];
 $y = 376;
 foreach ($pts as [$ic, $label]) {
     $p->group($label.' row', 330, $y, function ($g) use ($ic, $label) {

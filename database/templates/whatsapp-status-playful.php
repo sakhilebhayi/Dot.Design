@@ -22,15 +22,17 @@ $p->bg('bg');
 $m = $p->m;
 $cw = $p->cw();
 
+// Round picture and price badge in the middle; the lower edge is held by big soft circles so the screen never looks empty.
 $p->ellipse(-260, -260, 520, 520, 'surface', ['name' => 'Peach circle (bleeds off the edge)', 'role' => 'background']);
-$p->text('Your Business', $m, 250, $cw, ['size' => 34, 'weight' => 700, 'ls' => 0.12, 'case' => 'upper', 'color' => 'accent', 'align' => 'center', 'role' => 'logo', 'bind' => 'business_name', 'name' => 'Business name']);
-$p->text("Today's\nspecial", $m, 330, $cw, ['font' => 'head', 'size' => 150, 'lh' => 0.98, 'ls' => -0.03, 'align' => 'center', 'role' => 'headline', 'bind' => 'headline', 'name' => 'Headline']);
-$p->photo(90, 700, 620, 620, 'photo_1', 'ring', ['name' => 'Main picture', 'back' => 'surface']);
-$p->ellipse(750, 980, 250, 250, 'accent', ['name' => 'Price badge']);
+$p->ellipse(-180, 1560, 640, 640, 'surface', ['name' => 'Peach circle low left (bleeds off the edge)', 'role' => 'background']);
+$p->ellipse(640, 1640, 560, 560, 'accent', ['name' => 'Green circle low right (bleeds off the edge)', 'role' => 'background']);
+$p->text('Your Business', $m, 290, $cw, ['size' => 34, 'weight' => 700, 'ls' => 0.12, 'case' => 'upper', 'color' => 'accent', 'align' => 'center', 'role' => 'logo', 'bind' => 'business_name', 'name' => 'Business name']);
+$p->text("Today's\nspecial", $m, 350, $cw, ['font' => 'head', 'size' => 150, 'lh' => 0.98, 'ls' => -0.03, 'align' => 'center', 'role' => 'headline', 'bind' => 'headline', 'name' => 'Headline']);
+$p->photo(140, 700, 600, 600, 'photo_1', 'ring', ['name' => 'Main picture', 'back' => 'surface']);
+$p->ellipse(760, 1010, 250, 250, 'accent', ['name' => 'Price badge']);
 // the text box is the square inside the circle, so a longer price shrinks to stay on the badge
-$p->text('R65', 750 + 37, 980 + 37, 176, ['font' => 'head', 'size' => 76, 'color' => 'extra', 'align' => 'center', 'valign' => 'middle', 'h' => 176, 'role' => 'price', 'bind' => 'price', 'name' => 'Price']);
-$p->text('Fresh from the kitchen until sold out', $m, 1372, $cw, ['size' => 40, 'weight' => 700, 'align' => 'center', 'lh' => 1.3, 'role' => 'body', 'bind' => 'description', 'name' => 'Description']);
-$p->button('Order on WhatsApp', $m + 40, 1480, $cw - 80, 100, 'accent', 'extra', ['size' => 42, 'radius' => 55, 'bind' => 'cta']);
-$p->text(Sample::WHATSAPP, $m, 1596, $cw, ['size' => 36, 'weight' => 700, 'align' => 'center', 'role' => 'contact', 'bind' => 'whatsapp', 'name' => 'WhatsApp number']);
+$p->text('R65', 760 + 37, 1010 + 37, 176, ['font' => 'head', 'size' => 76, 'color' => 'extra', 'align' => 'center', 'valign' => 'middle', 'h' => 176, 'role' => 'price', 'bind' => 'price', 'name' => 'Price']);
+$p->text('Fresh from the kitchen until sold out', $m, 1336, $cw, ['size' => 40, 'weight' => 700, 'align' => 'center', 'lh' => 1.3, 'role' => 'body', 'bind' => 'description', 'name' => 'Description']);
+$p->button('Order on WhatsApp', $m + 40, 1396, $cw - 80, 90, 'accent', 'extra', ['size' => 40, 'radius' => 45, 'bind' => 'cta']);
 
 return $t->done();

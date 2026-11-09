@@ -2749,7 +2749,8 @@
                         "lineHeight": 1,
                         "letterSpacing": 0,
                         "textCase": "none",
-                        "color": "#ffffff"
+                        "color": "#ffffff",
+                        "autoFit": "shrink"
                     }
                 ]
             }
