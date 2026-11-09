@@ -4,7 +4,7 @@
  * brand update never undoes a deliberate choice), a brand chip records one.
  */
 import { find } from '../doc/tree.js';
-import { activePage } from './describe.js';
+import { activePage, effectiveBackground } from './describe.js';
 
 export const COLOUR_PROP = { text: 'color', icon: 'color', shape: 'fill' };
 
@@ -110,4 +110,20 @@ export function pickFile(accept, multiple = false) {
         input.addEventListener('cancel', () => resolve([]));
         input.click();
     });
+}
+
+/**
+ * Set the page colour so what the person sees changes. A template that follows the brand draws a full-page
+ * backdrop shape (only elements carry brand tokens), so the colour is written to that shape too; both writes share
+ * one undo key and are one undo step.
+ */
+export function setPageColour(ctx, page, hex, { token = null } = {}) {
+    const key = 'pagebg:' + page.id;
+    const eff = effectiveBackground(page);
+    if (token && eff.source === 'page') return ctx.run('brand.apply', { prop: 'background', token }, { key });
+    if (eff.source === 'backdrop') {
+        if (token) ctx.run('brand.apply', { ids: [eff.elementId], prop: 'fill', token }, { key });
+        else applyColour(ctx, [eff.elementId], hex, { key });
+    }
+    return ctx.run('page.update', { id: page.id, changes: { background: { ...page.background, type: 'solid', color: hex } } }, { key });
 }

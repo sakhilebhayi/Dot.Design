@@ -8,6 +8,8 @@ import { openShare } from '../lib/flows.mjs';
 import { decodePng } from '../lib/png.mjs';
 import { readStream, pdfInfo } from '../lib/files.mjs';
 
+// "Save to Dot.Files" is not one of the top bar's few primary buttons any more: it sits under More (docs/R45_POLISH_EDITOR.md)
+const openFilesDialog = async (page) => { await page.getByRole('button', { name: 'More', exact: true }).click(); await page.getByRole('menuitem', { name: 'Save to Dot.Files' }).click(); };
 const el = (id, t, x = 60, y = 60) => ({ id, type: 'text', x, y, width: 500, height: 90, text: t, fontSize: 50, color: '#111111', font: 'inter' });
 
 test('Save to Dot.Files files exactly the exported picture (ctx.exports)', async (t) => {

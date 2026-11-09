@@ -38,6 +38,26 @@ function placeAt(point, width, height) {
 }
 
 /**
+ * The size a payload will have when added, in page pixels, with the same rules insert() uses. The Elements tab
+ * shows it on hover so nobody has to add a thing to learn how big it comes in.
+ */
+export function addSize(page, payload) {
+    switch (payload.kind) {
+        case 'shape': {
+            const line = payload.shape === 'line' || payload.shape === 'arrow';
+            return { width: line ? 360 : 280, height: line ? 12 : payload.shape === 'rect' ? 200 : 280 };
+        }
+        case 'icon': { const s = Math.round(Math.min(page.width, page.height) * 0.14); return { width: s, height: s }; }
+        case 'library': {
+            const maxW = page.width * 0.9;
+            const k = payload.fit === 'page' ? 1 : payload.width > maxW ? maxW / payload.width : 1;
+            return { width: Math.round(payload.width * k), height: Math.round(payload.height * k) };
+        }
+        default: return null;
+    }
+}
+
+/**
  * insert(ctx, payload, {point}) -> engine result
  * payload kinds: shape, icon, text, library, asset, background, gradient
  */

@@ -140,8 +140,18 @@ export function uid(prefix = 'st') {
 }
 
 export const isTouch = () => typeof matchMedia === 'function' && matchMedia('(pointer: coarse)').matches;
-export const COMPACT_QUERY = '(max-width: 60rem)';
+/*
+ * Three layouts. Phone (and a phone on its side): panels are sheets over the stage. Tablet (768 to 1024 wide): the
+ * left panel is docked and the inspector is a drawer the person can fold away. Desktop: everything docked.
+ * "Compact" means the sheet model: below 768 px wide, or short and not wide (a phone in landscape).
+ */
+export const COMPACT_QUERY = '(max-width: 47.9375rem), (max-height: 30rem) and (max-width: 64rem)';
+export const DRAWER_QUERY = '(min-width: 47.9376rem) and (max-width: 64rem) and (min-height: 30.0625rem)';
 export const isCompact = () => typeof matchMedia === 'function' && matchMedia(COMPACT_QUERY).matches;
+export const isDrawer = () => typeof matchMedia === 'function' && matchMedia(DRAWER_QUERY).matches;
+/** A phone held sideways: sheets, but too short for a docked selection strip over the page. */
+export const isLandscapePhone = () => typeof matchMedia === 'function' && matchMedia('(max-height: 30rem) and (max-width: 64rem)').matches;
+export const layoutMode = () => (isCompact() ? 'phone' : isDrawer() ? 'tablet' : 'desktop');
 export const reducedMotion = () => typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 /** Trap Tab inside a container (dialogs, sheets). Returns a release function. */

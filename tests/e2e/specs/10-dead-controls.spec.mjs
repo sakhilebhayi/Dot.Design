@@ -54,6 +54,8 @@ test('every enabled control in the editor chrome does something', async (t) => {
                 // put things back
                 await page.keyboard.press('Escape'); await page.keyboard.press('Escape');
                 await page.evaluate(() => { const s = window.__studio.studio; let n = 0; while (s.canUndo() && n++ < 50) s.undo(); document.querySelectorAll('dialog[open]').forEach((d) => d.close()); });
+                // "Switch to Pro" (the Simple panel's foot) really changes the mode: put the mode back too, or the rest of this loop is measured in the other one
+                await page.evaluate((m) => window.__studio.ctx.setMode(m), mode);
                 await page.evaluate((i) => (i.length ? window.__studio.studio.select(i) : window.__studio.studio.clearSelection()), ids);
                 await page.waitForTimeout(100);
             }

@@ -64,9 +64,11 @@ test('phone: the editor opens, a rail tab opens a bottom sheet, tapping an eleme
         await page.getByRole('heading', { name: 'Shapes' }).waitFor({ state: 'visible', timeout: 8000 });
         await page.waitForTimeout(900); // the sheet slides in and the page re-fits above it
         const m = await page.evaluate(() => {
-            const head = document.querySelector('h3.st-group__title').getBoundingClientRect();
+            // the first group title that is drawn (an empty "Recently used" section is hidden and has no box)
+            const title = [...document.querySelectorAll('h3.st-group__title')].find((x) => x.getBoundingClientRect().height > 0);
+            const head = title.getBoundingClientRect();
             const pg = document.querySelector('svg.studio-page').getBoundingClientRect();
-            let e = document.querySelector('h3.st-group__title');
+            let e = title;
             while (e && !['fixed', 'absolute'].includes(getComputedStyle(e).position)) e = e.parentElement;
             const sheet = e ? e.getBoundingClientRect() : head;
             return { head: head.toJSON(), page: pg.toJSON(), sheet: sheet.toJSON() };
