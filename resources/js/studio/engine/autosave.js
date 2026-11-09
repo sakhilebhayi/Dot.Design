@@ -197,8 +197,8 @@ export function createAutosave(options) {
         markDirty() {
             if (destroyed || state === 'conflict') return;
             clearT(retryTimer); retryTimer = null;
+            if (!isOnline()) { clearT(timer); timer = null; setState('offline', { message: 'You are offline. Changes are kept and will save when you are back online.' }); return; }
             if (state !== 'offline') setState('pending', { message: '' });
-            if (state === 'offline' && !isOnline()) return;
             schedule(debounceMs);
         },
         /** Save everything now (navigation, "Save" button). Resolves with the final state. */

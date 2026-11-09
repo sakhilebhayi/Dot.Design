@@ -72,7 +72,7 @@ const XML_NS = 'http://www.w3.org/XML/1998/namespace';
 function setAttr(el, k, v) {
     if (k === 'style') el.style.cssText = v;
     else if (k.startsWith('xml:')) el.setAttributeNS(XML_NS, k, v);
-    else el.setAttribute(k, v);
+    else if (el.getAttribute(k) !== v) el.setAttribute(k, v);
 }
 
 function removeAttr(el, k) {
@@ -633,9 +633,9 @@ export function createLiveRenderer(svgRoot, options = {}) {
                 clear(elLayer);
                 ctx.bgDirty = true;
             }
-            svgRoot.setAttribute('width', fmt(page.width));
-            svgRoot.setAttribute('height', fmt(page.height));
-            svgRoot.setAttribute('viewBox', `0 0 ${fmt(page.width)} ${fmt(page.height)}`);
+            setAttr(svgRoot, 'width', fmt(page.width));
+            setAttr(svgRoot, 'height', fmt(page.height));
+            setAttr(svgRoot, 'viewBox', `0 0 ${fmt(page.width)} ${fmt(page.height)}`);
             renderBackground(page);
             syncList(elLayer, page.elements, rootCache);
             pageRef = page;
