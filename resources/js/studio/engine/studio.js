@@ -287,6 +287,13 @@ export function createStudio(options = {}) {
     }
     let lastEditing = null;
 
+    const history = core.history;
+    let lastHistory = history.size;
+    function historyInfo() {
+        const l = history.labels();
+        return { canUndo: core.canUndo(), canRedo: core.canRedo(), undoLabel: l.undo, redoLabel: l.redo };
+    }
+
     let prev = core.getState();
     core.store.subscribe((state, before, metas) => {
         if (destroyed) return;
@@ -321,12 +328,6 @@ export function createStudio(options = {}) {
             scheduleJournal();
         }
     });
-    const history = core.history;
-    let lastHistory = history.size;
-    function historyInfo() {
-        const l = history.labels();
-        return { canUndo: core.canUndo(), canRedo: core.canRedo(), undoLabel: l.undo, redoLabel: l.redo };
-    }
 
     viewport.onChange((v) => {
         stage.style.transform = `translate(${v.x}px, ${v.y}px) scale(${v.zoom})`;

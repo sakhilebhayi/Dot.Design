@@ -119,6 +119,8 @@ export function createOverlay(svg, viewport, options = {}) {
             if (!model.frame.single) {
                 for (const f of model.elementFrames || []) svg.appendChild(poly(framePoints(f, viewport).corners, colors.select, 1, { 'stroke-opacity': 0.55 }));
             }
+            // a pale halo under the frame keeps it readable on both dark and light artwork
+            svg.appendChild(poly(fp.corners, '#ffffff', 3.5, { 'stroke-opacity': 0.8 }));
             svg.appendChild(poly(fp.corners, colors.select, 1.5, model.frame.allLocked ? { 'stroke-dasharray': '4 3' } : null));
             if (model.showHandles !== false && !model.frame.allLocked) {
                 const s = model.coarse ? HANDLE_SIZE + 5 : HANDLE_SIZE;
@@ -153,6 +155,9 @@ export function createOverlay(svg, viewport, options = {}) {
             const tick = (p) => svg.appendChild(node(doc, 'line', horizontal ? { x1: p.x, y1: p.y - 4, x2: p.x, y2: p.y + 4, stroke: colors.guide, 'stroke-width': 1 } : { x1: p.x - 4, y1: p.y, x2: p.x + 4, y2: p.y, stroke: colors.guide, 'stroke-width': 1 }));
             tick(a); tick(b);
             const t = node(doc, 'text', { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 - 5, 'text-anchor': 'middle', 'font-size': 10, 'font-family': 'ui-monospace, Menlo, monospace', fill: colors.guide });
+            t.setAttribute('stroke', '#ffffff');
+            t.setAttribute('stroke-width', '3');
+            t.setAttribute('paint-order', 'stroke');
             t.textContent = String(Math.round(sp.gap));
             svg.appendChild(t);
         }
