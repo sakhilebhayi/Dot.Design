@@ -340,7 +340,7 @@ export function mountExport(root, props, ctx) {
                 onChange: (v) => { state.pdfMode = v; resetResult(); render(); },
             });
             return section('PDF', modes,
-                h('div', { class: 'out-row', role: 'group', 'aria-label': 'PDF picture quality' }, h('span', { class: 'out-muted' }, state.pdfMode === 'vector' ? 'Quality of pages saved as pictures' : 'Picture quality'), choices.map((v) => chip({ label: kind === 'print' ? `${v} dpi` : `${v}x`, pressed: kind === 'print' ? state.pdfDpi === v : state.pdfScale === v, onClick: () => { if (kind === 'print') state.pdfDpi = v; else state.pdfScale = v; resetResult(); render(); } }))));
+                h('div', { class: 'out-row', role: 'group', 'aria-label': 'PDF picture quality' }, h('span', { class: 'out-muted out-row__lead' }, state.pdfMode === 'vector' ? 'Quality of any page that has to be saved as a picture' : 'Picture quality'), choices.map((v) => chip({ label: kind === 'print' ? `${v} dpi` : `${v}x`, pressed: kind === 'print' ? state.pdfDpi === v : state.pdfScale === v, onClick: () => { if (kind === 'print') state.pdfDpi = v; else state.pdfScale = v; resetResult(); render(); } }))));
         }
         // png / jpg
         const out = [];

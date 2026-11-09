@@ -41,7 +41,7 @@
 .mc-cb__input::placeholder { color: var(--lt-ink-3); }
 .mc-cb__lead { display: inline-flex; flex: none; color: var(--lt-ink-3); }
 .mc-cb__ph { width: 1.25rem; height: 1.25rem; margin-inline: 0.2rem; }
-.mc-avatar { display: inline-grid; place-items: center; flex: none; width: 1.75rem; height: 1.75rem; border-radius: 50%; background: var(--mc-tone, var(--lt-accent)); color: #fff; font-size: var(--lt-text-xs); font-weight: 700; letter-spacing: 0.02em; line-height: 1; }
+.mc-avatar { display: inline-grid; place-items: center; flex: none; width: 1.75rem; height: 1.75rem; border-radius: 50%; background: color-mix(in srgb, var(--mc-tone, var(--lt-accent)) 16%, var(--lt-panel)); color: color-mix(in srgb, var(--mc-tone, var(--lt-accent)) 60%, var(--lt-ink)); font-size: var(--lt-text-xs); font-weight: 700; letter-spacing: 0.02em; line-height: 1; }
 .mc-avatar--sm { width: 1.5rem; height: 1.5rem; }
 .mc-opt--person { min-height: 2.75rem; }
 
