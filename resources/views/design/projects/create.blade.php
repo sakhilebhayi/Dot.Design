@@ -30,7 +30,7 @@
             <x-ds.select label="Unit" name="unit" id="design-projects-create-unit" required :selected="$unitValue" :options="array_combine(['px', 'in', 'cm', 'mm'], ['px', 'in', 'cm', 'mm'])" />
         </div>
 
-        <div class="lt-start" role="list" aria-label="Sizes" style="margin-inline: calc(-1 * var(--lt-space-3));">
+        <div class="lt-start" role="list" aria-label="Sizes" style="margin-inline: calc(-1 * var(--lt-space-3)); flex-wrap: wrap; overflow: visible;">
             @foreach (\App\Support\Ui\StartFormats::all() as $format)
                 <x-ds.format-chip role="listitem" :href="route('design.projects.create').'?format='.$format['key']" :name="$format['name']" :width="$format['width']" :height="$format['height']" :size="$format['width'].' × '.$format['height'].' '.$format['unit']" />
             @endforeach

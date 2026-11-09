@@ -2,7 +2,7 @@
     <x-authentication-card>
         <div style="display: grid; gap: var(--lt-space-2);">
             <h1 class="lt-auth__title">{{ __('Log in') }}</h1>
-            <p class="lt-small">{{ __('Welcome back. Your designs are where you left them.') }}</p>
+            <p class="lt-small">{{ __('Your designs are where you left them.') }}</p>
         </div>
 
         <x-validation-errors />

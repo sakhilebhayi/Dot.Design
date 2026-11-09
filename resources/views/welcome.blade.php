@@ -53,7 +53,7 @@
 
             <div class="lp-table" data-lp-table>
                 <div class="lp-table__stage">
-                    <div class="lt-frame lt-crop lp-sheet" data-lp-sheet style="--w: {{ $first['width'] }}; --h: {{ $first['height'] }}; --crop-len: 12px; --crop-gap: 8px; --crop-c: #14181c;">
+                    <div class="lt-frame lt-crop lp-sheet" data-lp-sheet style="--w: {{ $first['width'] }}; --h: {{ $first['height'] }}; --crop-len: 12px; --crop-gap: 8px; --crop-c: var(--lt-paper-ink);">
                         <span class="lp-sheet__name" data-lp-name>{{ $first['name'] }}</span>
                         <span class="lp-sheet__size" data-lp-size>{{ $first['width'] }} × {{ $first['height'] }} {{ $first['unit'] }}</span>
                     </div>
@@ -69,7 +69,7 @@
                 </div>
                 <div class="lp-cta-line">
                     <p>Every design starts from a size. Pick one and see it at its true proportions.</p>
-                    <x-ds.button :href="$hrefFor($first)" variant="secondary" data-lp-cta>{{ $isGuest ? 'Log in to start a' : 'Start a' }} <span data-lp-cta-text>{{ $first['name'] }}</span></x-ds.button>
+                    <x-ds.button :href="$hrefFor($first)" variant="secondary" data-lp-cta><span>{{ $isGuest ? 'Log in to start a' : 'Start a' }} <span data-lp-cta-text>{{ $first['name'] }}</span></span></x-ds.button>
                 </div>
             </div>
         </section>
@@ -139,9 +139,17 @@
         </section>
 
         <section class="lp-wrap lp-close" aria-labelledby="close-title">
-            <h2 id="close-title" class="lp-h1">Your ideas. Beautifully designed.</h2>
-            <div class="lp-actions">
-                <x-ds.button :href="$primaryHref" size="lg" iconEnd="arrow-right">{{ $isGuest ? 'Log in to start designing' : 'Open your designs' }}</x-ds.button>
+            <div>
+                <h2 id="close-title" class="lp-h1">Your ideas. Beautifully designed.</h2>
+                <div class="lp-actions">
+                    <x-ds.button :href="$primaryHref" size="lg" iconEnd="arrow-right">{{ $isGuest ? 'Log in to start designing' : 'Open your designs' }}</x-ds.button>
+                </div>
+            </div>
+            <div class="lp-close__table" aria-hidden="true">
+                @foreach (['instagram-post', 'poster', 'presentation'] as $key)
+                    @php($f = \App\Support\Ui\StartFormats::find($key))
+                    <span class="lt-frame lt-crop" style="--w: {{ $f['width'] }}; --h: {{ $f['height'] }}; --crop-len: 8px; --crop-gap: 6px; --crop-c: var(--lt-paper-ink);"></span>
+                @endforeach
             </div>
         </section>
     </main>

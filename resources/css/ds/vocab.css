@@ -26,17 +26,9 @@
 .lt-crop--quiet::after { opacity: 0.55; }
 .lt-crop--link:hover::after, .lt-crop--link:focus-visible::after, a:hover > .lt-crop--link::after, a:focus-visible > .lt-crop--link::after { opacity: 1; --crop-c: var(--lt-ink); inset: calc(-1 * (var(--crop-gap) + var(--crop-len) + 3px)); }
 
-/* ruled strip: a measured edge. Ticks every 8px, a longer tick every 40px. */
-.lt-ruler { position: relative; height: 9px; color: var(--lt-ink-3);
-    background-image:
-        repeating-linear-gradient(90deg, currentColor 0 1px, transparent 1px 40px),
-        repeating-linear-gradient(90deg, var(--lt-rule-strong) 0 1px, transparent 1px 8px);
-    background-size: 100% 9px, 100% 4px;
-    background-repeat: no-repeat;
-    background-position: left top, left top;
-    border-top: 1px solid var(--lt-rule-strong);
-    opacity: 0.9;
-}
+/* ruled strip: a measured edge. Ticks every 8px, a longer tick every 40px. Drawn as a mask so it takes the theme's ink. */
+.lt-ruler { position: relative; height: 9px; color: var(--lt-ink-3); background: currentColor; opacity: 0.85;
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='9' viewBox='0 0 40 9'%3E%3Cpath d='M0 0.5H40M0.5 0V9M8.5 0V4M16.5 0V4M24.5 0V4M32.5 0V4' stroke='black' stroke-width='1' fill='none'/%3E%3C/svg%3E") left top / 40px 9px repeat-x; mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='9' viewBox='0 0 40 9'%3E%3Cpath d='M0 0.5H40M0.5 0V9M8.5 0V4M16.5 0V4M24.5 0V4M32.5 0V4' stroke='black' stroke-width='1' fill='none'/%3E%3C/svg%3E") left top / 40px 9px repeat-x; }
 
 /* proof frame: a design page at its true aspect ratio. --w and --h are set inline from real data. */
 .lt-frame {
@@ -45,7 +37,7 @@
     aspect-ratio: var(--w, 4) / var(--h, 3);
     background: var(--lt-paper);
     box-shadow: 0 0 0 1px var(--lt-rule-strong), 0 1px 2px rgb(14 18 22 / 0.1), 0 6px 16px -8px rgb(14 18 22 / 0.25);
-    color: #14181c;
+    color: var(--lt-paper-ink);
 }
 .lt-frame > img { width: 100%; height: 100%; object-fit: cover; }
 .lt-frame--blank::before {

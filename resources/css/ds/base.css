@@ -75,7 +75,8 @@ input[type="checkbox"], input[type="radio"] { accent-color: var(--lt-accent); wi
 @keyframes lt-rise { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
 @keyframes lt-spin { to { transform: rotate(360deg); } }
 @keyframes lt-sheen { to { background-position: -200% 0; } }
-@keyframes lt-run { 0% { transform: translateX(-100%); } 100% { transform: translateX(300%); } }
+@keyframes lt-breathe { 0%, 100% { opacity: 0.35; } 50% { opacity: 1; } }
+@keyframes lt-grow { from { transform: scaleX(0.06); } to { transform: scaleX(0.92); } }
 
 @media (prefers-reduced-motion: reduce) {
     *, ::before, ::after {

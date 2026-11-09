@@ -114,9 +114,8 @@
 
 /* page header: the h1 sits on a ruler */
 .lt-pagehead { display: flex; align-items: flex-end; justify-content: space-between; gap: var(--lt-space-4) var(--lt-space-5); flex-wrap: wrap; padding-bottom: var(--lt-space-4); position: relative; margin-bottom: var(--lt-space-6); }
-.lt-pagehead::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 9px; color: var(--lt-ink-3); border-top: 1px solid var(--lt-rule-strong);
-    background-image: repeating-linear-gradient(90deg, currentColor 0 1px, transparent 1px 40px), repeating-linear-gradient(90deg, var(--lt-rule-strong) 0 1px, transparent 1px 8px);
-    background-size: 100% 9px, 100% 4px; background-repeat: no-repeat; opacity: 0.8; }
+.lt-pagehead::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 9px; color: var(--lt-ink-3); background: currentColor; opacity: 0.85;
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='9' viewBox='0 0 40 9'%3E%3Cpath d='M0 0.5H40M0.5 0V9M8.5 0V4M16.5 0V4M24.5 0V4M32.5 0V4' stroke='black' stroke-width='1' fill='none'/%3E%3C/svg%3E") left top / 40px 9px repeat-x; mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='9' viewBox='0 0 40 9'%3E%3Cpath d='M0 0.5H40M0.5 0V9M8.5 0V4M16.5 0V4M24.5 0V4M32.5 0V4' stroke='black' stroke-width='1' fill='none'/%3E%3C/svg%3E") left top / 40px 9px repeat-x; }
 .lt-pagehead { padding-bottom: calc(var(--lt-space-4) + 9px); }
 .lt-pagehead__text { min-width: 0; display: grid; gap: var(--lt-space-1); }
 .lt-pagehead__sub { color: var(--lt-ink-2); font-size: var(--lt-text-md); max-width: 60ch; }
@@ -137,10 +136,11 @@
 
 /* progress */
 .lt-progress { position: relative; height: 4px; background: var(--lt-rule); border-radius: 2px; overflow: hidden; }
-.lt-progress > span { position: absolute; inset: 0 auto 0 0; width: var(--p, 0%); background: var(--lt-accent); border-radius: inherit; transition: width var(--lt-dur-3) var(--lt-ease); }
-.lt-progress--busy > span { width: 35%; animation: lt-run 1.2s var(--lt-ease) infinite; }
+.lt-progress > span { position: absolute; inset: 0; width: 100%; background: var(--lt-accent); border-radius: inherit; transform-origin: left center; transform: scaleX(var(--p, 0)); transition: transform var(--lt-dur-3) var(--lt-ease); }
+.lt-progress--busy > span { transform: none; animation: lt-breathe 1.4s ease-in-out infinite; }
 .lt-navbar { position: fixed; left: 0; right: 0; top: 0; z-index: 90; height: 3px; pointer-events: none; opacity: 0; transition: opacity var(--lt-dur-2) var(--lt-ease); }
-.lt-navbar > span { position: absolute; inset: 0 auto 0 0; width: 30%; background: var(--lt-accent); animation: lt-run 1.1s var(--lt-ease) infinite; }
+.lt-navbar > span { position: absolute; inset: 0; background: var(--lt-accent); transform-origin: left center; transform: scaleX(0.06); }
+html.is-navigating .lt-navbar > span { animation: lt-grow 8s cubic-bezier(0.1, 0.8, 0.2, 1) forwards; }
 html.is-navigating .lt-navbar { opacity: 1; }
 
 /* skeleton: loading placeholder with the proportions of the thing it stands for */

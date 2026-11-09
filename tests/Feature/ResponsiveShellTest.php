@@ -123,7 +123,7 @@ class ResponsiveShellTest extends TestCase
 
         $index = $this->actingAs($user)->get(route('design.projects.index'));
         $index->assertSee('class="lt-page"', false);
-        $index->assertSee('class="lt-contacts"', false);
+        $index->assertSee('class="lt-contacts lt-views"', false);
         $index->assertSee('Responsive Poster Fixture');
 
         $create = $this->actingAs($user)->get(route('design.projects.create'));

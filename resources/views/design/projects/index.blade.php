@@ -71,7 +71,7 @@
         </x-ds.empty>
     @else
         <p class="lt-meta" role="status" style="margin-bottom: var(--lt-space-4);">@if ($listing['filtered']) Showing {{ $items->count() }} of {{ $listing['total'] }} @else {{ $items->count() }} {{ \Illuminate\Support\Str::plural('design', $items->count()) }} @endif</p>
-        <ul class="lt-contacts">
+        <ul class="lt-contacts lt-views">
             @foreach ($items as $project)
                 <li class="lt-contact">
                     <a href="{{ route('design.projects.show', $project) }}" class="lt-contact__stage" tabindex="-1" aria-hidden="true"><x-ds.frame :width="$project->width" :height="$project->height" class="lt-crop lt-crop--link" /></a>
