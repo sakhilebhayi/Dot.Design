@@ -217,15 +217,20 @@ textarea.asst-input { resize: vertical; min-height: 76px; }
 
 .asst-tag.is-accent { background: var(--lt-accent-wash); color: var(--lt-accent); border-color: transparent; }
 
-.asst-compare { display: grid; grid-template-columns: 1fr 1fr; gap: var(--lt-space-3, 12px); }
-.asst-compare.is-stacked { grid-template-columns: 1fr; }
+.asst-compare { display: grid; gap: var(--lt-space-2, 8px); min-width: 0; }
+.asst-compare__bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--lt-space-2, 8px) var(--lt-space-3, 12px); }
+.asst-outline-switch { min-height: 2rem; }
+.asst-outline-switch .mc-switch__state { display: none; }
+.asst-caption { min-height: 1.25em; }
 .asst-fig { margin: 0; display: flex; flex-direction: column; gap: var(--lt-space-1, 4px); min-width: 0; }
 .asst-fig figcaption { font-size: var(--lt-text-xs, 0.75rem); color: var(--lt-ink-3); }
 
 /* the stage is a pure neutral and the page on it is always paper */
-.asst-stage { background: var(--lt-stage); padding: var(--lt-space-2, 8px); display: flex; justify-content: center; align-items: center; min-height: 80px; }
+.asst-stage { background: var(--lt-stage); padding: var(--lt-space-3, 12px); display: flex; justify-content: center; align-items: center; min-height: 80px; border-radius: var(--lt-radius-2, 6px); }
 .asst-page { width: 100%; background: var(--lt-paper); box-shadow: 0 0 0 1px var(--lt-rule-strong), 0 2px 6px -2px color-mix(in srgb, var(--lt-ink) 40%, transparent); overflow: hidden; }
 .asst-page svg { display: block; width: 100%; height: 100%; }
+.asst-outline { fill: color-mix(in srgb, var(--lt-accent) 10%, transparent); stroke: var(--lt-accent); stroke-width: 2; stroke-dasharray: 6 4; stroke-linejoin: round; vector-effect: non-scaling-stroke; }
+.asst-field .mc-select { width: 100%; }
 .asst-noprev { display: block; padding: var(--lt-space-4, 16px); color: var(--lt-paper-ink-2, #4a5159); font-size: var(--lt-text-xs, 0.75rem); text-align: center; }
 
 .asst-changes { list-style: none; margin: var(--lt-space-1, 4px) 0 0; padding: 0; max-height: 220px; overflow: auto; border-top: 1px solid var(--lt-rule); }
@@ -262,6 +267,5 @@ textarea.asst-input { resize: vertical; min-height: 76px; }
 }
 
 @media (max-width: 420px) {
-    .asst-compare { grid-template-columns: 1fr; }
 }
 

@@ -2,6 +2,10 @@
 // Every file is made by the real renderer in the browser (resources/js/studio/output/*); nothing here pretends:
 // "Prepare" runs the export, shows real progress and the real file size, and only then offers the download.
 import '../../../../css/studio-output.css';
+import { select as mcSelect, switchControl, checkbox, segmented, numberField, slider, radioCards } from './_controls.js';
+import { applyPrintBoxes, hasPrintBoxes, COLOUR_NOTE, BLEED_CHOICES } from '../../output/print-boxes.js';
+import { fmtSeconds } from '../../output/number-format.js';
+import { filesEntryAvailable, openFilesDialog } from './_files-entry.js';
 import { h, clear, icon, saveFile, debounce, chip } from '../../output/ui-kit.js';
 import { quickActions, tabsFor, SCALE_CHOICES, DPI_CHOICES, FPS_GIF, FPS_VIDEO, EDGE_CHOICES, kindOf, targetsFromState, describeTarget, sizeLabel, sizeWarning, DEFAULT_SETTINGS } from '../../output/presets.js';
 import { runExport, planAnimation, estimateJpegBytes, estimateGifSize } from '../../output/export-jobs.js';
@@ -40,6 +44,7 @@ export function buildExporter(ctx) {
             const config = ctx.config || {};
             const project = { name: (config.project && config.project.name) || 'design', unit: (config.project && config.project.unit) || 'px', id: config.project && config.project.id };
             const kind = kindOf(project, findFormat(config));
+            project.kind = kind;
             const pages = studio.getState().doc.pages;
             const m = /^page-(\d+)$/.exec(String(scope));
             const indexes = m ? [Number(m[1]) - 1].filter((i) => pages[i]) : pages.map((_, i) => i);
@@ -72,12 +77,14 @@ export function mountExport(root, props, ctx) {
     const project = { name: (config.project && config.project.name) || 'design', unit: (config.project && config.project.unit) || 'px', id: config.project && config.project.id };
     const format = findFormat(config);
     const kind = kindOf(project, format);
+    project.kind = kind;
     const deps = browserDeps(studio);
     const getPages = () => studio.getState().doc.pages;
     const activeIndex = () => Math.max(0, getPages().findIndex((p) => p.id === studio.getState().activePageId));
     const animated = getPages().some((p) => animatedElements(p).length > 0);
     const video = webmSupport();
     const quick = quickActions({ project, format, animated, webmSupported: video.supported });
+    const filesAvailable = filesEntryAvailable(ctx);
     let destroyed = false;
     let abort = null;
     let previewUrl = null;
@@ -95,8 +102,10 @@ export function mountExport(root, props, ctx) {
         phase: 'idle', stage: '', progress: 0, result: null, error: null, messages: [],
         estimate: null, estimating: false, preview: { loading: true, error: '' },
         advancedOpen: ctx.mode === 'pro',
+        pdfMode: 'vector', bleedMm: 0, marks: false,
     };
     let prepared = null; // {svg, pageIndex, transparent} cached for previews and JPG estimates
+    let previewBox_dims = null; // the page plus bleed and marks, when the preview shows them
 
     // ---- derived -----------------------------------------------------------------------------------------------------
     const pageIndexes = () => {
@@ -113,6 +122,9 @@ export function mountExport(root, props, ctx) {
         s.sizes = targetsFromState(state, kind);
         if (!s.sizes.length) s.sizes = [{ mode: 'scale', scale: 1 }];
         s.pdfTarget = kind === 'print' ? { mode: 'dpi', dpi: state.pdfDpi } : { mode: 'scale', scale: state.pdfScale };
+        s.pdfMode = state.pdfMode;
+        s.bleedMm = kind === 'print' && ['png', 'jpg', 'pdf'].includes(f) ? state.bleedMm : 0;
+        s.marks = kind === 'print' && ['png', 'jpg', 'pdf'].includes(f) ? state.marks : false;
         return s;
     };
     const resetResult = () => {
@@ -130,8 +142,14 @@ export function mountExport(root, props, ctx) {
             const p = await prepareSvg(deps, { pageIndex: idx, embedFonts: true, transparent: state.format === 'png' && state.transparent, inline: true });
             if (destroyed) return;
             prepared = { svg: p.svg, pageIndex: idx, transparent: state.format === 'png' && state.transparent, page: p.page };
+            let shown = p.svg;
+            previewBox_dims = null;
+            if (kind === 'print' && ['png', 'jpg', 'pdf'].includes(state.format) && hasPrintBoxes({ bleedMm: state.bleedMm, marks: state.marks })) {
+                const framed = applyPrintBoxes(p.svg, { width: p.page.width, height: p.page.height, bleedMm: state.bleedMm, marks: state.marks });
+                if (framed.changed) { shown = framed.svg; previewBox_dims = { w: framed.width, h: framed.height }; }
+            }
             if (previewUrl) URL.revokeObjectURL(previewUrl);
-            previewUrl = URL.createObjectURL(new Blob([p.svg], { type: 'image/svg+xml;charset=utf-8' }));
+            previewUrl = URL.createObjectURL(new Blob([shown], { type: 'image/svg+xml;charset=utf-8' }));
             state.preview = { loading: false, error: '' };
         } catch (e) {
             if (destroyed) return;
@@ -224,7 +242,7 @@ export function mountExport(root, props, ctx) {
     function paintPreview() {
         clear(frameEl);
         const p = firstPage();
-        const w = p.width; const hh = p.height;
+        const w = previewBox_dims ? previewBox_dims.w : p.width; const hh = previewBox_dims ? previewBox_dims.h : p.height;
         frameEl.style.aspectRatio = `${w} / ${hh}`;
         frameEl.style.width = `min(100%, ${Math.round(18 * (w / hh) * 16)}px)`;
         frameEl.dataset.clear = state.format === 'png' && state.transparent ? '1' : '0';
@@ -251,16 +269,18 @@ export function mountExport(root, props, ctx) {
             const sizes = s.sizes.map((t) => describeTarget(p, t));
             add(sizes.length > 1 ? 'Sizes' : 'Size', sizes.map((d) => `${d.width} x ${d.height}`).join(', ') + ' px');
         } else if (f === 'pdf') {
-            const d = describeTarget(p, s.pdfTarget);
-            add('Picture size', `${d.width} x ${d.height} px per page`);
+            if (state.pdfMode === 'vector') add('Text', 'Stays text (selectable)');
+            else { const d = describeTarget(p, s.pdfTarget); add('Picture size', `${d.width} x ${d.height} px per page`); }
         } else if (f === 'svg') add('Size', `${Math.round(p.width)} x ${Math.round(p.height)} units`);
         else if (f === 'gif' || f === 'webm') {
             const plan = planAnimation(getPages(), pageIndexes(), { fps: s.fps, maxEdge: s.maxEdge });
             add('Size', `${plan.width} x ${plan.height} px`);
-            add('Length', `${(plan.durationMs / 1000).toFixed(1)} s, ${plan.frames} frames`);
+            add('Length', `${fmtSeconds(plan.durationMs)} s, ${plan.frames} frames`);
         }
         const n = pageIndexes().length;
         add('Pages', n === 1 ? `Page ${pageIndexes()[0] + 1}` : `${n} pages`);
+        if (s.bleedMm > 0) add('Bleed', `${s.bleedMm} mm`);
+        if (s.marks) add('Crop marks', 'On');
         if (state.phase === 'ready' && state.result) {
             const r = state.result;
             add('File', r.files[0].name);
@@ -289,15 +309,19 @@ export function mountExport(root, props, ctx) {
     function pagesSection() {
         const pages = getPages();
         if (pages.length < 2) return null;
-        const radio = (id, label) => h('label', { class: 'out-check' }, h('input', { type: 'radio', name: 'out-pages', value: id, checked: state.pagesMode === id, onchange: () => { state.pagesMode = id; resetResult(); render(); loadPreviewSoon(); } }), label);
-        const list = state.pagesMode === 'select' ? h('div', { class: 'out-pagelist', role: 'group', 'aria-label': 'Pages to download' }, pages.map((p, i) => h('label', { class: 'out-check' }, h('input', { type: 'checkbox', checked: state.selected.has(i), onchange: (e) => { if (e.target.checked) state.selected.add(i); else state.selected.delete(i); resetResult(); paintFacts(); renderActions(); loadPreviewSoon(); } }), p.name && String(p.name).trim() ? p.name : `Page ${i + 1}`))) : null;
-        return section('Pages', h('div', { class: 'out-row out-row--wide' }, radio('all', `All pages (${pages.length})`), radio('current', 'This page'), radio('select', 'Choose pages')), list);
+        const seg = segmented({
+            label: 'Which pages', value: state.pagesMode,
+            options: [{ value: 'all', label: `All pages (${pages.length})` }, { value: 'current', label: 'This page' }, { value: 'select', label: 'Choose pages' }],
+            onChange: (v) => { state.pagesMode = v; resetResult(); render(); loadPreviewSoon(); },
+        });
+        const list = state.pagesMode === 'select' ? h('div', { class: 'out-pagelist', role: 'group', 'aria-label': 'Pages to download' }, pages.map((p, i) => checkbox({ label: p.name && String(p.name).trim() ? p.name : `Page ${i + 1}`, checked: state.selected.has(i), onChange: (on) => { if (on) state.selected.add(i); else state.selected.delete(i); resetResult(); paintFacts(); renderActions(); loadPreviewSoon(); } }))) : null;
+        return section('Pages', seg, list);
     }
 
     function sizeSection() {
         const f = state.format;
         const p = firstPage();
-        if (f === 'svg') return section('Fonts', h('label', { class: 'out-check' }, h('input', { type: 'checkbox', checked: state.embedFonts, onchange: (e) => { state.embedFonts = e.target.checked; resetResult(); render(); } }), 'Include the fonts in the file'), h('p', { class: 'out-muted' }, state.embedFonts ? 'The file is bigger but looks the same everywhere. Text stays text.' : 'The file is smaller, but computers without these fonts will show other ones.'));
+        if (f === 'svg') return section('Fonts', switchControl({ label: 'Include the fonts in the file', checked: state.embedFonts, onChange: (on) => { state.embedFonts = on; resetResult(); render(); } }), h('p', { class: 'out-muted' }, state.embedFonts ? 'The file is bigger but looks the same everywhere. Text stays text.' : 'The file is smaller, but computers without these fonts will show other ones.'));
         if (f === 'gif' || f === 'webm') {
             const fpsList = f === 'gif' ? FPS_GIF : FPS_VIDEO;
             if (!fpsList.includes(state.fps)) state.fps = fpsList[1] || fpsList[0];
@@ -307,8 +331,16 @@ export function mountExport(root, props, ctx) {
         }
         if (f === 'pdf') {
             const choices = kind === 'print' ? DPI_CHOICES : [1, 2, 3];
-            return section('Quality', h('div', { class: 'out-row', role: 'group', 'aria-label': 'PDF picture quality' }, choices.map((v) => chip({ label: kind === 'print' ? `${v} dpi` : `${v}x`, pressed: kind === 'print' ? state.pdfDpi === v : state.pdfScale === v, onClick: () => { if (kind === 'print') state.pdfDpi = v; else state.pdfScale = v; resetResult(); render(); } }))),
-                h('p', { class: 'out-note' }, h('strong', {}, 'Pages are saved as high-resolution pictures. '), 'The text in a PDF made here is not selectable and cannot be searched.'));
+            const modes = radioCards({
+                name: 'out-pdfmode', label: 'What kind of PDF', value: state.pdfMode,
+                options: [
+                    { value: 'vector', label: 'PDF (text stays text)', description: 'Text can be selected and searched, and shapes stay sharp at any zoom. Pages with shadows, picture filters or blend modes are saved as pictures, and you are told which.' },
+                    { value: 'picture', label: 'PDF (as pictures)', description: 'Each page is one picture, exactly as you see it, effects included. The text cannot be selected or searched.' },
+                ],
+                onChange: (v) => { state.pdfMode = v; resetResult(); render(); },
+            });
+            return section('PDF', modes,
+                h('div', { class: 'out-row', role: 'group', 'aria-label': 'PDF picture quality' }, h('span', { class: 'out-muted out-row__lead' }, state.pdfMode === 'vector' ? 'Quality of any page that has to be saved as a picture' : 'Picture quality'), choices.map((v) => chip({ label: kind === 'print' ? `${v} dpi` : `${v}x`, pressed: kind === 'print' ? state.pdfDpi === v : state.pdfScale === v, onClick: () => { if (kind === 'print') state.pdfDpi = v; else state.pdfScale = v; resetResult(); render(); } }))));
         }
         // png / jpg
         const out = [];
@@ -317,8 +349,8 @@ export function mountExport(root, props, ctx) {
             out.push(h('div', { class: 'out-row', role: 'group', 'aria-label': 'Print quality' }, h('span', { class: 'out-muted' }, 'Print quality'), DPI_CHOICES.map((v) => chip({ label: `${v} dpi`, pressed: state.mode === 'dpi' && state.dpis.has(v), onClick: () => { state.mode = 'dpi'; if (state.dpis.has(v) && state.dpis.size > 1) state.dpis.delete(v); else state.dpis.add(v); resetResult(); render(); refreshEstimate(); } }))));
             out.push(h('div', { class: 'out-row', role: 'group', 'aria-label': 'Screen sizes' }, h('span', { class: 'out-muted' }, 'Or screen size'), scaleChips));
         } else out.push(h('div', { class: 'out-row', role: 'group', 'aria-label': 'Size multipliers' }, scaleChips));
-        const widthInput = h('input', { class: 'out-input', type: 'number', inputmode: 'numeric', min: '16', max: '20000', placeholder: 'Width in px', 'aria-label': 'Exact width in pixels', value: state.customWidth, disabled: !state.useWidth, oninput: (e) => { state.customWidth = e.target.value; resetResult(); paintFacts(); renderActions(); } });
-        out.push(h('div', { class: 'out-row' }, h('label', { class: 'out-check' }, h('input', { type: 'checkbox', checked: state.useWidth, onchange: (e) => { state.useWidth = e.target.checked; if (!state.useWidth && !state.scales.size && !state.dpis.size) state.scales.add(1); resetResult(); render(); if (state.useWidth) setTimeout(() => { const i = body.querySelector('input[type=number]'); if (i) i.focus(); }, 0); } }), 'Exact width'), widthInput, h('span', { class: 'out-muted' }, 'px, height follows')));
+        const widthInput = numberField({ value: state.customWidth === '' ? NaN : Number(state.customWidth), min: 16, max: 20000, step: 10, decimals: 0, label: 'Exact width in pixels', unit: 'px', disabled: !state.useWidth, placeholder: 'Width', dataFk: 'width', onChange: (v) => { state.customWidth = String(v); resetResult(); paintFacts(); renderActions(); } });
+        out.push(h('div', { class: 'out-row' }, switchControl({ label: 'Exact width', checked: state.useWidth, dataFk: 'use-width', onChange: (on) => { state.useWidth = on; if (!state.useWidth && !state.scales.size && !state.dpis.size) state.scales.add(1); resetResult(); render(); if (state.useWidth) setTimeout(() => { const i = body.querySelector('.mc-num__input'); if (i) i.focus(); }, 0); } }), widthInput, h('span', { class: 'out-muted' }, 'height follows')));
         const sizes = targetsFromState(state, kind);
         out.push(h('p', { class: 'out-muted' }, sizes.length > 1 ? `${sizes.length} sizes per page. They go together in one ZIP.` : 'Pick more than one size to get all of them in one ZIP.'));
         const d = sizes[0] ? describeTarget(p, sizes[0]) : null;
@@ -327,11 +359,27 @@ export function mountExport(root, props, ctx) {
         return section(kind === 'print' ? 'Size and quality' : 'Size', ...out);
     }
 
+    /** Bleed, crop marks and the colour note: print formats only, for the file types that go to a print shop. */
+    function printSection() {
+        if (kind !== 'print' || !['png', 'jpg', 'pdf'].includes(state.format)) return null;
+        const bleed = segmented({
+            label: 'Bleed', value: String(state.bleedMm),
+            options: BLEED_CHOICES.map((v) => ({ value: String(v), label: v === 0 ? 'None' : `${v} mm` })),
+            onChange: (v) => { state.bleedMm = Number(v); resetResult(); render(); loadPreviewSoon(); },
+        });
+        const marks = switchControl({ label: 'Crop marks', description: 'Short lines in the corners that show the printer where to cut.', checked: state.marks, dataFk: 'marks', onChange: (on) => { state.marks = on; resetResult(); render(); loadPreviewSoon(); } });
+        return section('Ready for the printer',
+            h('div', { class: 'out-row' }, h('span', { class: 'out-muted' }, 'Bleed'), bleed),
+            h('p', { class: 'out-muted' }, state.bleedMm > 0 ? `The background continues ${state.bleedMm} mm past the edge, so a small cutting error never shows a white line. Ask your printer which bleed they want; 3 mm is the usual one.` : 'Bleed is extra background beyond the edge that gets trimmed off. Most print shops ask for 3 mm.'),
+            marks,
+            h('p', { class: 'out-note' }, COLOUR_NOTE));
+    }
+
     function optionsSection() {
         const f = state.format;
         const out = [];
-        if (f === 'png') out.push(h('label', { class: 'out-check' }, h('input', { type: 'checkbox', checked: state.transparent, onchange: (e) => { state.transparent = e.target.checked; resetResult(); render(); loadPreviewSoon(); } }), 'See-through background'), state.transparent ? h('p', { class: 'out-muted' }, 'The page colour is left out. Shapes and pictures keep their own colours.') : null);
-        if (f === 'jpg') out.push(h('div', { class: 'out-slider' }, h('input', { type: 'range', min: '40', max: '100', step: '1', value: String(Math.round(state.quality * 100)), 'aria-label': 'JPG quality', oninput: (e) => { state.quality = Number(e.target.value) / 100; resetResult(); const lab = body.querySelector('[data-q]'); if (lab) lab.textContent = `${e.target.value}%`; refreshEstimate(); estimateSoon(); } }), h('span', { class: 'out-num', dataset: { q: '1' } }, `${Math.round(state.quality * 100)}%`)), h('p', { class: 'out-muted' }, 'Lower quality makes a smaller file. Below about 70% you may see blocky edges.'));
+        if (f === 'png') out.push(switchControl({ label: 'See-through background', checked: state.transparent, dataFk: 'transparent', onChange: (on) => { state.transparent = on; resetResult(); render(); loadPreviewSoon(); } }), state.transparent ? h('p', { class: 'out-muted' }, 'The page colour is left out. Shapes and pictures keep their own colours.') : null);
+        if (f === 'jpg') out.push(slider({ value: Math.round(state.quality * 100), min: 40, max: 100, step: 1, label: 'JPG quality', format: (v) => `${v}%`, onInput: (v) => { state.quality = v / 100; resetResult(); refreshEstimate(); estimateSoon(); } }), h('p', { class: 'out-muted' }, 'Lower quality makes a smaller file. Below about 70% you may see blocky edges.'));
         return out.length ? section(f === 'jpg' ? 'Quality' : 'Background', ...out) : null;
     }
     const estimateSoon = debounce(() => { paintFacts(); }, 400);
@@ -393,9 +441,10 @@ export function mountExport(root, props, ctx) {
         const adv = h('details', { class: 'out-adv', open: state.advancedOpen, ontoggle: (e) => { state.advancedOpen = e.target.open; } },
             h('summary', {}, 'More options', icon('chevron')),
             h('div', { class: 'out-adv__body' },
-                h('div', { class: 'out-options' }, tabs(), state.format === 'webm' && !video.supported ? null : pagesSection(), state.format === 'webm' && !video.supported ? null : sizeSection(), state.format === 'webm' && !video.supported ? null : optionsSection(), ...resultNotes(), h('div', { class: 'out-actions', dataset: { actions: '1' } })),
+                h('div', { class: 'out-options' }, tabs(), state.format === 'webm' && !video.supported ? null : pagesSection(), state.format === 'webm' && !video.supported ? null : sizeSection(), state.format === 'webm' && !video.supported ? null : optionsSection(), printSection(), ...resultNotes(), h('div', { class: 'out-actions', dataset: { actions: '1' } })),
                 (() => { clear(previewBox); paintPreview(); paintFacts(); previewBox.appendChild(h('div', { class: 'out-preview__stage' }, frameEl)); previewBox.appendChild(factsEl); previewBox.appendChild(warnEl); return previewBox; })()));
         body.appendChild(adv);
+        if (filesAvailable) body.appendChild(h('div', { class: 'out-files' }, h('button', { type: 'button', class: 'lt-btn lt-btn--ghost lt-btn--sm', onclick: () => openFilesDialog(ctx) }, 'Save a copy to Dot.Files'), h('span', { class: 'out-muted' }, 'Filed for everyone in your business.')));
         renderActions();
         if (focusKey) { const t = body.querySelector(`[data-fk="${focusKey}"]`); if (t) t.focus(); }
     }

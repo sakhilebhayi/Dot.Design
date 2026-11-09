@@ -13,6 +13,7 @@
 import '../../../../css/studio-collab.css';
 import { h, clear } from '../../collab/dom.js';
 import { busyWhile, button, field, notice, select, skeleton } from '../../collab/ui.js';
+import { checkbox } from './_controls.js';
 import { collabUrls } from '../../collab/urls.js';
 import { explain } from '../../collab/errors.js';
 
@@ -30,15 +31,8 @@ export function register(ctx) {
     if (!flags.filesVault) return;
 
     ctx.registerDialog('files.save', { title: 'Save to Dot.Files', size: 'md', mount: (el, props, c) => mountFiles(el, c || ctx) });
-    ctx.registerTopbarAction({
-        id: 'save-to-files',
-        label: 'Save to Dot.Files',
-        icon: 'upload',
-        order: 90,
-        modes: ['simple', 'pro'],
-        visible: (c) => !!exporter(c || ctx),
-        onClick: (c) => (c || ctx).openDialog('files.save'),
-    });
+    // No top bar button: the top bar keeps its layout whether or not Dot.Files is switched on. The dialog is opened from the
+    // Download dialog and the Share dialog, which show the entry only when this dialog is registered (flags.filesVault).
 }
 
 /** Only an http(s) address is ever turned into a link. */
@@ -69,8 +63,8 @@ export function mountFiles(el, ctx) {
         const pageCount = (() => { try { return ctx.studio.getState().doc.pages.length; } catch (e) { return 1; } })();
         const pageIndex = (() => { try { const s = ctx.studio.getState(); return Math.max(0, s.doc.pages.findIndex((p) => p.id === s.activePageId)); } catch (e) { return 0; } })();
         const scope = select([{ value: 'all', label: pageCount > 1 ? `All ${pageCount} pages` : 'The design' }].concat(pageCount > 1 ? [{ value: `page-${pageIndex + 1}`, label: `Page ${pageIndex + 1} only` }] : []), { value: 'all' });
-        const ack = h('input', { type: 'checkbox', id: 'cb-ack' });
-        const ackRow = h('label', { class: 'cb-check', for: 'cb-ack' }, ack, h('span', { text: 'I understand that everyone in this business will see this file in Dot.Files.' }));
+        const ack = checkbox({ label: 'I understand that everyone in this business will see this file in Dot.Files.', id: 'cb-ack' });
+        const ackRow = ack;
         const err = h('div', { class: 'cb-formerr' });
         const submit = button({ label: 'Save to Dot.Files', variant: 'primary', type: 'submit' });
         const form = h('form', { class: 'cb-form', novalidate: true },

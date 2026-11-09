@@ -1,7 +1,10 @@
 // Pure helpers for editing animation timing from the timeline (drag and arrow keys). No DOM.
 import { DEFAULT_IN_MS } from './animate.js';
 
-export const secs = (ms) => (ms / 1000).toFixed(1);
+import { fmtSeconds } from './number-format.js';
+
+/** Seconds text with a dot, whatever the browser's locale (never "5,0"). */
+export const secs = (ms) => fmtSeconds(ms);
 export const clampN = (v, a, b) => Math.min(b, Math.max(a, v));
 export const snap = (ms, step = 50) => Math.round(ms / step) * step;
 
@@ -26,3 +29,14 @@ export function moveSegment(anim, kind, dms, mode, D) {
     return null;
 }
 
+
+/** Ruler labels: whole seconds, thinned so two labels never come closer than `minGap` pixels. Pure: tested. */
+export function rulerTicks(durationMs, widthPx, minGap = 34) {
+    const total = Math.max(0.5, durationMs / 1000);
+    const whole = Math.floor(total);
+    const fit = Math.max(1, Math.floor(widthPx / minGap));
+    const step = Math.max(1, Math.ceil(whole / fit));
+    const ticks = [];
+    for (let s = 0; s <= whole; s += step) ticks.push({ at: (s * 1000) / durationMs, label: `${s}s` });
+    return ticks;
+}

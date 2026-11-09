@@ -11,7 +11,7 @@ const clone = (o) => JSON.parse(JSON.stringify(o));
 
 export const DEFAULT_SETTINGS = Object.freeze({
     format: 'png', pages: [0], sizes: [{ mode: 'scale', scale: 1 }], quality: 0.92, transparent: false, embedFonts: true,
-    pdfTarget: { mode: 'dpi', dpi: 150 }, fps: 15, maxEdge: 480,
+    pdfTarget: { mode: 'dpi', dpi: 150 }, fps: 15, maxEdge: 480, pdfMode: 'vector', bleedMm: 0, marks: false,
 });
 
 /** 'print' for paper formats (mm or in, or a print format in the catalog), otherwise 'digital'. */

@@ -42,11 +42,12 @@ test('animation: animate, preview, GIF, WebM, smart resize', async (t) => {
         assert.ok(h.animation.in.preset, 'the headline has an entrance');
         // the picture: choose an entrance from the selection's own controls
         await clickElement(page, image.id);
-        const sel = page.getByLabel('Entrance').or(page.getByLabel('Comes in')).first();
-        const options = await sel.locator('option').allTextContents();
+        const sel = page.getByRole('combobox', { name: 'Entrance', exact: true }).first();
+        await sel.click();
+        const options = await page.getByRole('option').allTextContents();
         const pick = options.find((o) => /zoom|slide|rise|fade/i.test(o));
         assert.ok(pick, `an entrance preset is offered (${options.join(', ')})`);
-        await sel.selectOption({ label: pick });
+        await page.getByRole('option', { name: pick }).click();
         await page.waitForFunction((id) => window.__studio.studio.getState().doc.pages[0].elements.find((e) => e.id === id).animation?.in, image.id);
     });
 
@@ -56,7 +57,7 @@ test('animation: animate, preview, GIF, WebM, smart resize', async (t) => {
         if (await page.getByRole('button', { name: 'Back to editing' }).count()) await page.getByRole('button', { name: 'Back to editing' }).click();
         await page.getByRole('button', { name: 'Play the animation' }).click();
         const time = page.locator('text=/\\d\\.\\d \\/ \\d\\.\\d s/').first();
-        const frame = () => page.evaluate(() => [...document.querySelectorAll('[data-layer=elements] > g')].map((g) => `${g.dataset.id}:${g.style.opacity}:${g.getAttribute('transform')}`).join(' | '));
+        const frame = () => page.evaluate(() => [...document.querySelectorAll('[data-layer=elements] > g')].map((g) => `${g.dataset.id}:${g.style.opacity}:${g.getAttribute('opacity')}:${g.getAttribute('transform')}`).join(' | '));
         const seen = new Set(); const times = new Set();
         for (let i = 0; i < 12; i++) { seen.add(await frame()); times.add(await time.innerText()); await page.waitForTimeout(120); }
         assert.ok(seen.size > 2, `the canvas changed while playing (${seen.size} distinct frames)`);

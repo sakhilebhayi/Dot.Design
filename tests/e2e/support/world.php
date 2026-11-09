@@ -48,7 +48,7 @@ switch ($cmd) {
         $owner = User::where('email', $in['owner'])->firstOrFail();
         $teamId = $in['team_id'] ?? $owner->personalTeam()->id;
         $p = new DesignProject(['user_id' => $owner->id, 'name' => $in['name'] ?? 'E2E project', 'type' => 'graphic', 'width' => $in['width'] ?? 1200, 'height' => $in['height'] ?? 628, 'unit' => 'px']);
-        $p->forceFill(['visibility' => $in['visibility'] ?? 'private', 'team_id' => $teamId])->save();
+        $p->forceFill(['visibility' => $in['visibility'] ?? 'private', 'team_id' => $teamId] + (isset($in['format_key']) ? ['format_key' => $in['format_key']] : []))->save();
         $p->addPage(['elements' => $in['elements'] ?? []]);
         $out = ['id' => $p->id, 'page_id' => $p->fresh()->canvases()->first()->id];
         break;

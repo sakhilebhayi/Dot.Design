@@ -21,15 +21,23 @@ test('Save to Dot.Files files exactly the exported picture (ctx.exports)', async
     await step(page, 'off on the main server: no button', async () => {
         await openEditor(page, p.id);
         assert.equal((await page.evaluate(() => window.__studio.ctx.config.flags.filesVault)), false);
-        assert.equal(await page.getByRole('button', { name: /Save to Dot.Files/ }).count(), 0);
+        assert.equal(await page.getByRole('button', { name: /Save (a copy )?to Dot.Files/ }).count(), 0);
+        await page.getByRole('button', { name: 'Download', exact: true }).click();
+        await page.locator('dialog[open]').getByText('Download for').first().waitFor();
+        assert.equal(await page.getByRole('button', { name: /Dot.Files/ }).count(), 0, 'switched off: no entry in the Download dialog either');
+        await page.keyboard.press('Escape');
         assert.equal(typeof (await page.evaluate(() => typeof window.__studio.ctx.exports)), 'string');
     });
     await step(page, 'on: ctx.exports exists and the item appears', async () => {
         await page.addInitScript(() => localStorage.setItem('dot-design-debug', '1'));
         await page.goto(`${env.ai}/design/projects/${p.id}`);
         await page.waitForFunction(() => !!window.__studio?.studio);
-        assert.equal(await page.evaluate(() => typeof window.__studio.ctx.exports?.render), 'function');
-        await page.getByRole('button', { name: 'Save to Dot.Files' }).click();
+        // the Download module is a lazy chunk that loads in idle time: wait for it instead of reading the handle at once
+        await page.waitForFunction(() => typeof window.__studio.ctx.exports?.render === 'function', null, { timeout: 15000 });
+        // no top bar button (the top bar keeps its layout): the entry is in the Download dialog
+        assert.equal(await page.locator('.st-top').getByRole('button', { name: /Dot.Files/ }).count(), 0);
+        await page.getByRole('button', { name: 'Download', exact: true }).click();
+        await page.getByRole('button', { name: 'Save a copy to Dot.Files' }).click();
         await page.locator('dialog[open]').getByText('This files a copy in your business').waitFor();
         await page.getByRole('checkbox').check();
         await page.locator('dialog[open]').getByRole('button', { name: 'Save to Dot.Files' }).click();
@@ -52,7 +60,8 @@ test('Save to Dot.Files files exactly the exported picture (ctx.exports)', async
     await step(page, 'saving again adds a version, not a second file', async () => {
         await page.keyboard.press('Escape');
         await page.waitForTimeout(300);
-        await page.getByRole('button', { name: 'Save to Dot.Files' }).click();
+        await page.getByRole('button', { name: 'Download', exact: true }).click();
+        await page.getByRole('button', { name: 'Save a copy to Dot.Files' }).click();
         await page.getByRole('checkbox').check();
         await page.locator('dialog[open]').getByRole('button', { name: 'Save to Dot.Files' }).click();
         await page.getByText(/Saved a new version of/).first().waitFor({ timeout: 30000 });

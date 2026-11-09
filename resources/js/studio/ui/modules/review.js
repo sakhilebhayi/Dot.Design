@@ -14,7 +14,7 @@
  */
 import '../../../../css/studio-collab.css';
 import { h, clear } from '../../collab/dom.js';
-import { busyWhile, button, empty, field, notice, select, skeleton, tag, textarea } from '../../collab/ui.js';
+import { busyWhile, button, empty, field, notice, peopleCombobox, skeleton, tag, textarea } from '../../collab/ui.js';
 import { can, collabUrls } from '../../collab/urls.js';
 import { explain } from '../../collab/errors.js';
 import { peopleStore } from '../../collab/people.js';
@@ -109,16 +109,28 @@ export function createReviewController(ctx) {
     const onFocus = () => { if (started) load(); };
 
     // ------------------------------------------------------------------ canvas bar
+    // A strip of its own above the canvas. The stage is pushed down by the bar's height (a CSS variable on the stage wrapper,
+    // see studio-collab.css), so the bar never lies on top of the page under review.
+    let host = null;
+    let sizer = null;
     function ensureBar() {
         if (bar) return bar;
         let root = null;
         try { root = ctx.studio && ctx.studio.root; } catch (e) { root = null; }
         if (!root) return null;
-        const el = h('div', { class: 'cb-revbar', 'data-studio-ignore': '', hidden: true });
+        host = root.parentElement && root.parentElement.classList.contains('st-stagewrap') ? root.parentElement : root;
+        const el = h('div', { class: 'cb-revbar', 'data-studio-ignore': '', hidden: true, role: 'region', 'aria-label': 'Review' });
         for (const type of ['pointerdown', 'pointerup', 'dblclick', 'contextmenu', 'keydown']) el.addEventListener(type, (e) => e.stopPropagation());
-        root.append(el);
+        host.append(el);
         bar = el;
+        if (typeof ResizeObserver !== 'undefined') { sizer = new ResizeObserver(() => syncOffset()); sizer.observe(el); }
         return bar;
+    }
+    function syncOffset() {
+        if (!host || !bar) return;
+        if (bar.hidden) { host.removeAttribute('data-cb-bar'); host.style.removeProperty('--cb-bar-h'); return; }
+        host.setAttribute('data-cb-bar', '1');
+        host.style.setProperty('--cb-bar-h', `${Math.ceil(bar.getBoundingClientRect().height)}px`);
     }
 
     function paintBar() {
@@ -126,27 +138,28 @@ export function createReviewController(ctx) {
         const d = derivedCache;
         if (!el || !d) return;
         clear(el);
-        if (d.key === 'draft' && !d.banner) { el.hidden = true; return; }
+        if (d.key === 'draft' && !d.banner) { el.hidden = true; syncOffset(); return; }
         const chip = h('button', { type: 'button', class: `cb-statuschip cb-statuschip--${d.tone}`, onclick: () => ctx.openDialog('review.status'), 'aria-label': `Review status: ${d.label}. Open details` }, h('span', { class: 'cb-dot', 'aria-hidden': 'true' }), d.label);
-        const parts = [chip];
-
+        const actions = h('div', { class: 'cb-revbar__actions' });
+        let line = '';
+        let note = null;
+        const versionLink = d.pinnedVersionId ? h('button', { type: 'button', class: 'cb-revbar__link', onclick: () => ctx.openDialog('versions.view', { versionId: d.pinnedVersionId }) }, d.canDecide ? 'See the version sent' : 'Version sent') : null;
         if (d.canDecide) {
             const who = (d.review.requester && d.review.requester.name) || 'A colleague';
-            parts.push(h('span', { class: 'cb-revbar__text', text: `${who} asked you to review the version they sent.` }),
-                button({ label: 'Approve', variant: 'primary', size: 'sm', onClick: () => ctx.openDialog('review.decide', { mode: 'approve' }) }),
-                button({ label: 'Request changes', variant: 'secondary', size: 'sm', onClick: () => ctx.openDialog('review.decide', { mode: 'changes' }) }),
-                d.pinnedVersionId ? button({ label: 'Compare with now', variant: 'ghost', size: 'sm', onClick: () => ctx.openDialog('versions.view', { versionId: d.pinnedVersionId }) }) : null);
+            line = `${who} asked you to review`;
+            if (versionLink) actions.append(versionLink);
+            actions.append(button({ label: 'Request changes', variant: 'secondary', size: 'sm', onClick: () => ctx.openDialog('review.decide', { mode: 'changes' }) }), button({ label: 'Approve', variant: 'primary', size: 'sm', onClick: () => ctx.openDialog('review.decide', { mode: 'approve' }) }));
         } else if (d.banner) {
-            parts.push(h('span', { class: 'cb-revbar__text', text: d.banner.text }));
-            if (d.banner.note) parts.push(h('span', { class: 'cb-revbar__note', text: d.banner.note }));
-            if (d.key === 'stale' || d.key === 'changes_requested') {
-                if (d.canRequest) parts.push(button({ label: 'Request a new review', variant: 'primary', size: 'sm', onClick: () => ctx.openDialog('review.request') }));
-            }
-            if (d.canDownloadFinal && can(ctx.config, 'export')) parts.push(button({ label: 'Download final', variant: 'secondary', size: 'sm', onClick: () => ctx.openDialog('export') }));
+            line = d.banner.text;
+            note = d.banner.note || null;
+            if (versionLink) actions.append(versionLink);
+            if ((d.key === 'stale' || d.key === 'changes_requested') && d.canRequest) actions.append(button({ label: 'Request a new review', variant: 'primary', size: 'sm', onClick: () => ctx.openDialog('review.request') }));
+            if (d.canDownloadFinal && can(ctx.config, 'export')) actions.append(button({ label: 'Download final', variant: 'secondary', size: 'sm', onClick: () => ctx.openDialog('export') }));
         }
-        el.append(...parts.filter(Boolean));
+        el.append(...[h('div', { class: 'cb-revbar__who' }, chip, h('span', { class: 'cb-revbar__text', title: line, text: line })), actions.childNodes.length ? actions : null, note ? h('span', { class: 'cb-revbar__note', text: note }) : null].filter(Boolean));
         el.hidden = false;
         el.classList.toggle('is-attention', d.canDecide || d.key === 'stale');
+        syncOffset();
     }
 
     // ------------------------------------------------------------------ dialogs
@@ -175,7 +188,7 @@ export function createReviewController(ctx) {
                 return;
             }
             const solo = r.data.people.length <= 1;
-            const reviewer = select(choices.map((p) => ({ value: String(p.id), label: `${p.name} (${p.role_label.toLowerCase()})` })), { value: String(choices[0].id) });
+            const reviewer = peopleCombobox(choices.map((p) => ({ value: String(p.id), label: p.name, sub: p.role_label })), { value: String(choices[0].id), label: 'Who should review it', placeholder: 'Search by name', emptyText: 'Nobody with that name can approve' });
             const note = textarea({ rows: 4, maxlength: 2000, placeholder: 'What should they look at? Anything they should know?' });
             const err = h('div', { class: 'cb-formerr' });
             const submit = button({ label: 'Send for review', variant: 'primary', type: 'submit' });
@@ -315,7 +328,7 @@ export function createReviewController(ctx) {
         mountRequest, mountDecide, mountStatus,
         onChange(fn) { listeners.add(fn); if (derivedCache) fn(derivedCache); },
         reload: load,
-        destroy() { offs.forEach((o) => { try { o(); } catch (e) { /* ignore */ } }); window.removeEventListener('focus', onFocus); clearTimeout(timer); if (bar) bar.remove(); bar = null; started = false; },
+        destroy() { offs.forEach((o) => { try { o(); } catch (e) { /* ignore */ } }); window.removeEventListener('focus', onFocus); clearTimeout(timer); if (sizer) sizer.disconnect(); if (bar) { bar.hidden = true; syncOffset(); bar.remove(); } bar = null; started = false; },
     };
 }
 

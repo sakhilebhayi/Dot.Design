@@ -72,7 +72,8 @@ export function buildPdf({ pages, title = 'Design', producer = 'Dot.Design', dat
     pages.forEach((p, i) => {
         const pg = pageObj(i);
         const content = ascii(`q ${num(p.widthPt)} 0 0 ${num(p.heightPt)} 0 0 cm /Im0 Do Q`);
-        object(pg, [`<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${num(p.widthPt)} ${num(p.heightPt)}] /Resources << /XObject << /Im0 ${pg + 2} 0 R >> /ProcSet [/PDF /ImageC] >> /Contents ${pg + 1} 0 R >>`]);
+        const boxes = p.trim ? ` /CropBox [0 0 ${num(p.widthPt)} ${num(p.heightPt)}] /TrimBox [${num(p.trim.x)} ${num(p.trim.y)} ${num(p.trim.x + p.trim.w)} ${num(p.trim.y + p.trim.h)}] /BleedBox [${num(p.trim.x - p.trim.bleed)} ${num(p.trim.y - p.trim.bleed)} ${num(p.trim.x + p.trim.w + p.trim.bleed)} ${num(p.trim.y + p.trim.h + p.trim.bleed)}]` : '';
+        object(pg, [`<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${num(p.widthPt)} ${num(p.heightPt)}]${boxes} /Resources << /XObject << /Im0 ${pg + 2} 0 R >> /ProcSet [/PDF /ImageC] >> /Contents ${pg + 1} 0 R >>`]);
         object(pg + 1, [`<< /Length ${content.length} >>\nstream\n`, content, '\nendstream']);
         object(pg + 2, [`<< /Type /XObject /Subtype /Image /Width ${p.pxWidth} /Height ${p.pxHeight} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${p.jpeg.length} >>\nstream\n`, p.jpeg, '\nendstream']);
     });

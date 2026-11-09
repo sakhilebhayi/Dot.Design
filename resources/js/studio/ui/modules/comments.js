@@ -16,7 +16,8 @@ import { can, collabUrls } from '../../collab/urls.js';
 import { explain } from '../../collab/errors.js';
 import { peopleStore } from '../../collab/people.js';
 import { countThreads, filterThreads, remove, upsert } from '../../collab/comments-state.js';
-import { anchorForClick, anchorForElement, numberThreads, pinPagePoint, pinScreen, popoverPosition, screenToPage } from '../../collab/pins.js';
+import { anchorForClick, anchorForElement, elementScreenQuad, layoutMarkers, leader, markerHome, numberThreads, pinPagePoint, pinScreen, popoverPosition, quadBounds, screenToPage } from '../../collab/pins.js';
+import { switchControl } from './_controls.js';
 import { createComposer, threadCard } from '../../collab/comment-ui.js';
 
 export function register(ctx) {
@@ -141,14 +142,18 @@ export function createController(ctx) {
         if (!root) return null;
         const layer = h('div', { class: 'cb-pins', 'data-studio-ignore': '' });
         const pinsEl = h('div', { class: 'cb-pins__layer' });
+        const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+        svg.setAttribute('class', 'cb-pins__svg'); svg.setAttribute('aria-hidden', 'true');
+        const tip = h('div', { class: 'cb-tip', hidden: true, role: 'tooltip' });
         const pop = h('div', { class: 'cb-pop', hidden: true, role: 'dialog', 'aria-label': 'Comment' });
-        layer.append(pinsEl, pop);
+        const toggle = h('button', { type: 'button', class: 'cb-pintoggle', hidden: true, onclick: () => setShowPins(!state.showPins), onpointerdown: (e) => e.stopPropagation() });
+        layer.append(svg, pinsEl, tip, pop, toggle);
         for (const type of ['pointerdown', 'pointerup', 'pointermove', 'wheel', 'dblclick', 'contextmenu', 'keydown']) {
             pop.addEventListener(type, (e) => { if (type !== 'wheel' || pop.scrollHeight > pop.clientHeight) e.stopPropagation(); });
         }
         layer.addEventListener('pointerdown', onStagePointer);
         root.append(layer);
-        overlay = { root, layer, pinsEl, pop };
+        overlay = { root, layer, pinsEl, pop, svg, tip, toggle };
         return overlay;
     }
 
@@ -245,7 +250,8 @@ export function createController(ctx) {
         const anchor = popoverAnchor();
         const size = { width: overlay.root.clientWidth, height: overlay.root.clientHeight };
         if (!anchor) { overlay.pop.style.left = '8px'; overlay.pop.style.top = '8px'; return; }
-        const pin = pinScreen(studio().viewport.view, anchor, size);
+        const mk = overlay.markers && overlay.markers.get(state.draft ? 'draft' : state.active);
+        const pin = mk ? { x: mk.x, y: mk.y } : pinScreen(studio().viewport.view, anchor, size);
         const box = { width: Math.min(320, size.width - 16), height: overlay.pop.offsetHeight || 220 };
         const pos = popoverPosition(pin, size, box);
         overlay.pop.style.width = `${box.width}px`;
@@ -256,6 +262,35 @@ export function createController(ctx) {
     const visible = () => filterThreads(state.threads, { status: 'all', scope: 'page', pageId: activePageId() })
         .filter((t) => !t.resolved || state.filter.status !== 'open' || t.id === state.active);
 
+    function setShowPins(on) {
+        state.showPins = !!on;
+        draw();
+        for (const p of panels) p.render();
+    }
+
+    const MARKER = 22;
+    const NS = 'http://www.w3.org/2000/svg';
+    const svgEl = (tag, attrs) => { const n = document.createElementNS(NS, tag); for (const [k, v] of Object.entries(attrs)) n.setAttribute(k, String(v)); return n; };
+
+    function showTip(t, marker) {
+        if (!overlay) return;
+        const tip = overlay.tip;
+        const who = t.is_guest ? 'A guest' : (t.author && t.author.name) || 'Someone';
+        const replies = (t.replies || []).length;
+        const body = String(t.body || '').replace(/\s+/g, ' ').trim();
+        tip.replaceChildren(...[h('strong', { text: who }), h('span', { class: 'cb-tip__body', text: body.length > 120 ? `${body.slice(0, 119)}...` : body }), replies ? h('span', { class: 'cb-tip__meta', text: `${replies} ${replies === 1 ? 'reply' : 'replies'}${t.resolved ? ', resolved' : ''}` }) : (t.resolved ? h('span', { class: 'cb-tip__meta', text: 'Resolved' }) : null)].filter(Boolean));
+        tip.hidden = false;
+        const size = { width: overlay.root.clientWidth, height: overlay.root.clientHeight };
+        const x = parseFloat(marker.dataset.x); const y = parseFloat(marker.dataset.y);
+        const w = Math.min(260, size.width - 16);
+        tip.style.width = `${w}px`;
+        const left = Math.max(8, Math.min(x - w / 2, size.width - w - 8));
+        const below = y < 90;
+        tip.style.left = `${left}px`;
+        tip.style.top = below ? `${y + MARKER / 2 + 8}px` : `${Math.max(8, y - MARKER / 2 - 8 - tip.offsetHeight)}px`;
+    }
+    function hideTip() { if (overlay) overlay.tip.hidden = true; }
+
     function draw() {
         if (!overlay) return;
         const page = activePage();
@@ -265,30 +300,59 @@ export function createController(ctx) {
         const pageThreads = state.threads.filter((t) => String(t.page_id) === String(activePageId()) && t.x !== null && t.x !== undefined);
         const shown = state.filter.status === 'resolved' ? pageThreads.filter((t) => t.resolved) : state.filter.status === 'open' ? pageThreads.filter((t) => !t.resolved || t.id === state.active) : pageThreads;
         const numbers = numberThreads(shown);
-        const frag = document.createDocumentFragment();
+        // anchors first (screen points and element boxes), then marker positions that avoid each other
+        const entries = [];
         for (const t of shown) {
             const point = pinPagePoint(t, page);
             if (!point || point.detached) continue;
-            const s = pinScreen(view, point, size);
-            if (!s.visible) continue;
-            const a = t.is_guest ? 'a guest' : (t.author && t.author.name) || 'someone';
-            const b = h('button', {
-                type: 'button', class: `cb-pin${t.resolved ? ' is-resolved' : ''}${state.active === t.id ? ' is-active' : ''}`,
-                'data-thread': t.id, style: `transform: translate(${s.x}px, ${s.y}px)`, 'data-studio-ignore': '',
-                'aria-label': `Comment ${numbers.get(t.id)} by ${a}${t.resolved ? ', resolved' : ''}. Open`,
-                onclick: (e) => { e.stopPropagation(); focusThread(t.id); },
-                onpointerdown: (e) => e.stopPropagation(),
-            }, h('span', { text: String(numbers.get(t.id)) }));
-            frag.append(b);
+            const a = pinScreen(view, point, size);
+            if (!a.visible) continue;
+            const quad = t.element_id ? elementScreenQuad(view, page, t.element_id) : null;
+            entries.push({ t, anchor: { x: a.x, y: a.y }, quad, home: markerHome({ x: a.x, y: a.y }, quad, { diameter: MARKER }) });
         }
         if (state.draft) {
             const point = pinPagePointForDraft(page);
-            if (point) {
-                const s = pinScreen(view, point, size);
-                frag.append(h('span', { class: 'cb-pin cb-pin--draft', style: `transform: translate(${s.x}px, ${s.y}px)`, 'aria-hidden': 'true' }, h('span', { text: '+' })));
-            }
+            if (point) { const a = pinScreen(view, point, size); const quad = state.draft.element_id ? elementScreenQuad(view, page, state.draft.element_id) : null; entries.push({ draft: true, anchor: { x: a.x, y: a.y }, quad, home: markerHome({ x: a.x, y: a.y }, quad, { diameter: MARKER }) }); }
         }
+        // the open thread is placed first so it keeps its home; the rest follow in number order
+        entries.sort((x, y) => (state.active && x.t && x.t.id === state.active ? -1 : 0) - (state.active && y.t && y.t.id === state.active ? -1 : 0));
+        const laid = layoutMarkers(entries.map((e, i) => ({ id: i, anchor: e.anchor, home: e.home, avoid: e.quad ? quadBounds(e.quad) : null })), { diameter: MARKER, bounds: size });
+
+        const frag = document.createDocumentFragment();
+        const lines = document.createDocumentFragment();
+        entries.forEach((e, i) => {
+            const m = laid.get(i);
+            const l = leader(e.anchor, m, MARKER);
+            const active = e.t && state.active === e.t.id;
+            const cls = `${active ? 'is-active' : ''}${e.t && e.t.resolved ? ' is-resolved' : ''}`;
+            // the anchored element, outlined when its thread is open: the person sees exactly what the comment is about
+            if (active && e.quad) lines.append(svgEl('polygon', { points: e.quad.map((p) => `${p.x},${p.y}`).join(' '), class: 'cb-outline' }));
+            if (l) lines.append(svgEl('line', { x1: l.x1, y1: l.y1, x2: l.x2, y2: l.y2, class: `cb-leader ${cls}` }));
+            lines.append(svgEl('circle', { cx: e.anchor.x, cy: e.anchor.y, r: active ? 4 : 3, class: `cb-anchor ${cls}${e.draft ? ' is-draft' : ''}` }));
+            if (e.draft) { frag.append(h('span', { class: 'cb-pin cb-pin--draft', style: `transform: translate(${m.x}px, ${m.y}px)`, 'aria-hidden': 'true' }, h('span', { text: '+' }))); return; }
+            const t = e.t;
+            const who = t.is_guest ? 'a guest' : (t.author && t.author.name) || 'someone';
+            const b = h('button', {
+                type: 'button', class: `cb-pin${t.resolved ? ' is-resolved' : ''}${active ? ' is-active' : ''}`,
+                'data-thread': t.id, 'data-x': m.x, 'data-y': m.y, style: `transform: translate(${m.x}px, ${m.y}px)`, 'data-studio-ignore': '',
+                'aria-label': `Comment ${numbers.get(t.id)} by ${who}${t.resolved ? ', resolved' : ''}. Open`,
+                onclick: (ev) => { ev.stopPropagation(); hideTip(); focusThread(t.id); },
+                onpointerdown: (ev) => ev.stopPropagation(),
+                onpointerenter: () => { if (!active) showTip(t, b); },
+                onpointerleave: hideTip,
+                onfocus: () => { if (!active) showTip(t, b); },
+                onblur: hideTip,
+            }, h('span', { text: String(numbers.get(t.id)) }));
+            frag.append(b);
+        });
+        overlay.markers = new Map();
+        entries.forEach((e, i) => overlay.markers.set(e.draft ? 'draft' : e.t.id, laid.get(i)));
+        overlay.svg.replaceChildren(lines);
         overlay.pinsEl.replaceChildren(frag);
+        const count = pageThreads.filter((t) => !t.resolved).length;
+        overlay.toggle.hidden = pageThreads.length === 0;
+        overlay.toggle.textContent = state.showPins ? 'Hide comments' : `Show comments (${count})`;
+        overlay.toggle.setAttribute('aria-pressed', String(!state.showPins));
         position();
     }
 
@@ -362,7 +426,7 @@ export function createController(ctx) {
                 h('div', { class: 'cb-chips', role: 'group', 'aria-label': 'Where' },
                     chip('This page', state.filter.scope === 'page', () => { state.filter.scope = 'page'; notify(); }),
                     chip('All pages', state.filter.scope === 'all', () => { state.filter.scope = 'all'; notify(); })),
-                h('label', { class: 'cb-check cb-check--sm' }, h('input', { type: 'checkbox', checked: state.showPins, onchange: (e) => { state.showPins = e.target.checked; draw(); } }), h('span', { text: 'Show pins on the design' })));
+                switchControl({ label: 'Show comments on the design', checked: state.showPins, onChange: (on) => { state.showPins = on; draw(); }, className: 'cb-pinswitch' }));
 
             const body = h('div', { class: 'cb-panel__list', 'aria-live': 'polite' });
             if (state.load === 'loading') body.append(skeleton(3));

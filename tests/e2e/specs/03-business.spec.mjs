@@ -78,8 +78,9 @@ test('business: brand, design, share, comment, review, approve, stale, export, i
     await step(op, 'request review', async () => {
         await op.getByRole('button', { name: 'Review', exact: true }).click();
         await op.locator('dialog[open]').getByText('Request a review').waitFor();
-        const sel = op.locator('dialog[open] select').first();
-        await sel.selectOption({ value: await sel.locator('option').filter({ hasText: 'Reviewer' }).first().getAttribute('value') });
+        // the people picker is a searchable combobox with avatars (not a native select)
+        await op.locator('dialog[open] .mc-cb__input').click();
+        await op.locator('dialog[open]').getByRole('option').filter({ hasText: 'Reviewer' }).first().click();
         await op.locator('dialog[open] textarea').fill('Please check the offer wording.');
         await op.getByRole('button', { name: 'Send for review' }).click();
         await op.waitForTimeout(1200);

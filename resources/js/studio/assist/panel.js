@@ -7,6 +7,8 @@ import { createIconRegistry } from '../engine/icons.js';
 import { createCanvasMeasurer } from '../engine/text-layout.js';
 import { renderPageToSvgString } from '../engine/render.js';
 import { COPY_KINDS, IMPROVE_PRESETS } from './controller.js';
+import { addedIds, changedElementIds, outlineBoxes, outlineCaption } from './preview-model.js';
+import { select as mcSelect, segmented, switchControl } from '../ui/modules/_controls.js';
 
 const SVG_PARSER = typeof DOMParser !== 'undefined' ? new DOMParser() : null;
 
@@ -203,18 +205,30 @@ export function mountPanel(root, ctx, controller, options = {}) {
     function renderCompare(p) {
         const before = controller.activePage();
         const afterPage = controller.preview();
-        const fig = (label, page) => {
-            const frame = h('div', { class: 'asst-page' });
-            const r = page.width / page.height;
-            frame.style.aspectRatio = String(r);
-            frame.style.maxWidth = `${Math.round((r >= 1.25 ? 300 : 190) * (r >= 1.25 ? 1 : r))}px`;
-            const svg = drawPage(page, ctx, options);
-            if (svg) frame.append(svg); else frame.append(h('span', { class: 'asst-noprev', text: 'No preview' }));
-            return h('figure', { class: 'asst-fig' }, [h('div', { class: 'asst-stage' }, frame), h('figcaption', { text: label })]);
-        };
         if (!afterPage) return h('p', { class: 'asst-msg is-bad', text: 'This suggestion no longer fits the page. Dismiss it and ask again.' });
-        const wide = before.width / before.height >= 1.25;
-        return h('div', { class: `asst-compare${wide ? ' is-stacked' : ''}` }, [fig('Before', before), fig('After', afterPage)]);
+        const ids = changedElementIds(p);
+        const added = addedIds(p);
+        const state = { side: view.compareSide || 'after', outline: view.outline !== false };
+        const stage = h('div', { class: 'asst-stage', role: 'img' });
+        const caption = h('p', { class: 'asst-note asst-caption', 'aria-live': 'polite' });
+        function paint() {
+            const page = state.side === 'after' ? afterPage : before;
+            const r = page.width / page.height;
+            const frame = h('div', { class: 'asst-page' });
+            frame.style.aspectRatio = String(r);
+            // the page fits the stage by its own aspect ratio; any space around it is the stage colour, never white
+            frame.style.width = `min(100%, ${Math.round(19 * 16 * r)}px)`;
+            const boxes = state.outline ? outlineBoxes(page, state.side === 'before' ? new Set([...ids].filter((id) => !added.has(id))) : ids) : [];
+            const svg = drawPage(page, ctx, options, boxes);
+            if (svg) frame.append(svg); else frame.append(h('span', { class: 'asst-noprev', text: 'No preview' }));
+            stage.replaceChildren(frame);
+            stage.setAttribute('aria-label', `${state.side === 'after' ? 'After' : 'Before'}: the page${state.outline && boxes.length ? ' with the changed elements outlined' : ''}`);
+            caption.textContent = state.outline ? outlineCaption(state.side, boxes.length) : '';
+        }
+        const seg = segmented({ label: 'Show the page', value: state.side, size: 'sm', options: [{ value: 'before', label: 'Before' }, { value: 'after', label: 'After' }], onChange: (v) => { state.side = v; view.compareSide = v; paint(); } });
+        const outline = switchControl({ label: 'Outline what changes', checked: state.outline, className: 'asst-outline-switch', onChange: (on) => { state.outline = on; view.outline = on; paint(); } });
+        paint();
+        return h('div', { class: 'asst-compare' }, [h('div', { class: 'asst-compare__bar' }, [seg, outline]), stage, caption]);
     }
 
     function renderChanges(p) {
@@ -257,12 +271,12 @@ export function mountPanel(root, ctx, controller, options = {}) {
 
         sec.append(h('p', { class: 'asst-note', text: 'Suggestions only use the numbers, prices and links you type below. You choose where each one goes.' }));
         const field = (id, label, input) => h('div', { class: 'asst-field' }, [h('label', { for: id, class: 'asst-label', text: label }), input]);
+        // a custom select exposes its button as the labelled control
+
         const text = (key, id, label, ph, max = 120) => { const i = h('input', { id, class: 'asst-input', type: 'text', maxlength: max, placeholder: ph, autocomplete: 'off' }); i.value = view.form[key]; i.addEventListener('input', () => { view.form[key] = i.value; }); return field(id, label, i); };
 
-        const kind = h('select', { id: 'asst-kind', class: 'asst-input' }, COPY_KINDS.map((k) => h('option', { value: k.key, text: k.label, selected: k.key === view.form.kind })));
-        kind.addEventListener('change', () => { view.form.kind = kind.value; });
-        const count = h('select', { id: 'asst-count', class: 'asst-input' }, [1, 2, 3, 4, 5].map((n) => h('option', { value: String(n), text: String(n), selected: String(n) === view.form.count })));
-        count.addEventListener('change', () => { view.form.count = count.value; });
+        const kind = mcSelect({ id: 'asst-kind', label: 'What do you need?', options: COPY_KINDS.map((k) => ({ value: k.key, label: k.label })), value: view.form.kind, onChange: (v) => { view.form.kind = v; } });
+        const count = mcSelect({ id: 'asst-count', label: 'How many suggestions', options: [1, 2, 3, 4, 5].map((n) => ({ value: String(n), label: String(n) })), value: view.form.count, onChange: (v) => { view.form.count = v; } });
         const details = h('textarea', { id: 'asst-details', class: 'asst-input', rows: 3, maxlength: 400, placeholder: 'Prices, dates, phone numbers or links to include' });
         details.value = view.form.details;
         details.addEventListener('input', () => { view.form.details = details.value; });
@@ -341,7 +355,7 @@ export function mountPanel(root, ctx, controller, options = {}) {
 }
 
 /** The page drawn by the same renderer as the canvas, on a scratch copy. Returns an <svg> element or null. */
-export function drawPage(page, ctx, options = {}) {
+export function drawPage(page, ctx, options = {}, outlines = []) {
     if (!SVG_PARSER) return null;
     try {
         const fonts = ctx.studio.fonts || null;
@@ -365,6 +379,19 @@ export function drawPage(page, ctx, options = {}) {
         node.removeAttribute('height');
         node.setAttribute('aria-hidden', 'true');
         node.setAttribute('focusable', 'false');
+        if (outlines.length) {
+            const NS = 'http://www.w3.org/2000/svg';
+            const g = document.createElementNS(NS, 'g');
+            g.setAttribute('class', 'asst-outlines');
+            for (const b of outlines) {
+                const r = document.createElementNS(NS, 'rect');
+                r.setAttribute('x', '0'); r.setAttribute('y', '0'); r.setAttribute('width', String(b.width)); r.setAttribute('height', String(b.height));
+                r.setAttribute('transform', `matrix(${b.matrix.join(' ')})`);
+                r.setAttribute('class', 'asst-outline');
+                g.append(r);
+            }
+            node.append(g);
+        }
         return node;
     } catch (e) {
         return null;
