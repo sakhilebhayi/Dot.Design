@@ -141,6 +141,16 @@ try {
 
     // 8. layers (Pro): arrows, rename, reorder
     await c.eval(`[...document.querySelectorAll('.st-seg__btn')].find(b => /Pro/.test(b.getAttribute('aria-label'))).click()`); await sleep(400);
+    await c.eval(`document.querySelector('.st-right__tab[aria-selected=true]').focus()`);
+    await c.key('ArrowRight'); await sleep(300);
+    check('arrow keys move between the Design and Layers tabs', await c.eval(`document.querySelector('.st-right__tab[aria-selected=true]')?.textContent === 'Layers' && document.activeElement.textContent === 'Layers'`), await active());
+    check('the properties tabs are one tab stop', await c.eval(`[...document.querySelectorAll('.st-right__tab')].filter(b => b.tabIndex === 0).length === 1`));
+    await c.eval(`[...document.querySelectorAll('.st-right__tab')].find(b => b.textContent === 'Design').click()`); await sleep(200);
+    await pickElement(c, "(e) => e.name === 'Headline'"); await sleep(400);
+    await c.eval(`document.querySelector('.st-float button').focus()`);
+    const t0 = await active();
+    await c.key('ArrowRight');
+    check('arrow keys move along the selection toolbar', (await active()) !== t0 && /st-float__btn/.test(await active()), `${t0} -> ${await active()}`);
     await c.eval(`[...document.querySelectorAll('.st-right__tabs [role=tab]')].find(b => /Layers/.test(b.textContent))?.click()`); await sleep(300);
     await c.eval(`document.querySelector('.st-layer__main[tabindex="0"]').focus()`); await sleep(100);
     const l0 = await sel();

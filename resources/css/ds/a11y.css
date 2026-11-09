@@ -87,15 +87,14 @@
     }
     :focus-visible:focus-visible:focus-visible { outline: 2px solid Highlight; outline-offset: 2px; } /* tripled: it must beat every outline above */
     /* selected, pressed, current and on: Highlight with its own text colour (not colour alone: the aria state is also in the name) */
-    [aria-pressed="true"], [aria-current="true"], [aria-selected="true"], [aria-checked="true"], .is-on, .is-current, .is-active {
+    :root :is([aria-pressed="true"], [aria-current="true"], [aria-selected="true"], [aria-checked="true"], .is-on, .is-current, .is-active) {
         forced-color-adjust: none;
         background: Highlight;
         color: HighlightText;
         outline: 2px solid HighlightText;
         outline-offset: -3px;
     }
-    [aria-pressed="true"] *, [aria-current="true"] *, [aria-selected="true"] *, [aria-checked="true"] *, .is-on *, .is-current * { color: inherit; }
-    [aria-pressed="true"] svg, [aria-current="true"] svg, [aria-selected="true"] svg, [aria-checked="true"] svg, .is-on svg, .is-current svg { color: HighlightText; }
+    :root :is([aria-pressed="true"], [aria-current="true"], [aria-selected="true"], [aria-checked="true"], .is-on, .is-current) :is(*, svg) { color: inherit; }
     [disabled], [aria-disabled="true"] { color: GrayText; outline-color: GrayText; }
     /* status chips carry text and an icon already; keep a visible edge and say the state in system colours */
     .lt-tag--ok, .lt-tag--warn, .lt-tag--bad, .lt-tag--accent, .st-save[data-kind] { outline: 1px solid CanvasText; }

@@ -1,6 +1,7 @@
 // The guided brief: one question at a time, every optional step skippable, answers kept if the page reloads, and a live
 // strip of starting points. The state machine (lib/brief-machine.js) decides what is asked; this file draws it.
 import '../../../css/pages/start.css';
+import { arrowNav } from '../ui/arrow-nav.js';
 import { createApi, uploadFile } from './lib/api.js';
 import { createBriefMachine } from './lib/brief-machine.js';
 import { clear, debounce, h, icon, readBoot } from './lib/dom.js';
@@ -266,6 +267,7 @@ function start() {
     function stepStyle(step) {
         const a = machine.getState().answers;
         const grid = h('div', { class: 'cf-styles', role: 'radiogroup', 'aria-label': 'Look' });
+        arrowNav(grid, '[role=radio]', { activate: true });
         for (const s of boot.styles) {
             const stage = frame(3, 4, 'cf-style__frame');
             const btn = h('button', {
@@ -287,6 +289,7 @@ function start() {
         const a = machine.getState().answers;
         const wrap = h('div', { class: 'cf-where' });
         const group = h('div', { class: 'cf-sizes', role: 'radiogroup', 'aria-label': 'Where you will use it' });
+        arrowNav(group, '[role=radio]', { activate: true });
         const options = step.options || [];
         const inList = options.some((o) => o.key === a.format_key);
         function select(key) {

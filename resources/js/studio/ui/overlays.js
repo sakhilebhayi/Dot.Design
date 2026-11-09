@@ -16,7 +16,7 @@ export function createToasts(root) {
         const kind = opts.kind === 'bad' || opts.kind === 'warn' ? opts.kind : 'ok';
         let timer = null;
         const close = () => { clearTimeout(timer); if (item.parentNode) item.remove(); };
-        const arm = () => { clearTimeout(timer); if (!opts.sticky) timer = setTimeout(close, opts.ms || TOAST_MS[kind]); };
+        const arm = () => { clearTimeout(timer); if (!opts.sticky) timer = setTimeout(close, opts.ms || (opts.action ? Math.max(9000, TOAST_MS[kind]) : TOAST_MS[kind])); };  // a message with an action (Undo) stays longer (WCAG 2.2.1)
         const item = h('div', { class: `st-toast st-toast--${kind}`, attrs: { role: kind === 'bad' ? 'alert' : 'status' } },
             icon(kind === 'ok' ? 'circle-check' : kind === 'warn' ? 'triangle-alert' : 'circle-alert'),
             h('div', { class: 'st-toast__body', text: String(message) }),
@@ -24,6 +24,8 @@ export function createToasts(root) {
             h('button', { class: 'st-toast__close', attrs: { type: 'button', 'aria-label': 'Dismiss' }, onClick: close }, icon('x', 'lt-icon--sm')));
         item.addEventListener('mouseenter', () => clearTimeout(timer));
         item.addEventListener('mouseleave', arm);
+        item.addEventListener('focusin', () => clearTimeout(timer)); // reading by keyboard stops the clock too
+        item.addEventListener('focusout', arm);
         while (host.children.length >= 4) host.firstChild.remove();
         host.appendChild(item);
         arm();

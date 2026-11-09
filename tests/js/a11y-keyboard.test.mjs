@@ -94,3 +94,20 @@ test('the keyboard inset only counts a real on-screen keyboard and pans the text
     assert.equal(panToReveal(390, 400), -14);
     assert.equal(panToReveal(520, 400), -144);
 });
+
+// ---- arrow keys inside tab lists, radio groups and toolbars ----
+import { nextIndex } from '../../resources/js/studio/ui/arrow-nav.js';
+
+test('arrow keys wrap around a widget, Home and End jump, other keys do nothing', () => {
+    assert.equal(nextIndex('ArrowRight', 0, 3), 1);
+    assert.equal(nextIndex('ArrowRight', 2, 3), 0, 'wraps forward');
+    assert.equal(nextIndex('ArrowLeft', 0, 3), 2, 'wraps back');
+    assert.equal(nextIndex('ArrowDown', 1, 3), 2);
+    assert.equal(nextIndex('ArrowUp', 1, 3), 0);
+    assert.equal(nextIndex('Home', 2, 3), 0);
+    assert.equal(nextIndex('End', 0, 3), 2);
+    assert.equal(nextIndex('a', 0, 3), -1);
+    assert.equal(nextIndex('ArrowRight', 0, 0), -1);
+    assert.equal(nextIndex('ArrowRight', 0, 3, { vertical: true, both: false }), -1, 'a vertical list ignores left and right');
+    assert.equal(nextIndex('ArrowDown', 0, 3, { vertical: true, both: false }), 1);
+});

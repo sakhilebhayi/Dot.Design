@@ -13,6 +13,7 @@ run keyboard-768 node scripts/dev/a11y/keyboard.mjs --vp 768
 run keyboard-390 node scripts/dev/a11y/keyboard.mjs --vp 390
 run motion node scripts/dev/a11y/motion.mjs
 run focus-obscured node scripts/dev/a11y/focus-obscured.mjs
+run labels node scripts/dev/a11y/labels.mjs
 run states node scripts/dev/a11y/states.mjs
 run js-tests npm run --silent test:js
 if [ "$1" != "quick" ]; then

@@ -10,6 +10,7 @@ import { prepareSvg, ExportError } from '../../output/export-svg.js';
 import { webmSupport } from '../../output/webm.js';
 import { animatedElements } from '../../output/animate.js';
 import { formatBytes } from '../../output/bytes.js';
+import { arrowNav } from '../arrow-nav.js';
 
 const EXPORT_DIALOG = 'export';
 
@@ -311,10 +312,12 @@ export function mountExport(root, props, ctx) {
 
     function tabs() {
         const list = tabsFor({ animated });
-        return h('div', { class: 'out-tabs', role: 'tablist', 'aria-label': 'File type' }, list.map((t) => h('button', {
+        const strip = h('div', { class: 'out-tabs', role: 'tablist', 'aria-label': 'File type' }, list.map((t) => h('button', {
             type: 'button', role: 'tab', class: 'out-tab', 'aria-selected': state.format === t.id ? 'true' : 'false', title: t.help, dataset: { fk: `tab-${t.id}` },
             onclick: () => { state.format = t.id; state.estimate = null; resetResult(); render(); loadPreviewSoon(); refreshEstimate(); },
         }, t.label)));
+        arrowNav(strip, '[role=tab]'); // the next tab takes focus; Enter or Space chooses it (choosing rebuilds the panel)
+        return strip;
     }
 
     function renderActions() {

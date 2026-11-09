@@ -8,6 +8,7 @@ import { find } from '../doc/tree.js';
 import { frameHandlePoints, selectionFrame } from '../engine/selection.js';
 import { pickFile } from './actions.js';
 import { openContextMenu } from './contextmenu.js';
+import { arrowNav } from './arrow-nav.js';
 import { announceSelection } from './describe.js';
 import { COMPACT_QUERY, announce, h, icon, isCompact, setVars, throttleFrame } from './dom.js';
 import { openColourPopover, openFontPopover, openLayerMenu, textSize } from './quick.js';
@@ -17,6 +18,7 @@ export function createFloating(ctx, shell) {
     const root = shell.stage;
     const bar = h('div', { class: 'st-float', hidden: true, attrs: { role: 'toolbar', 'aria-label': 'Selection actions', 'data-studio-ignore': '' } });
     shell.stageWrap.appendChild(bar);
+    arrowNav(bar, 'button');
     let dragging = false;
 
     const btn = (label, iconName, onClick, { text, pressed, tip = true } = {}) => {

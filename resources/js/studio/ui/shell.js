@@ -4,6 +4,7 @@
  * runs the compact (phone and tablet) model where panels become bottom sheets.
  * It holds no editing logic; panels and the engine do that.
  */
+import { arrowNav } from './arrow-nav.js';
 import { COMPACT_QUERY, h, icon, isCompact } from './dom.js';
 
 const TAB_KEY = 'dot-design-tab';
@@ -128,13 +129,14 @@ export function createShell(ctx) {
     rightBody.append(simpleHost, sectionHost, layersHost);
     const sections = new Map(); // id -> {wrap, handle}
     let rightTab = 'design';
+    arrowNav(rightTabs, '[role=tab]', { activate: true });
 
     function renderRightTabs() {
         rightTabs.textContent = '';
         rightTabs.hidden = ctx.mode !== 'pro' || isCompact() && false;
         if (ctx.mode !== 'pro') { layersHost.hidden = true; return; }
         for (const [id, label] of [['design', 'Design'], ['layers', 'Layers']]) {
-            const b = h('button', { class: 'st-right__tab', attrs: { type: 'button', role: 'tab', 'aria-selected': String(rightTab === id) }, text: label, onClick: () => { rightTab = id; renderRightTabs(); applyRightTab(); } });
+            const b = h('button', { class: 'st-right__tab', attrs: { type: 'button', role: 'tab', 'aria-selected': String(rightTab === id), tabindex: rightTab === id ? '0' : '-1' }, text: label, onClick: () => { rightTab = id; renderRightTabs(); applyRightTab(); rightTabs.querySelector('[aria-selected=true]')?.focus(); } });
             rightTabs.appendChild(b);
         }
     }
