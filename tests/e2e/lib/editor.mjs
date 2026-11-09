@@ -66,8 +66,8 @@ export function firstDiff(a, b, path = '') {
 
 /** Download dialog: pick a format tab (and size chip), press Prepare file, press Download. Returns the Playwright Download. */
 export async function exportFile(page, { tab = 'PNG', scale = null, pages = null } = {}) {
-    if (!(await page.locator('.out-adv').count())) await page.getByRole('button', { name: 'Download', exact: true }).first().click();
-    await page.locator('.out-adv').evaluate((e) => { e.open = true; });
+    if (!(await page.locator('dialog[open] .out-adv').count())) await page.getByRole('button', { name: 'Download', exact: true }).first().click();
+    await page.locator('dialog[open] .out-adv').evaluate((e) => { e.open = true; });
     await page.getByRole('tab', { name: tab, exact: true }).click();
     if (scale) {
         // size chips are toggles (picking several makes a ZIP): leave exactly the wanted one pressed
