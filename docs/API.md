@@ -41,7 +41,7 @@ Limits you will hit: a page save is at most 1.4 MB on the wire and 1 MB of norma
 ## Routes
 
 <!-- BEGIN GENERATED: routes -->
-162 routes, generated from `php artisan route:list --json` by `php scripts/ops/generate-docs.php`. Framework routes (Livewire, Sanctum, two-factor, the signed local-disk route) are left out. "signed in" means the session guard plus a verified email; every JSON route answers JSON errors (`App\Http\Middleware\JsonApi`).
+163 routes, generated from `php artisan route:list --json` by `php scripts/ops/generate-docs.php`. Framework routes (Livewire, Sanctum, two-factor, the signed local-disk route) are left out. "signed in" means the session guard plus a verified email; every JSON route answers JSON errors (`App\Http\Middleware\JsonApi`).
 
 #### Projects, pages, history, sharing, review
 
@@ -121,7 +121,7 @@ Limits you will hit: a page save is at most 1.4 MB on the wire and 1 MB of norma
 | POST | `/login` | `login.store` | public | `throttle:login` | `Laravel\Fortify\Http\Controllers\AuthenticatedSessionController@store` |
 | POST | `/logout` | `logout` | signed in |  | `Laravel\Fortify\Http\Controllers\AuthenticatedSessionController@destroy` |
 | GET | `/privacy-policy` | `policy.show` | public |  | `Laravel\Jetstream\Http\Controllers\Livewire\PrivacyPolicyController@show` |
-| GET/POST/PUT/PATCH/DELETE/OPTIONS | `/register` | `register` | public |  | `Illuminate\Routing\RedirectController` |
+| ANY | `/register` | `register` | public |  | `Illuminate\Routing\RedirectController` |
 | POST | `/reset-password` | `password.update` | public |  | `Laravel\Fortify\Http\Controllers\NewPasswordController@store` |
 | GET | `/reset-password/{token}` | `password.reset` | public |  | `Laravel\Fortify\Http\Controllers\NewPasswordController@create` |
 | GET | `/team-invitations/{invitation}` | `team-invitations.accept` | signed in |  | `Laravel\Jetstream\Http\Controllers\TeamInvitationController@accept` |
@@ -218,6 +218,7 @@ Limits you will hit: a page save is at most 1.4 MB on the wire and 1 MB of norma
 |---|---|---|---|---|---|
 | GET | `/design/activity` | `design.activity.index` | signed in |  | `Studio\ActivityController@workspace` |
 | GET | `/design/activity/log` | `design.activity.page` | signed in |  | `Studio\ActivityPageController@index` |
+| POST | `/design/milestones/{key}` | `design.milestones.seen` | signed in |  | `Studio\MilestoneController@seen` |
 | GET | `/design/review` | `design.reviews.index` | signed in |  | `Studio\ReviewInboxController@index` |
 | GET | `/design/reviews` | `design.reviews.inbox` | signed in |  | `Studio\ReviewController@inbox` |
 | GET | `/design/settings` | `design.settings.show` | signed in |  | `Studio\SettingsController@show` |

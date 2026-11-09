@@ -28,7 +28,7 @@ $p->photo(($p->w - 250) / 2, 238, 250, 250, 'photo_1', 'ring', ['name' => 'Produ
 $p->text('R1 499', $m, 522, $cw, ['font' => 'head', 'size' => 40, 'color' => 'accent', 'align' => 'center', 'lh' => 1, 'role' => 'price', 'bind' => 'price', 'name' => 'Price']);
 $p->text('Designed in detail, tested every day and ready when you are.', $m + 70, 580, $cw - 140, ['size' => 14, 'color' => 'extra', 'align' => 'center', 'lh' => 1.5, 'bind' => 'description', 'name' => 'Description']);
 
-$items = [['truck', 'Free delivery'], ['shield-check', 'Secure payment'], ['refresh', 'Easy returns']];
+$items = [['heart', 'Made with care'], ['shield-check', 'Built to last'], ['refresh', 'Easy to use']];
 foreach ($items as $i => [$ic, $label]) {
     [$x, $w] = $p->col($i, 3, 12);
     $p->group($label.' card', $x, 650, function ($g) use ($ic, $label, $w) {

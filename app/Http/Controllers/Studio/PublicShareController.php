@@ -54,6 +54,7 @@ class PublicShareController extends Controller
             'pages' => $pages,
             'token' => $token,
             'canComment' => $share->permission === 'comment',
+            'canDownload' => (bool) $share->download_allowed,
         ]);
     }
 

@@ -21,10 +21,12 @@ $p->bg('bg');
 $m = $p->m;
 $cw = $p->cw();
 
-$p->text('Your Business', $m, 250, $cw, ['font' => 'head', 'size' => 32, 'ls' => 0.16, 'case' => 'upper', 'color' => 'extra', 'align' => 'center', 'role' => 'logo', 'bind' => 'business_name', 'name' => 'Business name']);
-$p->photo(220, 370, 640, 640, 'photo_1', 'ring', ['name' => 'Main picture', 'back' => 'surface']);
-$p->text("Coming\nsoon", $m, 1070, $cw, ['font' => 'head', 'size' => 170, 'lh' => 0.96, 'ls' => -0.04, 'align' => 'center', 'role' => 'headline', 'bind' => 'headline', 'name' => 'Headline']);
-$p->text('Friday 6 June', $m, 1420, $cw, ['font' => 'head', 'size' => 60, 'color' => 'accent', 'align' => 'center', 'role' => 'subhead', 'bind' => 'date', 'name' => 'Date']);
-$p->text('Follow to be the first to know', $m, 1500, $cw, ['size' => 34, 'color' => 'extra', 'align' => 'center', 'role' => 'body', 'bind' => 'description', 'name' => 'Description']);
+// Centred and ceremonial: a big date numeral is the focal point, the picture rises from the bottom edge like a moon.
+$p->text('Your Business', $m, 290, $cw, ['font' => 'head', 'size' => 32, 'ls' => 0.16, 'case' => 'upper', 'color' => 'extra', 'align' => 'center', 'role' => 'logo', 'bind' => 'business_name', 'name' => 'Business name']);
+$p->text("Coming\nsoon", $m, 370, $cw, ['font' => 'head', 'size' => 176, 'lh' => 0.96, 'ls' => -0.04, 'align' => 'center', 'role' => 'headline', 'bind' => 'headline', 'name' => 'Headline']);
+$p->rule(490, 780, 100, 8, 'accent', ['name' => 'Accent bar']);
+$p->text('Friday 6 June', $m, 830, $cw, ['font' => 'head', 'size' => 76, 'color' => 'accent', 'align' => 'center', 'role' => 'subhead', 'bind' => 'date', 'name' => 'Date']);
+$p->text('Follow to be the first to know', $m, 940, $cw, ['size' => 38, 'color' => 'extra', 'align' => 'center', 'role' => 'body', 'bind' => 'description', 'name' => 'Description']);
+$p->photo(150, 1040, 780, 780, 'photo_1', 'ring', ['name' => 'Main picture', 'back' => 'surface']);
 
 return $t->done();

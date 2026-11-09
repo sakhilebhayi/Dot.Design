@@ -13,6 +13,7 @@
  * retried smaller, then reported.
  */
 import { ExportError, prepareSvg, standalone } from './export-svg.js';
+import { applyPrintBoxes, hasPrintBoxes } from './print-boxes.js';
 
 export const MAX_SCALE = 8;
 export const MIN_JPG_QUALITY = 0.4;
@@ -101,17 +102,23 @@ export function disposeCanvas(canvas) {
  * exportPageRaster(deps, {pageIndex, format: 'png'|'jpg', target, quality, transparent, signal, onStage})
  *   -> {blob, bytes(), width, height, scale, mime, reducedFrom, message?}
  */
-export async function exportPageRaster(deps, { pageIndex, format = 'png', target, quality = 0.92, transparent = false, signal, onStage } = {}) {
+export async function exportPageRaster(deps, { pageIndex, format = 'png', target, quality = 0.92, transparent = false, signal, onStage, print = null } = {}) {
     const stage = (s) => { if (onStage) onStage(s); };
     const isJpg = format === 'jpg' || format === 'jpeg';
     const page = deps.studio.getState().doc.pages[pageIndex];
     if (!page) throw new ExportError('no-page', 'That page does not exist any more.', 'Close the dialog and choose a page again.');
-    const size = resolveTarget(page, target);
+    let size = resolveTarget(page, target);
     stage('Getting fonts and pictures ready');
     // fonts are awaited inside renderPageToSvgAsync, pictures inside prepareSvg: nothing is drawn before both are in
     const prepared = await prepareSvg(deps, { pageIndex, embedFonts: true, transparent: transparent && !isJpg, inline: true, signal });
     stage('Drawing');
-    const drawn = await drawSvgToCanvas(deps, prepared.svg, { width: size.width, height: size.height, flatten: isJpg, signal });
+    let svg = prepared.svg;
+    if (hasPrintBoxes(print)) {
+        // print readiness: the same picture with bleed around it and crop marks outside it (sizes stay at the chosen scale)
+        const framed = applyPrintBoxes(svg, { width: page.width, height: page.height, bleedMm: print.bleedMm || 0, marks: !!print.marks });
+        if (framed.changed) { svg = framed.svg; size = { ...size, width: Math.max(1, Math.round(framed.width * size.scale)), height: Math.max(1, Math.round(framed.height * size.scale)) }; }
+    }
+    const drawn = await drawSvgToCanvas(deps, svg, { width: size.width, height: size.height, flatten: isJpg, signal });
     stage('Saving the file');
     const mime = isJpg ? 'image/jpeg' : 'image/png';
     let blob;

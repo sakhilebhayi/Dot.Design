@@ -10,8 +10,12 @@ import { pickFile } from './actions.js';
 import { openContextMenu } from './contextmenu.js';
 import { arrowNav } from './arrow-nav.js';
 import { announceSelection } from './describe.js';
-import { COMPACT_QUERY, announce, h, icon, isCompact, setVars, throttleFrame } from './dom.js';
-import { openColourPopover, openFontPopover, openLayerMenu, textSize } from './quick.js';
+import { COMPACT_QUERY, announce, h, icon, isCompact, isLandscapePhone, setVars, throttleFrame } from './dom.js';
+
+/** The docked strip is for a phone held upright; on its side there is no height to spare, so the floating bar is used. */
+const stripMode = () => isCompact() && !isLandscapePhone();
+import { openColourPopover, openFontPopover, openLayerMenu } from './quick.js';
+import { neighbourRects, placeToolbar } from './float-place.js';
 
 export function createFloating(ctx, shell) {
     const studio = ctx.studio;
@@ -43,7 +47,7 @@ export function createFloating(ctx, shell) {
     }
 
     function build(sel) {
-        if (isCompact()) return buildCompact(sel);
+        if (stripMode()) return buildCompact(sel);
         const simple = ctx.mode === 'simple';
         const items = [];
         const el = sel.el;
@@ -54,7 +58,6 @@ export function createFloating(ctx, shell) {
         if (sel.locked) return [lock, more];
         if (sel.kind === 'text') {
             items.push(btn('Edit text', 'pen', () => studio.beginTextEdit(el.id, { selectAll: true }), { text: simple ? 'Edit text' : undefined }));
-            if (simple) items.push(btn('Make text smaller', 'minus', () => textSize.smaller(ctx, sel)), btn('Make text bigger', 'plus', () => textSize.bigger(ctx, sel)));
             items.push(btn('Colour', 'palette', (b) => openColourPopover(ctx, b, sel)));
             if (simple) items.push(btn('Font', 'text', (b) => openFontPopover(ctx, b, sel)));
         } else if (sel.kind === 'image') {
@@ -81,7 +84,7 @@ export function createFloating(ctx, shell) {
         const sel = ctx.selection();
         if (ctx.readOnly || !sel.count || s.editingId || dragging) { bar.hidden = true; return; }
         bar.hidden = false;
-        const compact = isCompact();
+        const compact = stripMode();
         bar.dataset.compact = compact ? '1' : '0';
         if (compact) { bar.style.removeProperty('--fx'); bar.style.removeProperty('--fy'); return; }
         const frame = selectionFrame(sel.page, sel.ids);
@@ -91,22 +94,20 @@ export function createFloating(ctx, shell) {
         const xs = corners.map((c) => c.x); const ys = corners.map((c) => c.y);
         const rr = root.getBoundingClientRect(); const wr = shell.stageWrap.getBoundingClientRect();
         const ox = rr.left - wr.left; const oy = rr.top - wr.top;
-        const cx = ox + (Math.min(...xs) + Math.max(...xs)) / 2;
-        const top = oy + Math.min(...ys);
-        const bottom = oy + Math.max(...ys);
+        // placement is worked out in stage pixels (the area the page can occupy), then moved into the wrap's coordinates
+        const box = { x: Math.min(...xs), y: Math.min(...ys), w: Math.max(...xs) - Math.min(...xs), h: Math.max(...ys) - Math.min(...ys) };
+        const others = neighbourRects(sel.page.elements, sel.ids, (px, py) => studio.viewport.pageToScreen(px, py), sel.page);
         const bw = bar.offsetWidth || 240; const bh = bar.offsetHeight || 44;
-        let y = top - bh - 14;
-        if (y < oy + 6) y = bottom + 34;
-        y = Math.min(y, wr.height - bh - 8);
-        const x = Math.max(ox + 6, Math.min(cx - bw / 2, wr.width - bw - 8));
-        setVars(bar, { fx: x + 'px', fy: y + 'px' });
+        const spot = placeToolbar({ frame: box, bar: { w: bw, h: bh }, bounds: { w: rr.width, h: rr.height }, others, rotatable: !sel.locked && !sel.anyLocked });
+        bar.dataset.side = spot.side;
+        setVars(bar, { fx: ox + spot.x + 'px', fy: oy + spot.y + 'px' });
     });
 
     let lastKey = '';
     function render() {
         const sel = ctx.selection();
         // rebuild only when the kind of toolbar changes, so a popover anchored to a button survives a colour edit
-        const key = [ctx.mode, isCompact(), sel.kind, sel.locked, sel.emptyPicture, sel.count > 1 ? sel.count : sel.ids[0]].join('|');
+        const key = [ctx.mode, stripMode(), sel.kind, sel.locked, sel.emptyPicture, sel.count > 1 ? sel.count : sel.ids[0]].join('|');
         if (key !== lastKey) { lastKey = key; bar.replaceChildren(...build(sel)); }
         place();
     }

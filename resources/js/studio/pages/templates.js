@@ -5,6 +5,8 @@ import { createApi } from './lib/api.js';
 import { clear, debounce, h, icon, readBoot } from './lib/dom.js';
 import { createPreviewer, createRenderQueue } from './lib/preview.js';
 import { drawInto, loadIcons, whenVisible } from './lib/preview-ui.js';
+import { initialSlotValues } from './lib/slot-defaults.js';
+import { cardSubtitle } from './lib/card-subtitle.js';
 import { activeFilters, buildApiQuery, buildPageQuery, CATEGORY_TABS, clearAll, FILTER_KEYS, parseQuery, sameQuery, withFilter, withTab } from './lib/template-query.js';
 
 const boot = readBoot('templates-boot');
@@ -161,7 +163,7 @@ function start() {
         const label = [t.name, t.kind_label, t.page_count > 1 ? `${t.page_count} pages` : null].filter(Boolean).join(', ');
         const open = h('button', { type: 'button', class: 'cf-tcard__open', 'aria-label': `Open ${label}`, onclick: (e) => openDetail(t.slug, e.currentTarget) }, h('span', { class: 'cf-tcard__stage', 'aria-hidden': 'true' }, f));
         const li = h('li', { class: 'cf-tcard', dataset: { slug: t.slug } }, open,
-            h('div', { class: 'cf-tcard__meta' }, h('span', { class: 'cf-tcard__name', text: t.name }), h('span', { class: 'cf-tcard__sub', text: [t.kind_label, t.format_label].filter(Boolean).join(', ') }),
+            h('div', { class: 'cf-tcard__meta' }, h('span', { class: 'cf-tcard__name', text: t.name }), h('span', { class: 'cf-tcard__sub', text: cardSubtitle(t.kind_label, t.format_label) }),
                 t.page_count > 1 ? h('span', { class: 'lt-tag', text: `${t.page_count} pages` }) : null));
         if (t.page_count > 1) {
             const flip = h('div', { class: 'cf-flip', role: 'group', 'aria-label': 'Flip through pages' });
@@ -276,12 +278,7 @@ function start() {
         const pictureSlots = (t.slots || []).filter((s) => s.type === 'image');
         const prev = boot.previous || {};
         const kit = boot.kit;
-        const values = {};
-        const fromKit = { tagline: kit && kit.tagline, website: kit && kit.website, ...(kit ? kit.contacts : {}) };
-        for (const s of textSlots) {
-            if (s.key === 'business_name') values[s.key] = prev.business_name || '';
-            else values[s.key] = (prev.details && prev.details[s.key]) || fromKit[s.key] || '';
-        }
+        const values = initialSlotValues({ slots: t.slots || [], previous: prev, kit, goal: goalFor(t) });
         const state = { business_name: prev.business_name || '', values, brand: false, page: 0, errors: {}, busy: false };
 
         const stage = h('span', { class: 'lt-frame lt-frame--blank cf-detail__frame', style: { '--w': String(t.width), '--h': String(t.height) } });
@@ -321,7 +318,7 @@ function start() {
             } else {
                 note.textContent = res.status === 429 ? 'The live preview is paused for a moment. You can still make the design.' : 'The preview could not update. You can still make the design.';
             }
-        }, 650);
+        }, 350);
 
         if ((t.pages || []).length > 1) {
             (t.pages || []).forEach((p, i) => {
@@ -348,7 +345,7 @@ function start() {
 
         if (kit) {
             const swId = 'fill-brand';
-            const sw = h('input', { type: 'checkbox', id: swId, role: 'switch', class: 'cf-switch__input', onchange: (e) => { state.brand = e.target.checked; refill(); } });
+            const sw = h('input', { type: 'checkbox', id: swId, role: 'switch', class: 'lt-switch', onchange: (e) => { state.brand = e.target.checked; refill(); } });
             form.append(h('label', { class: 'cf-switch', for: swId }, sw, h('span', { class: 'cf-switch__text' }, h('span', { class: 'cf-switch__label', text: 'Fill with my brand colours' }), h('span', { class: 'lt-hint', text: `Uses colours and fonts from ${kit.name}. Off keeps the template’s own colours.` })), h('span', { class: 'cf-swatches', 'aria-hidden': 'true' }, kit.colors.map((c) => h('span', { class: 'cf-swatch', style: { '--c': c.hex } })))));
         }
 

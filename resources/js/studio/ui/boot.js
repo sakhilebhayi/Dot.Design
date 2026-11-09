@@ -1,7 +1,7 @@
 import { labelFor } from '../engine/core.js';
 import { createStudio } from '../engine/studio.js';
 import { createSaveAdapter } from './adapter.js';
-import { installCoach } from './coach.js';
+import { installCoach, installMilestone } from './coach.js';
 import { createContext } from './context.js';
 import { installContextMenu } from './contextmenu.js';
 import { registerCore } from './core-modules.js';
@@ -142,7 +142,7 @@ function start(root, config) {
     createPageStrip(ctx, shell);
     if (!readOnly) { mountSimplePanel(ctx, shell); mountLayers(ctx, shell); } else { shell.right.hidden = true; root.dataset.right = 'closed'; shell.rail.hidden = true; }
     installShortcuts(ctx, { preview, openSheet });
-    if (!readOnly) { installReliability(ctx, shell); installThumbnails(ctx); installCoach(ctx, shell); }
+    if (!readOnly) { installReliability(ctx, shell); installThumbnails(ctx); installCoach(ctx, shell); installMilestone(ctx); }
     shell.init();
     shell.applyRightTab();
     if (readOnly) { root.dataset.readonly = '1'; shell.pages.querySelector('.st-pageadd') && (shell.pages.querySelector('.st-pageadd').hidden = true); }

@@ -1,13 +1,12 @@
 @extends('errors._ecosystem-layout', ['code' => 403])
 
 @section('title', "You don't have access to this")
-@section('message', "It may belong to a different workspace, need a role you do not have, or require you to log in first. If you think this is a mistake, ask whoever owns the workspace.")
+@section('message', "It may belong to another workspace or need a role you do not have. Ask whoever owns it to share it with you, or go back to your own work.")
 
 @section('actions')
-    <a href="/" class="lt-btn">Go home</a>
     @auth
-        <a href="{{ route('dashboard') }}" class="lt-btn lt-btn--ghost">Go to Home</a>
+        <a href="{{ route('dashboard') }}" class="lt-btn">Back to Home</a>
     @else
-        @if (Route::has('login'))<a href="{{ route('login') }}" class="lt-btn lt-btn--ghost">Log in</a>@endif
+        <a href="/" class="lt-btn">Go to the start page</a>
     @endauth
 @endsection

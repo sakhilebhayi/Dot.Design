@@ -11,7 +11,8 @@ export function mountLayers(ctx, shell) {
     const host = shell.layersHost;
     const list = h('ul', { class: 'st-layers', attrs: { role: 'tree', 'aria-label': 'Layers, top layer first', 'aria-multiselectable': 'true' } });
     const empty = h('p', { class: 'st-note', text: 'Nothing on this page yet. Add text, a shape or a picture and it shows up here.' });
-    host.append(list, empty);
+    const tip = h('p', { class: 'st-note st-layers__tip', text: 'Drag a layer to reorder it, or press Alt with the arrow keys. Double click or F2 renames.' });
+    host.append(list, empty, tip);
     const collapsed = new Set();
     let drag = null;
     let editing = null;
@@ -29,7 +30,7 @@ export function mountLayers(ctx, shell) {
         const s = studio.getState();
         const page = s.doc.pages.find((p) => p.id === s.activePageId) || s.doc.pages[0];
         const rows = rowsFor(page.elements, 0, null, []);
-        empty.hidden = rows.length > 0;
+        empty.hidden = rows.length > 0; tip.hidden = rows.length < 2;
         const sel = new Set(s.selection);
         const frag = document.createDocumentFragment();
         for (const r of rows) {
@@ -51,6 +52,8 @@ export function mountLayers(ctx, shell) {
             main.addEventListener('keydown', (ev) => {
                 const items = Array.from(list.querySelectorAll('.st-layer__main'));
                 const at = items.indexOf(main);
+                // Alt with an arrow moves the layer itself (this branch must come before the plain arrows, which only move focus)
+                if (ev.altKey && (ev.key === 'ArrowUp' || ev.key === 'ArrowDown')) { ev.preventDefault(); ctx.run('element.reorder', { ids: [e.id], to: ev.key === 'ArrowUp' ? 'forward' : 'back' }); return; }
                 if (ev.key === 'ArrowDown' && items[at + 1]) { ev.preventDefault(); items[at + 1].focus(); } else if (ev.key === 'ArrowUp' && items[at - 1]) { ev.preventDefault(); items[at - 1].focus(); } else if (ev.key === 'F2') { ev.preventDefault(); startRename(e, label); } else if ((ev.key === 'Delete' || ev.key === 'Backspace') && sel.has(e.id)) { ev.preventDefault(); ctx.run('element.remove', { ids: [e.id] }); } else if (ev.key === 'ArrowRight' && e.type === 'group' && collapsed.has(e.id)) { collapsed.delete(e.id); render(); } else if (ev.key === 'ArrowLeft' && e.type === 'group' && !collapsed.has(e.id)) { collapsed.add(e.id); render(); } else if ((ev.altKey) && (ev.key === 'ArrowUp' || ev.key === 'ArrowDown')) { ev.preventDefault(); ctx.run('element.reorder', { ids: [e.id], to: ev.key === 'ArrowUp' ? 'forward' : 'back' }); }
             });
             main.addEventListener('focus', () => { if (!sel.has(e.id)) studio.select([e.id], { group: r.parentId }); });
@@ -85,6 +88,7 @@ export function mountLayers(ctx, shell) {
         if (!drag.moved && Math.abs(ev.clientY - drag.startY) < 6) return;
         drag.moved = true;
         list.classList.add('is-sorting');
+        drag.li.classList.add('is-dragging');
         const items = Array.from(list.children).filter((li) => (li.dataset.parent || '') === (drag.r.parentId || ''));
         let target = null;
         for (const li of items) { const rect = li.getBoundingClientRect(); if (ev.clientY < rect.top + rect.height / 2) { target = li; break; } }
@@ -97,6 +101,7 @@ export function mountLayers(ctx, shell) {
         if (!drag) return;
         const d = drag; setTimeout(() => { drag = null; }, 0);
         list.classList.remove('is-sorting');
+        d.li.classList.remove('is-dragging');
         Array.from(list.children).forEach((li) => li.classList.remove('is-drop-before', 'is-drop-end'));
         if (!d.moved) return;
         // rows are top-first, so "before" a row means above it: a higher index in the elements array

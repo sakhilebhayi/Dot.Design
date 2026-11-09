@@ -4,6 +4,8 @@
 
 @section('content')
     {{-- The editor mounts here. Everything it needs is in the JSON below (a non-executable data block, so no inline script). --}}
+    {{-- The page's one heading, for screen readers and outline tools; the editor draws its own visible title bar. --}}
+    <h1 class="lt-sr">{{ $project->name }}</h1>
     <div id="studio-app" class="st-app" data-project="{{ $project->id }}">
         <div class="st-boot" role="status" aria-live="polite">
             <svg class="lt-icon lt-icon--lg lt-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-6.2-8.55"/></svg>

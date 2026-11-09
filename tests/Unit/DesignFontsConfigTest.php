@@ -48,6 +48,20 @@ class DesignFontsConfigTest extends TestCase
         }
     }
 
+    /** The vector PDF embeds TrueType: scripts/fonts/woff2-to-ttf.mjs writes a zlib-compressed .ttf next to every woff2. */
+    public function test_every_woff2_has_a_pdf_ready_ttfz_beside_it(): void
+    {
+        foreach ($this->fonts() as $font) {
+            foreach ($font['files'] as $variant => $path) {
+                $ttfz = public_path(preg_replace('/\.woff2$/', '.ttfz', $path));
+                $this->assertFileExists($ttfz, "{$font['key']} {$variant}: run node scripts/fonts/woff2-to-ttf.mjs");
+                $ttf = zlib_decode((string) file_get_contents($ttfz));
+                $this->assertNotFalse($ttf, "{$ttfz} is not zlib data");
+                $this->assertSame("\x00\x01\x00\x00", substr($ttf, 0, 4), "{$ttfz} is not TrueType");
+            }
+        }
+    }
+
     public function test_weights_and_italics_match_the_files(): void
     {
         foreach ($this->fonts() as $font) {

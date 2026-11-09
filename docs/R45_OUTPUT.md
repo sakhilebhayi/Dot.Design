@@ -85,13 +85,13 @@ Also checked by hand in the browser: every state of the three dialogs and the An
 ## 6. Limitations (honest)
 
 - **Browser canvas limits.** Chrome and Edge allow about 16 384 pixels per side and 268 M pixels per canvas, Firefox about 32 767 per side and 472 M, iOS Safari about 16.7 M pixels in total. We cap at 100 M pixels (10 000 x 10 000) on desktop and 16.7 M on iOS, probe the real canvas and reduce with a message; 600 dpi A3 and larger will be reduced on most devices. Large exports are memory heavy.
-- **PDF is raster only.** One JPEG per page at 150/300/600 dpi (print) or 1x to 3x (screen); text is not selectable; no bleed or crop marks; colour is sRGB, no CMYK. Vector PDF is not claimed.
+- **PDF.** Superseded by the pmod update below: the default is now a vector PDF with real text; the raster PDF remains as "PDF (as pictures)". Colour is still sRGB, no CMYK.
 - **WebM support matrix.** Verified here only in Chrome 157 (vp9 or vp8 through MediaRecorder). Expected to work in current Chrome, Edge and Firefox; Safari records MP4/other containers on most versions, so `isTypeSupported('video/webm')` is false there and the Video tab says so and offers GIF (not tested on Safari or Firefox in this environment). **No MP4.** The tab must stay in front while recording (a hidden tab's timers slow to 1 Hz; the recording stops with a clear message rather than producing slow motion). Chrome writes WebM without a duration header, so the file plays but may not show a length.
 - **GIF.** 256 colours (median cut, no dithering by default) so gradients band; limited by frame count (600 frames cap warning) and memory (360 MB of frame data, the picture is reduced to fit). The estimate is a projection from sampled frames and can be 10% off.
 - **Fonts.** Only the 18 shipped latin-subset families embed; other scripts fall back. SVG with embedded fonts is large (each used weight is a whole woff2 file); the toggle drops them.
 - **Pictures.** Must be same-origin or blob/data (the engine already drops other hosts). A picture that fails to load aborts that export with a specific message instead of leaving a hole.
 - **Animation.** Only top-level elements animate; page transitions appear in exports only (D-1008); "type" reveals characters by count (centre and right aligned text keep their alignment because the hidden part stays in layout); filters, blend modes and shadows are honoured but a 60-element page full of shadows costs paint time.
-- **Resize.** Deterministic heuristics, not design intelligence: it does not know a picture's subject (focal point stays as set), it does not reorder content, it will not drop elements, and a design that changes shape by 3x or more (story to banner, A4 to card) is flagged as needing your check, honestly. Rotated elements are scaled as pieces and not re-wrapped. Bleed and crop marks are not re-derived for print targets. The preview draws icons from the built-in set when the boot JSON does not carry the full icon library.
+- **Resize.** Deterministic heuristics, not design intelligence: it does not know a picture's subject (focal point stays as set), it does not reorder content, it will not drop elements, and a design that changes shape by 3x or more (story to banner, A4 to card) is flagged as needing your check, honestly. Rotated elements are scaled as pieces and not re-wrapped. Bleed and crop marks are not re-derived for print targets (the Download dialog has them, see the pmod update). The preview draws icons from the built-in set when the boot JSON does not carry the full icon library.
 - **Not mine, not built.** "Save a copy to Dot.Files" (collab owns it), MP4, vector PDF, server-side export.
 
 ## 7. Seams other owners should know
@@ -103,3 +103,13 @@ Also checked by hand in the browser: every state of the three dialogs and the An
 - The engine exposes no animation-override hook and no `measure`/`icons`; `animate-apply.js` reads the renderer's `[data-layer=elements] > g[data-id]` frames and the resize dialog builds its own canvas measurer from `studio.fonts`. A `renderer.setOverrides()` and `studio.measure` would remove both couplings.
 - The contract has no bottom dock, so the timeline lives in the left tab; it can move to a dock without changes to `playback.js`.
 - `package.json` `test:js` only globs `tests/js/*.test.mjs`; add `tests/js/output/*.test.mjs` to it when merging.
+
+## 8. pmod update (2026-11-09): vector PDF, print readiness, Animate tab
+
+Full account, evidence and limits: `docs/R45_POLISH_MODULES.md`. Decisions D-2000 to D-2011.
+
+- **Vector PDF** (`vector-pdf.js`, `pdf-font.js`, `pdf-objects.js`, `svg-parse.js`, `export-vector.js`): real text from embedded TrueType (`public/fonts/design/**/*.ttfz`, made by `scripts/fonts/woff2-to-ttf.mjs`), PDF paths, shadings, picture clips and alpha. Per page: anything it cannot reproduce (shadows, picture filters, blend modes, gradient outlines, letters a font lacks, fonts that are not ours) becomes a picture page with a message. Run `node scripts/fonts/woff2-to-ttf.mjs` after adding or changing a font file (a PHP test fails if a `.ttfz` is missing).
+- **Print readiness** (`print-boxes.js`): bleed 0 / 3 / 5 mm, crop marks, TrimBox / BleedBox / CropBox, RGB note, a message for elements that end exactly on the page edge. Print designs are written at 1 unit = 1 pt.
+- **Dialog**: custom controls (`ui/modules/_controls.js`), PDF kind chooser, "Ready for the printer" section, preview that shows the bleed and marks, "Save a copy to Dot.Files" when enabled.
+- **Animate tab**: timeline first (`ui/modules/animate.js`), locale-safe numbers (`output/number-format.js`).
+- **Limits that remain**: no `calt`, no CMYK, fonts embedded whole, Chrome's viewer and Apple's PDFKit are the only viewers used.

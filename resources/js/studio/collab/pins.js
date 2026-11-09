@@ -108,3 +108,83 @@ export function numberThreads(threads) {
     threads.forEach((t, i) => out.set(t.id, i + 1));
     return out;
 }
+
+// ---- marker placement (R-45 pmod) -----------------------------------------------------------------------------------------
+// A pin used to be a teardrop sitting ON the anchor point, so it covered the words under review. Now the anchor is a tiny dot
+// on the design, the numbered marker sits beside it (outside the element's corner when the pin belongs to an element), a thin
+// leader line joins them, and markers push each other apart so two comments about the same place never stack on one spot.
+
+/** Screen-space corners [nw, ne, se, sw] of an element's box (carried through rotation, flip and parent groups), or null. */
+export function elementScreenQuad(view, page, id) {
+    const hit = page ? locate(page.elements, id) : null;
+    if (!hit) return null;
+    const { width: w, height: h } = hit.element;
+    return [[0, 0], [w, 0], [w, h], [0, h]].map(([x, y]) => { const p = applyMatrix(hit.matrix, x, y); return pageToScreen(view, p.x, p.y); });
+}
+
+export const quadBounds = (q) => ({ left: Math.min(...q.map((p) => p.x)), right: Math.max(...q.map((p) => p.x)), top: Math.min(...q.map((p) => p.y)), bottom: Math.max(...q.map((p) => p.y)) });
+
+const DIRS = [[1, -1], [1, 0], [0, -1], [-1, -1], [1, 1], [-1, 0], [0, 1], [-1, 1]];
+
+/**
+ * Where each marker goes. items: [{id, anchor:{x,y}, home:{x,y}}] where `home` is the preferred centre (the element's top-right
+ * corner pushed outwards, or anchor + (14, -14) for a point). Markers are placed in order; one that would touch an earlier
+ * marker is moved along 8 directions at growing distances until it fits inside `bounds` ({width, height}). Pure and deterministic,
+ * so the same comments always land in the same places and a test can pin the behaviour. An item's optional `avoid` box (the
+ * element the comment is about) is kept clear: a marker that has to move never slides onto the words it refers to.
+ * Returns Map(id -> {x, y, moved}).
+ */
+export function layoutMarkers(items, { diameter = 22, gap = 4, bounds = { width: 1000, height: 800 }, margin = 4 } = {}) {
+    const out = new Map();
+    const placed = [];
+    const need = diameter + gap;
+    const r = diameter / 2;
+    const clamp = (p) => ({ x: Math.min(bounds.width - r - margin, Math.max(r + margin, p.x)), y: Math.min(bounds.height - r - margin, Math.max(r + margin, p.y)) });
+    // an item may carry `avoid`: the box of the element it is about; the marker's circle must stay out of it
+    const clear = (p, box) => !box || Math.hypot(Math.max(box.left - p.x, 0, p.x - box.right), Math.max(box.top - p.y, 0, p.y - box.bottom)) >= r;
+    const free = (p, it) => placed.every((q) => Math.hypot(p.x - q.x, p.y - q.y) >= need) && clear(p, it.avoid);
+    for (const it of items) {
+        const home = clamp(it.home);
+        let pick = null;
+        if (free(home, it)) pick = home;
+        for (let ring = 1; !pick && ring <= 10; ring += 1) {
+            for (const [dx, dy] of DIRS) {
+                const cand = clamp({ x: home.x + dx * need * ring * 0.75, y: home.y + dy * need * ring * 0.75 });
+                if (free(cand, it)) { pick = cand; break; }
+            }
+        }
+        if (!pick) pick = home;
+        placed.push(pick);
+        out.set(it.id, { x: pick.x, y: pick.y, moved: Math.hypot(pick.x - home.x, pick.y - home.y) > 0.5 });
+    }
+    return out;
+}
+
+/**
+ * The preferred marker centre. A pin on an element sits just OUTSIDE the nearest edge of the element's box (top first on a tie, then
+ * right, bottom, left), straight out from the anchor, so the marker never lies on the words being discussed and the leader line is
+ * short. A pin on the bare page sits up and to the right of its anchor.
+ */
+export function markerHome(anchor, quad, { diameter = 22, offset = 8 } = {}) {
+    const r = diameter / 2;
+    if (!quad) return { x: anchor.x + 12 + r, y: anchor.y - 12 - r };
+    const b = quadBounds(quad);
+    const d = [['top', anchor.y - b.top], ['right', b.right - anchor.x], ['bottom', b.bottom - anchor.y], ['left', anchor.x - b.left]];
+    let best = d[0];
+    for (const c of d) if (c[1] < best[1] - 6) best = c; // a clear win beats the reading-order preference
+    const cx = Math.min(b.right, Math.max(b.left, anchor.x));
+    const cy = Math.min(b.bottom, Math.max(b.top, anchor.y));
+    if (best[0] === 'top') return { x: cx, y: b.top - offset - r };
+    if (best[0] === 'right') return { x: b.right + offset + r, y: cy };
+    if (best[0] === 'bottom') return { x: cx, y: b.bottom + offset + r };
+    return { x: b.left - offset - r, y: cy };
+}
+
+/** Leader line from the anchor dot to the marker edge, or null when they are already touching. */
+export function leader(anchor, marker, diameter = 22) {
+    const dx = marker.x - anchor.x; const dy = marker.y - anchor.y;
+    const len = Math.hypot(dx, dy);
+    const r = diameter / 2;
+    if (len <= r + 5) return null;
+    return { x1: anchor.x, y1: anchor.y, x2: marker.x - (dx / len) * r, y2: marker.y - (dy / len) * r };
+}

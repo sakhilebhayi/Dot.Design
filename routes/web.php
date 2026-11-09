@@ -11,7 +11,6 @@ use App\Http\Controllers\DesignProjectController;
 use App\Http\Controllers\DesignTokenController;
 use App\Http\Controllers\TokenConsumptionRecordController;
 use App\Http\Controllers\TokenSetController;
-use App\Models\AiGenerationLog;
 use App\Models\DesignAsset;
 use App\Models\DesignCanvas;
 use App\Models\DesignProject;
@@ -65,7 +64,7 @@ Route::middleware([
     'verified',
 ])->group(function () {
     Route::get('/dashboard', function () {
-        // DesignProject/DesignAsset/AiGenerationLog all apply HasUserScope
+        // DesignProject and DesignAsset apply their workspace scope
         // (see app/Models/Concerns/HasUserScope.php), so every query below
         // is already scoped to the authenticated user at the model level --
         // the explicit where('user_id', ...) calls this closure used to
@@ -77,7 +76,6 @@ Route::middleware([
         $recentProjects = DesignProject::where('created_at', '>=', now()->subDays(30))->count();
         $totalCanvases = DesignCanvas::whereHas('project')->count();
         $totalAssets = DesignAsset::count();
-        $aiGenerations = AiGenerationLog::count();
 
         $projects = DesignProject::withCount(['canvases'])
             ->latest()
@@ -87,14 +85,9 @@ Route::middleware([
             ->limit(8)
             ->get();
 
-        $generationsByProvider = AiGenerationLog::selectRaw('provider, count(*) as total')
-            ->groupBy('provider')
-            ->pluck('total', 'provider');
-
         return view('dashboard', compact(
             'totalProjects', 'recentProjects', 'totalCanvases',
-            'totalAssets', 'aiGenerations', 'projects', 'recentAssets',
-            'generationsByProvider'
+            'totalAssets', 'projects', 'recentAssets'
         ));
     })->name('dashboard');
 
@@ -127,7 +120,7 @@ Route::middleware([
     });
 
     // R-45 studio routes (docs/R45_ARCHITECTURE.md section 6): one file per owner so parallel work does not collide.
-    foreach (['backend', 'business', 'collab', 'ai', 'output', 'integrations', 'editorui', 'privacy'] as $studioRoutes) {
+    foreach (['backend', 'business', 'collab', 'ai', 'output', 'integrations', 'editorui', 'privacy', 'ppages'] as $studioRoutes) {
         require __DIR__.'/studio/'.$studioRoutes.'.php';
     }
 

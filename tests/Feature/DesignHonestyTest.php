@@ -76,11 +76,15 @@ class DesignHonestyTest extends TestCase
         $this->assertSame(1, substr_count($html, 'View all'));
     }
 
-    public function test_dashboard_labels_mock_provider_activity(): void
+    public function test_dashboard_does_not_show_mock_provider_activity_at_all(): void
     {
+        // R-45: changed from "labels mock provider activity". Nothing in the product links to the old mock image driver any
+        // more, so the dashboard no longer shows an AI-generation count or a mock block, labelled or not.
         $user = User::factory()->withPersonalTeam()->create();
         AiGenerationLog::create(['user_id' => $user->id, 'prompt' => 'x', 'provider' => 'mock']);
 
-        $this->actingAs($user)->get('/dashboard')->assertOk()->assertSee('Placeholder (no AI provider connected)');
+        $this->actingAs($user)->get('/dashboard')->assertOk()
+            ->assertDontSee('Placeholder (no AI provider connected)')
+            ->assertDontSee('Image requests');
     }
 }

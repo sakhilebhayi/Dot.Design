@@ -27,3 +27,4 @@ Homestead.yaml
 Thumbs.db
 /storage/perf
 /storage/a11y
+/tests/e2e/out

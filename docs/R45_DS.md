@@ -42,3 +42,9 @@ The old editor (`design/projects/show.blade.php`, `public/js/design-editor/`) is
 - No real thumbnails exist yet: frames are neutral on purpose. When `thumbnail_asset_id` ships, put an `<img>` inside `<x-ds.frame :blank="false">`.
 - Team and API-token pages still say "Team" in Livewire form copy while the menus say "workspace".
 - Two screenshots per theme were not kept; only 8 representative JPEGs are in `docs/R45_screens/ds/`.
+
+## Additions by the pages polish (ppages, D-2100 to D-2110)
+- `resources/css/ds/controls.css`: switch (`<input type="checkbox" role="switch" class="lt-switch">`), checkbox and radio drawn by the system, all states, forced-colours. `resources/css/ds/signal.css`: the signal colour (`--lt-signal`, `--lt-signal-ink`, `--lt-signal-wash`), primary-action focus, `.lt-seal`, success-toast seal, `.lt-milestone`. `resources/css/ds/landing-fonts.css` is generated (see `scripts/landing/build-art.mjs`).
+- Components: `<x-ds.design-tile :project :brand-updated>` (Home and Start), `<x-ds.logo>` (full logo, dark lettering or white lettering by theme), `<x-ds.milestone :milestone>` (first-time message). `App\Support\Ui\FontManifest::label($key)` for font names, `Milestones`, `LandingArt`.
+- Contract: never size a checkbox or radio in a component with a global selector; use a class (the base rules are `:where()`). Never write a font name with `Str::headline`; use `FontManifest::label`.
+

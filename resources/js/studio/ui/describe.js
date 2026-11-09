@@ -59,14 +59,70 @@ export function announceSelection(sel) {
 const KIND_LABEL = { rect: 'Rectangle', ellipse: 'Circle', triangle: 'Triangle', star: 'Star', polygon: 'Polygon', line: 'Line', arrow: 'Arrow', path: 'Shape' };
 export const labelForKind = (k) => KIND_LABEL[k] || 'Shape';
 
+const ROLE_NAMES = { headline: 'Headline', subhead: 'Subheading', body: 'Body text', badge: 'Label', cta: 'Button', button: 'Button', caption: 'Caption', contact: 'Contact line', logo: 'Logo', price: 'Price', background: 'Background', photo: 'Picture', image: 'Picture', quote: 'Quote' };
+
+/** Names a template author gives helper shapes ("Subheading block", "Main picture backing"): fine in a file, not in a layer list. */
+export function isDevName(name) {
+    return /(^|\s)(block|backing)$/i.test(String(name).trim());
+}
+
+/**
+ * The name shown in layers and headers: what the person called it, else something a beginner would say
+ * ("Headline", "Picture", "Shape behind subheading"), made from the role, the type and the text.
+ */
+export function friendlyName(e) {
+    const name = typeof e.name === 'string' ? e.name.trim() : '';
+    if (name && !isDevName(name)) return name;
+    if (e.type === 'text') {
+        if (e.role && ROLE_NAMES[e.role]) return ROLE_NAMES[e.role];
+        const t = (e.text || '').replace(/\s+/g, ' ').trim();
+        return t ? t.slice(0, 32) : 'Empty text';
+    }
+    if (e.type === 'image') return /logo/i.test(name + ' ' + (e.role || '')) ? 'Logo' : e.asset_id ? 'Picture' : 'Empty picture';
+    if (e.type === 'icon') return 'Icon';
+    if (e.type === 'group') return 'Group';
+    if (e.type === 'shape') {
+        if (e.role === 'background') return 'Background';
+        if (name) {
+            // "Subheading block" is the box behind the subheading; "Main picture backing" the frame behind the picture.
+            const base = name.replace(/\s*(accent block|backing|block)$/i, '').replace(/^main\s+/i, '').trim().toLowerCase();
+            const lead = /accent block$/i.test(name) ? 'Offset shape behind ' : /backing$/i.test(name) ? 'Frame behind ' : 'Shape behind ';
+            if (base) return lead + base;
+        }
+        return labelForKind(e.kind);
+    }
+    return 'Layer';
+}
+
 /** The label shown in layers and headers for an element. */
 export function elementLabel(e) {
-    if (e.name) return e.name;
-    if (e.type === 'text') return (e.text || '').replace(/\s+/g, ' ').trim().slice(0, 32) || 'Empty text';
-    if (e.type === 'shape') return labelForKind(e.kind);
-    if (e.type === 'image') return e.asset_id ? 'Picture' : 'Picture spot';
-    if (e.type === 'icon') return 'Icon';
-    return 'Group';
+    return friendlyName(e);
+}
+
+/** One line under the panel title: what is selected, without repeating the title ("Text" / "Slow-cooked lamb"). */
+export function selectionSubtitle(sel) {
+    if (!sel.count) return '';
+    if (sel.count > 1) return sel.count + ' items selected';
+    const e = sel.el;
+    if (e.type === 'text') { const t = (e.text || '').replace(/\s+/g, ' ').trim(); return t ? '\u201c' + (t.length > 40 ? t.slice(0, 39) + '\u2026' : t) + '\u201d' : 'Empty text'; }
+    if (e.type === 'image') return sel.emptyPicture ? 'Empty picture spot' : friendlyName(e);
+    return friendlyName(e);
+}
+
+/**
+ * What the page background really looks like. Templates that follow a brand colour draw a full-page backdrop shape
+ * (only elements can carry brand tokens), so the page's own background can be stale underneath it. This returns
+ * the backdrop's fill when one sits at the bottom of the stack, else the page background.
+ * -> {color: '#rrggbb'|null, source: 'page'|'backdrop', elementId?}
+ */
+export function effectiveBackground(page) {
+    const bottom = page.elements && page.elements[0];
+    if (bottom && bottom.type === 'shape' && bottom.kind === 'rect' && !bottom.hidden && typeof bottom.fill === 'string' && /^#[0-9a-f]{6,8}$/i.test(bottom.fill)
+        && bottom.width >= page.width * 0.98 && bottom.height >= page.height * 0.98 && bottom.x <= page.width * 0.01 && bottom.y <= page.height * 0.01 && (bottom.opacity ?? 1) >= 0.99) {
+        return { color: bottom.fill.slice(0, 7).toLowerCase(), source: 'backdrop', elementId: bottom.id };
+    }
+    const bg = page.background;
+    return { color: bg && bg.type === 'solid' && typeof bg.color === 'string' ? bg.color.slice(0, 7).toLowerCase() : null, source: 'page' };
 }
 
 export const typeIcon = (e) => ({ text: 'text', image: 'image', icon: 'sparkle', group: 'group', shape: e.kind === 'ellipse' ? 'circle' : e.kind === 'triangle' ? 'triangle' : e.kind === 'star' ? 'star' : 'square' }[e.type] || 'shape');

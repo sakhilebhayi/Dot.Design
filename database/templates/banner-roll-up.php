@@ -31,7 +31,7 @@ $p->rect($m, 1640, 280, 24, 'accent', ['name' => 'Accent bar']);
 $p->text('Practical help for growing companies.', $m, 1740, $cw, ['size' => 90, 'color' => 'extra', 'lh' => 1.25, 'role' => 'subhead', 'bind' => 'subheadline', 'name' => 'Subheading']);
 $p->photo($m, 2080, $cw - 50, 1250, 'photo_1', 'offset', ['name' => 'Main picture']);
 
-$pts = [['chart-line', 'Clear plans'], ['users', 'Experienced people'], ['shield-check', 'Reliable delivery']];
+$pts = [['chart-line', 'Clear plans'], ['users', 'Friendly people'], ['shield-check', 'Reliable service']];
 $y = 3480;
 foreach ($pts as [$ic, $label]) {
     $p->ellipse($m, $y, 230, 230, 'surface', ['name' => 'Icon disc']);

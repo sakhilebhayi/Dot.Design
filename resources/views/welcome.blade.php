@@ -4,6 +4,10 @@
     $isGuest = ! auth()->check();
     $hrefFor = fn (array $f) => $isGuest ? route('login') : route('design.projects.create').'?format='.$f['key'];
     $primaryHref = $isGuest ? route('login') : route('dashboard');
+    // The artwork is real: library templates drawn by the editor's own renderer (see scripts/landing/build-art.mjs).
+    $art = \App\Support\Ui\LandingArt::manifest();
+    $heroMeta = $art[$first['key']] ?? null;
+    $kitColours = [['#145a3c', 'Main colour'], ['#d4572a', 'Second colour'], ['#f0a030', 'Highlight colour'], ['#1f2933', 'Neutral']];
 @endphp
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
@@ -53,22 +57,30 @@
 
             <div class="lp-table" data-lp-table>
                 <div class="lp-table__stage">
-                    <div class="lt-frame lt-crop lp-sheet" data-lp-sheet style="--w: {{ $first['width'] }}; --h: {{ $first['height'] }}; --crop-len: 12px; --crop-gap: 8px; --crop-c: var(--lt-paper-ink);">
-                        <span class="lp-sheet__name" data-lp-name>{{ $first['name'] }}</span>
-                        <span class="lp-sheet__size" data-lp-size>{{ $first['width'] }} × {{ $first['height'] }} {{ $first['unit'] }}</span>
-                    </div>
+                    <figure class="lp-sheet lt-frame lt-crop @unless($heroMeta) lt-frame--blank @endunless" data-lp-sheet style="--w: {{ $heroMeta['width'] ?? $first['width'] }}; --h: {{ $heroMeta['height'] ?? $first['height'] }}; --crop-len: 12px; --crop-gap: 8px; --crop-c: var(--lt-paper-ink);">
+                        <div class="lp-art" data-lp-art role="img" aria-label="{{ $heroMeta ? $heroMeta['name'].', a library template' : $first['name'] }}">{!! \App\Support\Ui\LandingArt::svg($first['key']) !!}</div>
+                    </figure>
+                </div>
+                <div class="lp-proof">
+                    <p class="lp-caption" data-lp-caption role="status">
+                        @if ($heroMeta)<b data-lp-name>{{ $heroMeta['name'] }}</b>, a ready-made template, drawn by the same code the editor uses at {{ $first['width'] }} × {{ $first['height'] }} {{ $first['unit'] }}.@else<b data-lp-name>{{ $first['name'] }}</b>@endif
+                    </p>
+                    <ul class="lp-colors" data-lp-colors aria-label="Colours in this template">
+                        @foreach (($heroMeta['colors'] ?? []) as $hex)<li role="img" aria-label="{{ $hex }}" style="--c: {{ $hex }}" title="{{ $hex }}"></li>@endforeach
+                    </ul>
                 </div>
                 <div class="lp-table__ruler lt-ruler" aria-hidden="true" style="margin-top: 0;"></div>
                 <div class="lp-formats" role="group" aria-label="Choose a size">
                     @foreach ($formats as $format)
-                        <a href="{{ $hrefFor($format) }}" class="lt-fchip" data-lp-format data-name="{{ $format['name'] }}" data-w="{{ $format['width'] }}" data-h="{{ $format['height'] }}" data-size="{{ $format['width'] }} × {{ $format['height'] }} {{ $format['unit'] }}" data-href="{{ $hrefFor($format) }}" aria-current="{{ $loop->first ? 'true' : 'false' }}">
+                        @php($m = $art[$format['key']] ?? null)
+                        <a href="{{ $hrefFor($format) }}" class="lt-fchip" data-lp-format data-key="{{ $format['key'] }}" data-name="{{ $format['name'] }}" data-w="{{ $m['width'] ?? $format['width'] }}" data-h="{{ $m['height'] ?? $format['height'] }}" data-size="{{ $format['width'] }} × {{ $format['height'] }} {{ $format['unit'] }}" data-href="{{ $hrefFor($format) }}" @if ($m) data-art="{{ \App\Support\Ui\LandingArt::url($format['key']) }}" data-art-name="{{ $m['name'] }}" data-colors="{{ implode(' ', $m['colors']) }}" @endif aria-current="{{ $loop->first ? 'true' : 'false' }}">
                             <span class="lt-fchip__frame" style="--w: {{ $format['width'] }}; --h: {{ $format['height'] }}" aria-hidden="true"></span>
                             <span><span class="lt-fchip__name">{{ $format['name'] }}</span><span class="lt-fchip__size">{{ $format['width'] }} × {{ $format['height'] }} {{ $format['unit'] }}</span></span>
                         </a>
                     @endforeach
                 </div>
                 <div class="lp-cta-line">
-                    <p>Every design starts from a size. Pick one and see it at its true proportions.</p>
+                    <p>Every design starts from a size. Pick one and see a real template at its true proportions.</p>
                     <x-ds.button :href="$hrefFor($first)" variant="secondary" data-lp-cta><span>{{ $isGuest ? 'Log in to start a' : 'Start a' }} <span data-lp-cta-text>{{ $first['name'] }}</span></span></x-ds.button>
                 </div>
             </div>
@@ -88,21 +100,32 @@
             </div>
         </section>
 
-        <section class="lp-section" aria-labelledby="brand-title">
-            <div class="lp-wrap lp-split">
-                <div>
+        <section class="lp-section lp-section--deferred" aria-labelledby="brand-title">
+            <div class="lp-wrap lp-brand">
+                <div class="lp-brand__copy">
                     <h2 id="brand-title" class="lp-h2">Set your brand once</h2>
                     <p class="lp-intro">Add your colours, fonts and logo to a brand kit. New designs start from them. When the kit changes, you choose whether each design follows, so nothing is rewritten behind your back.</p>
-                </div>
-                <div class="lp-kit" role="img" aria-label="Colours, fonts and a logo flow from the brand kit into every new design">
-                    <div class="lp-kit__slots">
-                        <div class="lp-slot"><x-ds.icon name="palette" /><span><b>Colours</b><small>Named, with a role each</small></span></div>
-                        <div class="lp-slot"><x-ds.icon name="text" /><span><b>Fonts</b><small>Heading, body, accent</small></span></div>
-                        <div class="lp-slot"><x-ds.icon name="image" /><span><b>Logo</b><small>Light and dark versions</small></span></div>
+                    <div class="lp-kitcard" aria-label="The example brand kit used on this page">
+                        <p class="lp-kitcard__title">The example kit on the right</p>
+                        <ul class="lp-kitcard__colors">
+                            @foreach ($kitColours as [$hex, $label])<li><span class="lt-swatch__chip" style="--c: {{ $hex }}" aria-hidden="true"></span>{{ $label }} <span class="lt-swatch__value">{{ $hex }}</span></li>@endforeach
+                        </ul>
+                        <p class="lt-small">Heading font Fraunces, body font DM Sans.</p>
                     </div>
-                    <span class="lp-kit__arrow" aria-hidden="true"><x-ds.icon name="arrow-right" /></span>
-                    <span class="lt-frame lt-frame--blank lt-crop" style="--crop-len: 8px; --crop-gap: 6px;"></span>
                 </div>
+                <figure class="lp-ba" aria-label="One template before and after an example brand kit is applied">
+                    <div class="lp-ba__pair @if (($art['brand-before']['width'] ?? 1) > ($art['brand-before']['height'] ?? 1) * 1.2) lp-ba__pair--stack @endif">
+                        @foreach (['brand-before' => 'As the template ships', 'brand-after' => 'With the example kit applied'] as $key => $caption)
+                            @php($bm = $art[$key] ?? null)
+                            <div class="lp-ba__cell">
+                                <span class="lt-frame lt-crop @unless($bm) lt-frame--blank @endunless" style="--w: {{ $bm['width'] ?? 4 }}; --h: {{ $bm['height'] ?? 5 }}; --crop-len: 8px; --crop-gap: 6px; --crop-c: var(--lt-paper-ink);" role="img" aria-label="{{ $caption }}"><span class="lp-art">{!! \App\Support\Ui\LandingArt::svg($key) !!}</span></span>
+                                <span class="lp-ba__cap">{{ $caption }}</span>
+                            </div>
+                            @if ($loop->first)<span class="lp-ba__arrow" aria-hidden="true"><x-ds.icon name="arrow-right" /></span>@endif
+                        @endforeach
+                    </div>
+                    <figcaption class="lt-small">The same template, drawn by the same renderer. Only the brand changed: the words, the layout and the pictures are as they were.</figcaption>
+                </figure>
             </div>
         </section>
 
@@ -138,7 +161,7 @@
             </div>
         </section>
 
-        <section class="lp-wrap lp-close" aria-labelledby="close-title">
+        <section class="lp-wrap lp-close lp-section--deferred" aria-labelledby="close-title">
             <div>
                 <h2 id="close-title" class="lp-h1">Your ideas. Beautifully designed.</h2>
                 <div class="lp-actions">
@@ -147,8 +170,8 @@
             </div>
             <div class="lp-close__table" aria-hidden="true">
                 @foreach (['instagram-post', 'poster', 'presentation'] as $key)
-                    @php($f = \App\Support\Ui\StartFormats::find($key))
-                    <span class="lt-frame lt-crop" style="--w: {{ $f['width'] }}; --h: {{ $f['height'] }}; --crop-len: 8px; --crop-gap: 6px; --crop-c: var(--lt-paper-ink);"></span>
+                    @php($cm = $art['close-'.$key] ?? null)
+                    <span class="lt-frame lt-crop lp-art @unless($cm) lt-frame--blank @endunless" style="--w: {{ $cm['width'] ?? 1 }}; --h: {{ $cm['height'] ?? 1 }}; --crop-len: 8px; --crop-gap: 6px; --crop-c: var(--lt-paper-ink);">{!! \App\Support\Ui\LandingArt::svg('close-'.$key) !!}</span>
                 @endforeach
             </div>
         </section>

@@ -12,6 +12,28 @@ export function actionButton(label, iconName, onClick, { danger, primary, block 
     return h('button', { class: ['lt-btn', !primary && 'lt-btn--secondary', block && 'lt-btn--block', danger && 'st-btn--danger', 'st-btn'], attrs: { type: 'button', 'aria-pressed': pressed === undefined ? null : String(!!pressed), title: title || null }, onClick }, iconName ? icon(iconName) : null, h('span', { text: label }));
 }
 
+/**
+ * A compact icon button for the Arrange row. The accessible name and the tooltip carry the full label; the row's
+ * caption (see iconRow) shows it as visible text on hover and keyboard focus, so a beginner never has to guess.
+ */
+export function iconButton(label, iconName, onClick, { danger, pressed } = {}) {
+    return h('button', { class: ['st-ico', danger && 'st-ico--danger'], attrs: { type: 'button', 'aria-label': label, title: label, 'aria-pressed': pressed === undefined ? null : String(!!pressed) }, data: { label }, onClick }, icon(iconName));
+}
+
+/**
+ * A row of icon buttons with a caption under it. The caption says what the hovered or focused button does;
+ * a destructive button sits apart at the end, behind a divider.
+ */
+export function iconRow(title, buttons, { apart = [], rest = '' } = {}) {
+    const caption = h('p', { class: 'st-ico-hint', attrs: { 'aria-hidden': 'true' }, text: rest });
+    const row = h('div', { class: 'st-icorow', attrs: { role: 'group', 'aria-label': title } }, ...buttons, apart.length ? h('span', { class: 'st-icorow__gap', attrs: { 'aria-hidden': 'true' } }) : null, ...apart);
+    const show = (e) => { const b = e.target.closest('.st-ico'); if (b) caption.textContent = b.dataset.label || ''; caption.classList.toggle('is-danger', !!(b && b.classList.contains('st-ico--danger'))); };
+    const hide = () => { caption.textContent = rest; caption.classList.remove('is-danger'); };
+    row.addEventListener('pointerover', show); row.addEventListener('focusin', show);
+    row.addEventListener('pointerout', hide); row.addEventListener('focusout', hide);
+    return h('div', { class: 'st-group st-group--tight' }, h('h3', { class: 'st-group__title', text: title }), row, caption);
+}
+
 export function rowOf(...nodes) { return h('div', { class: 'st-row' }, ...nodes); }
 /** A row of text buttons that stack when the panel is narrow. */
 export function wrapRow(...nodes) { return h('div', { class: 'st-row st-row--wrap' }, ...nodes); }

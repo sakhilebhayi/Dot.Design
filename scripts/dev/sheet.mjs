@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Renders library data with the REAL engine in headless Chrome and writes PNG contact sheets.
-// Usage: node scripts/dev/sheet.mjs --out <dir> [--data templates.json] [--only a,b] [--per 6] [--h 520] [--w 760] [--width 1600] [--page 2] [--no-placeholders]
+// Usage: node scripts/dev/sheet.mjs --out <dir> [--data templates.json] [--only a,b] [--per 6] [--h 520] [--w 760] [--width 1600] [--page 2] [--no-placeholders] [--placeholders preview]
 //   --kit vivid|dull|navy|pastel [--brief full|long|empty]  instantiate through the real TemplateInstantiator with a brand kit first
 //   --kind templates|icons|elements  (icons and elements draw resources/design/*.json)
 //   data: a file name inside the QA data dir (default: templates.json, exported with design:export-templates).
@@ -33,11 +33,11 @@ try {
     let n = 0;
     for (let i = 0; i < slugs.length; i += per) {
         const group = slugs.slice(i, i + per);
-        const qs = new URLSearchParams({ data, only: group.join(','), h: opt('h', '520'), w: opt('w', '760'), placeholders: args.includes('--no-placeholders') ? '0' : '1', ...(opt('page') ? { page: opt('page') } : {}) });
+        const qs = new URLSearchParams({ data, only: group.join(','), h: opt('h', '520'), w: opt('w', '760'), placeholders: args.includes('--no-placeholders') ? '0' : opt('placeholders', '1'), ...(opt('page') ? { page: opt('page') } : {}) });
         await h.chrome.goto(`${h.base}/qa/sheet.html?${qs}`);
         await h.chrome.eval('new Promise(r => { const t = setInterval(() => { if (window.SHEET_READY) { clearInterval(t); r(); } }, 50); })');
-        const dims = await h.chrome.eval('({w: document.documentElement.scrollWidth, h: document.documentElement.scrollHeight})');
-        await h.chrome.viewport(width, Math.min(dims.h + 20, 4000));
+        const dims = await h.chrome.eval('({w: document.documentElement.scrollWidth, h: Math.ceil(document.getElementById("grid").getBoundingClientRect().height) + 14})');
+        await h.chrome.viewport(width, Math.min(dims.h + 6, 4000));
         const png = await h.chrome.screenshot({ full: true });
         const name = join(out, `${String(++n).padStart(2, '0')}-${group[0]}.png`);
         writeFileSync(name, png);

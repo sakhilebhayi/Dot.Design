@@ -40,10 +40,10 @@ const QA = {
         return normalisePage({ ...page, id: 'qa', revision: 0 }, { project: format });
     },
     /** SVG markup of one raw page exactly as the editor draws it. placeholders=true keeps the "Add a picture" slots. */
-    svg(rawPage, format, { placeholders = true, idPrefix } = {}) {
+    svg(rawPage, format, { placeholders = true, placeholderStyle, idPrefix } = {}) {
         const page = QA.norm(rawPage, format);
         seq += 1;
-        return renderPageToSvgString(page, { forExport: !placeholders, measure, icons, assetUrl: () => null, assetSize: () => null, fonts, idPrefix: idPrefix || `qa${seq}-` });
+        return renderPageToSvgString(page, { forExport: !placeholders, ...(placeholderStyle ? { placeholderStyle } : {}), measure, icons, assetUrl: () => null, assetSize: () => null, fonts, idPrefix: idPrefix || `qa${seq}-` });
     },
     /** Real layout of every text element on a normalised page: [{path,id,name,role,bind,box,layout}] */
     layoutAll(rawPage, format) {

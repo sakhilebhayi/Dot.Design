@@ -64,9 +64,9 @@ test('single PNG is not zipped and is named <design>-<page>-<w>x<h>.png', async 
     assert.equal(res.files[0].name, 'spring-sale-front-400x200.png');
 });
 
-test('PDF: one file, N pages, point sizes from the unit, valid structure', async () => {
+test('PDF as pictures: one file, N pages, point sizes from the unit, valid structure', async () => {
     const deps = stubDeps(pgs());
-    const res = await runExport(deps, { format: 'pdf', pages: [0, 1], pdfTarget: { mode: 'dpi', dpi: 300 } }, { name: 'Flyer', unit: 'mm' }, {});
+    const res = await runExport(deps, { format: 'pdf', pdfMode: 'picture', pages: [0, 1], pdfTarget: { mode: 'dpi', dpi: 300 } }, { name: 'Flyer', unit: 'mm' }, {});
     assert.equal(res.files.length, 1);
     assert.equal(res.files[0].mime, 'application/pdf');
     const parsed = parsePdf(res.files[0].bytes);
@@ -75,8 +75,16 @@ test('PDF: one file, N pages, point sizes from the unit, valid structure', async
     assert.deepEqual(parsed.pages[0].image, { w: Math.round(200 * 300 / 72), h: Math.round(100 * 300 / 72) });
     assert.ok(parsed.pages.every((p) => p.jpegOk));
     assert.match(parsed.info, /\/Title \(Flyer\)/);
-    const px = await runExport(deps, { format: 'pdf', pages: [0], pdfTarget: { mode: 'scale', scale: 2 } }, { name: 'Post', unit: 'px' });
+    const px = await runExport(deps, { format: 'pdf', pdfMode: 'picture', pages: [0], pdfTarget: { mode: 'scale', scale: 2 } }, { name: 'Post', unit: 'px' });
     assert.deepEqual([parsePdf(px.files[0].bytes).pages[0].widthPt, parsePdf(px.files[0].bytes).pages[0].heightPt], [150, 75]); // px pages: 0.75 pt per px
+});
+
+test('PDF (text stays text): a page the vector writer cannot draw is saved as a picture, with a message', async () => {
+    const deps = stubDeps(pgs()); // the stub renderer has no shipped fonts, so every page is refused and falls back
+    const res = await runExport(deps, { format: 'pdf', pages: [0, 1], pdfTarget: { mode: 'dpi', dpi: 150 } }, { name: 'Flyer', unit: 'mm' }, {});
+    assert.equal(res.files[0].mime, 'application/pdf');
+    assert.ok(res.messages.some((m) => /Page 1 is saved as a picture because it uses a font/.test(m)), res.messages.join(' | '));
+    assert.ok(res.messages.some((m) => /text on that page cannot be selected/.test(m)));
 });
 
 test('SVG batch keeps text as text and names files by page', async () => {

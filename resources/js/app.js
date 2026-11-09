@@ -7,3 +7,4 @@ import './ds/toast.js';
 import './ds/view.js';
 import './ds/progress.js';
 import './ds/landing.js';
+import './ds/milestone.js';

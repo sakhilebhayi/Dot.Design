@@ -8,6 +8,20 @@ namespace App\Support\Ui;
  */
 class FontManifest
 {
+    /** The name people read for a font key, from the catalogue ("dm-sans" is "DM Sans"). An unknown key falls back to its words. */
+    public static function label(?string $key): string
+    {
+        $key = (string) $key;
+
+        foreach ((array) config('design_fonts.fonts', []) as $font) {
+            if (is_array($font) && ($font['key'] ?? null) === $key && ! empty($font['label'])) {
+                return (string) $font['label'];
+            }
+        }
+
+        return \Illuminate\Support\Str::headline($key);
+    }
+
     /** @return list<array<string, mixed>> */
     public static function forBrowser(): array
     {

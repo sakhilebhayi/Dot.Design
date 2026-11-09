@@ -57,7 +57,7 @@ class TemplateInstantiator
                 $brandApplied,
                 $warnings,
             );
-            $pages[] = $page;
+            $pages[] = $this->syncBackdrop($page, (int) $template->width, (int) $template->height);
         }
 
         $readable = [];
@@ -75,6 +75,37 @@ class TemplateInstantiator
         $warnings = array_values(array_unique($warnings));
 
         return new InstantiationResult($pages, (int) $template->width, (int) $template->height, $filled, $left, $brandApplied, $warnings, $readable);
+    }
+
+    /**
+     * A template that follows a brand colour draws its page colour as a full-page backdrop shape (only elements can carry
+     * brand tokens), so applying the brand recolours the shape and leaves the page's own background behind it stale (a
+     * green page whose Page inspector said #111111). Keep the two the same colour so every reader of the page background
+     * (the inspector, thumbnails, exports with no backdrop) agrees with what is drawn.
+     *
+     * @param  array<string, mixed>  $page
+     * @return array<string, mixed>
+     */
+    private function syncBackdrop(array $page, int $width, int $height): array
+    {
+        $bg = $page['background'] ?? null;
+        $first = $page['elements'][0] ?? null;
+
+        if (! is_array($bg) || ($bg['type'] ?? null) !== 'solid' || ! is_array($first)) {
+            return $page;
+        }
+
+        $fill = $first['fill'] ?? null;
+        $coversPage = ($first['type'] ?? null) === 'shape' && ($first['kind'] ?? null) === 'rect'
+            && (float) ($first['x'] ?? 1) <= $width * 0.01 && (float) ($first['y'] ?? 1) <= $height * 0.01
+            && (float) ($first['width'] ?? 0) >= $width * 0.98 && (float) ($first['height'] ?? 0) >= $height * 0.98
+            && (float) ($first['opacity'] ?? 1) >= 0.99 && empty($first['hidden']);
+
+        if ($coversPage && is_string($fill) && preg_match('/^#[0-9a-f]{6}$/i', $fill) === 1) {
+            $page['background']['color'] = strtolower($fill);
+        }
+
+        return $page;
     }
 
     /**
@@ -127,8 +158,14 @@ class TemplateInstantiator
             $element['text'] = $text[$bind]['value'];
             $filled[] = $base + ['source' => $text[$bind]['source'], 'type' => 'text'];
 
-            if (($element['autoFit'] ?? 'none') === 'none' && mb_strlen($element['text']) > max(24, (int) (mb_strlen($previous) * 2))) {
-                $warnings[] = 'Some text you added is much longer than the sample text it replaced, so it may not fit. Check the design.';
+            // Words longer than the sample must not run off the page or over their neighbours: the box keeps its size and the
+            // type shrinks to fit it (the engine only shrinks when the text really overflows, so short text is unchanged).
+            if (($element['autoFit'] ?? 'none') === 'none' && mb_strlen($element['text']) > mb_strlen($previous)) {
+                $element['autoFit'] = 'shrink';
+
+                if (mb_strlen($element['text']) > max(24, (int) (mb_strlen($previous) * 2))) {
+                    $warnings[] = 'Some text you added is much longer than the sample text it replaced, so it was made smaller to fit. Check the design.';
+                }
             }
 
             return $element;

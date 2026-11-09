@@ -34,9 +34,10 @@ function setupTheme() {
     const dark = () => (root.getAttribute('data-theme') || (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')) === 'dark';
     const paint = () => {
         const d = dark();
-        btn.setAttribute('aria-pressed', String(d));
-        $('[data-sv-theme-label]', btn).textContent = d ? 'Light' : 'Dark';
-        btn.setAttribute('aria-label', d ? 'Switch to light mode' : 'Switch to dark mode');
+        // the button names what it will do; the icon shows the same thing (a sun to go light, a moon to go dark)
+        $('[data-sv-theme-label]', btn).textContent = d ? 'Light theme' : 'Dark theme';
+        btn.setAttribute('aria-label', d ? 'Switch to light theme' : 'Switch to dark theme');
+        btn.querySelectorAll('[data-sv-theme-icon]').forEach((i) => i.toggleAttribute('hidden', i.getAttribute('data-sv-theme-icon') !== (d ? 'sun' : 'moon')));
     };
     btn.addEventListener('click', () => {
         const next = dark() ? 'light' : 'dark';
@@ -271,8 +272,57 @@ function boot() {
         });
     }
 
+    setupDownload(viewer, stage, doc);
+
     syncPage();
     syncZoom();
+}
+
+/**
+ * "Allow downloads": the buttons exist in the page only when the link allows it. The file is made here, in the browser, by the
+ * same export code the editor uses (so it is the design the visitor is looking at, nothing else), and the code is loaded only
+ * when a button is pressed. Nothing is sent anywhere and no cookie is set.
+ */
+function setupDownload(viewer, stage, doc) {
+    const group = $('[data-sv-download-group]');
+    if (!group) return;
+    const status = $('[data-sv-download-status]', group);
+    const buttons = Array.from(group.querySelectorAll('[data-sv-download]'));
+    group.hidden = false;
+    const say = (t) => { if (status) status.textContent = t; };
+    let busy = false;
+    const studioLike = {
+        root: stage,
+        getState: () => ({ doc: { pages: viewer.pages } }),
+        renderPageToSvgAsync: (i, opts) => viewer.renderPageToSvgAsync(i, opts),
+    };
+    const projectName = (doc.project && doc.project.name) || 'design';
+
+    buttons.forEach((b) => b.addEventListener('click', async () => {
+        if (busy) return;
+        busy = true; buttons.forEach((x) => { x.disabled = true; });
+        const format = b.getAttribute('data-sv-download');
+        say(format === 'pdf' ? 'Making the PDF' : 'Making the picture');
+        try {
+            const [{ runExport }, { browserDeps }, { DEFAULT_SETTINGS }] = await Promise.all([
+                import('../output/export-jobs.js'), import('../output/export-raster.js'), import('../output/presets.js'),
+            ]);
+            const result = await runExport(browserDeps(studioLike), {
+                ...DEFAULT_SETTINGS, format, pages: viewer.pages.map((_, i) => i), sizes: [{ mode: 'scale', scale: 1 }], pdfTarget: { mode: 'scale', scale: 2 }, embedFonts: true,
+            }, { name: projectName, unit: 'px' });
+            const file = result.files[0];
+            const url = URL.createObjectURL(new Blob([file.bytes], { type: file.mime }));
+            const a = document.createElement('a');
+            a.href = url; a.download = file.name; a.rel = 'noopener';
+            document.body.appendChild(a); a.click(); a.remove();
+            setTimeout(() => URL.revokeObjectURL(url), 30000);
+            say(`Download started: ${file.name}`);
+        } catch (e) {
+            say(e && e.message ? e.message : 'The file could not be made. Reload the page and try again.');
+        } finally {
+            busy = false; buttons.forEach((x) => { x.disabled = false; });
+        }
+    }));
 }
 
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot); else boot();

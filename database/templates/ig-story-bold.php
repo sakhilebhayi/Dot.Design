@@ -21,12 +21,14 @@ $p->bg('bg');
 $m = $p->m;
 $cw = $p->cw();
 
-$p->text('Your Business', $m, 250, $cw, ['size' => 34, 'weight' => 700, 'ls' => 0.14, 'case' => 'upper', 'role' => 'logo', 'bind' => 'business_name', 'name' => 'Business name']);
-$p->text("JUST\nLANDED", $m, 320, $cw, ['font' => 'head', 'size' => 184, 'lh' => 0.95, 'ls' => -0.02, 'role' => 'headline', 'bind' => 'headline', 'name' => 'Headline']);
-$p->photo($m, 730, 600, 600, 'photo_1', 'offset', ['name' => 'Product picture', 'accent' => 'extra', 'back' => 'surface']);
-$p->ellipse(640, 1010, 330, 330, 'extra', ['name' => 'Price badge']);
+// Type first, then a full-bleed picture: the picture runs under the app's bottom bar, the copy stays above it.
+$p->text('Your Business', $m, 290, $cw, ['size' => 34, 'weight' => 700, 'ls' => 0.14, 'case' => 'upper', 'role' => 'logo', 'bind' => 'business_name', 'name' => 'Business name']);
+$p->text("JUST\nLANDED", $m, 360, $cw, ['font' => 'head', 'size' => 200, 'lh' => 0.95, 'ls' => -0.02, 'role' => 'headline', 'bind' => 'headline', 'name' => 'Headline']);
+$p->button('Shop now', $m, 808, 460, 120, 'surface', 'accent', ['size' => 44, 'radius' => 60, 'bind' => 'cta']);
+$p->ellipse(690, 750, 300, 300, 'extra', ['name' => 'Price badge']);
 // the text box is the square inside the circle, so a longer price shrinks to stay on the badge
-$p->text("From\nR349", 640 + 48, 1010 + 48, 234, ['font' => 'head', 'size' => 72, 'lh' => 1.0, 'color' => 'surface', 'align' => 'center', 'valign' => 'middle', 'h' => 234, 'role' => 'price', 'bind' => 'price', 'name' => 'Price']);
-$p->button('Shop now', $m, 1430, $cw, 110, 'surface', 'accent', ['size' => 42, 'radius' => 55, 'bind' => 'cta']);
+$p->text("From\nR349", 690 + 44, 750 + 44, 212, ['font' => 'head', 'size' => 64, 'lh' => 1.0, 'color' => 'surface', 'align' => 'center', 'valign' => 'middle', 'h' => 212, 'role' => 'price', 'bind' => 'price', 'name' => 'Price']);
+$p->rect(0, 1092, 1080, 16, 'extra', ['name' => 'Picture accent strip']);
+$p->photo(0, 1108, 1080, 812, 'photo_1', 'plain', ['name' => 'Product picture', 'back' => 'surface']);
 
 return $t->done();

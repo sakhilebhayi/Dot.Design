@@ -71,11 +71,11 @@ class LibraryTemplatesTest extends TestCase
         return $out;
     }
 
-    public function test_the_library_has_between_48_and_60_templates_and_the_index_lists_them_all(): void
+    public function test_the_library_has_between_48_and_72_templates_and_the_index_lists_them_all(): void
     {
         $all = self::all();
         $this->assertGreaterThanOrEqual(48, count($all));
-        $this->assertLessThanOrEqual(60, count($all));
+        $this->assertLessThanOrEqual(72, count($all));
         $index = require dirname(__DIR__, 2).'/database/templates/_index.php';
         $this->assertSame(array_keys($all), array_keys($index), 'database/templates/_index.php must list exactly the template files');
     }

@@ -28,7 +28,7 @@ export function createPreviewRenderer(ctx) {
         if (!page) return;
         const prefix = 'tp' + (++seq) + '-';
         const paint = () => {
-            const markup = renderPageToSvgString(page, { forExport: !placeholders, measure, icons, assetUrl: () => null, assetSize: () => null, fonts, idPrefix: prefix });
+            const markup = renderPageToSvgString(page, { forExport: !placeholders, placeholderStyle: placeholders ? 'preview' : 'none', measure, icons, assetUrl: () => null, assetSize: () => null, fonts, idPrefix: prefix });
             const svg = parseSvg(markup);
             if (svg) { svg.setAttribute('aria-hidden', 'true'); svg.setAttribute('focusable', 'false'); host.replaceChildren(svg); }
         };

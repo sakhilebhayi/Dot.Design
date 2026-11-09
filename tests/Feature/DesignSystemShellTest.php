@@ -240,7 +240,8 @@ class DesignSystemShellTest extends TestCase
     public function test_the_landing_page_has_no_invented_proof_and_no_dashes(): void
     {
         $html = $this->get('/')->assertOk()->getContent();
-        $text = html_entity_decode(strip_tags(preg_replace('#<(script|style)\b.*?</\1>#s', '', $html)));
+        // the drawings are pictures of real library templates (their sample words are part of the picture, not page copy)
+        $text = html_entity_decode(strip_tags(preg_replace('#<(script|style|svg)\b.*?</\1>#s', '', $html)));
 
         $this->assertStringNotContainsString('—', $text);
         $this->assertStringNotContainsString('–', $text);

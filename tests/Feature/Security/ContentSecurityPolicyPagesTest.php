@@ -150,7 +150,7 @@ class ContentSecurityPolicyPagesTest extends TestCase
 
         $html = (string) $response->getContent();
         $this->assertStringContainsString('nonce="'.$m[1].'"', $html);
-        $this->assertMatchesRegularExpression('#<script src="/livewire/livewire\.js[^"]*" nonce="'.preg_quote($m[1], '#').'"#', $html);
+        $this->assertMatchesRegularExpression('#<script src="/livewire/livewire(?:\.min)?\.js[^"]*" nonce="'.preg_quote($m[1], '#').'"#', $html);
         $this->assertMatchesRegularExpression('#<style nonce="'.preg_quote($m[1], '#').'" data-livewire-style>#', $html);
     }
 

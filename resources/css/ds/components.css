@@ -237,7 +237,6 @@ html.is-navigating .lt-navbar { opacity: 1; }
     .lt-textarea { font-size: 1rem; }
     .lt-menu__item { min-height: 2.75rem; }
     .lt-seg > button { min-height: 2.5rem; min-width: 2.75rem; }
-    .lt-check input { width: 1.25rem; height: 1.25rem; }
 }
 
 /* Jetstream flash banner */
@@ -248,7 +247,7 @@ html.is-navigating .lt-navbar { opacity: 1; }
 .lt-banner__text { min-width: 0; }
 
 /* checkbox (Jetstream forms) */
-.lt-checkbox { width: 1rem; height: 1rem; accent-color: var(--lt-accent); border-radius: var(--lt-radius-1); }
+.lt-checkbox { accent-color: var(--lt-accent); }
 
 /* Jetstream form sections */
 .lt-formsection__intro { min-width: 0; }

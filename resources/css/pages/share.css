@@ -4,6 +4,7 @@
 @import '../ds/base.css';
 @import '../ds/vocab.css';
 @import '../ds/components.css';
+@import '../ds/controls.css';
 @import '../ds/a11y.css';
 
 .sv { min-height: 100dvh; display: flex; flex-direction: column; background: var(--lt-ground); }
@@ -12,22 +13,23 @@
 
 /* top bar */
 .sv-bar { display: flex; align-items: center; gap: var(--lt-space-4); padding: var(--lt-space-3) var(--lt-space-5); background: var(--lt-panel); border-bottom: 1px solid var(--lt-rule); }
-.sv-brand { display: inline-flex; align-items: center; gap: var(--lt-space-2); font-family: var(--lt-font-display); font-weight: 600; letter-spacing: -0.015em; color: var(--lt-ink); white-space: nowrap; }
-.sv-mark { width: 1.25rem; height: 1.25rem; border-radius: 50%; background: var(--lt-ink); box-shadow: inset 0 0 0 5px var(--lt-ink), 0 0 0 1px var(--lt-ink); position: relative; }
-.sv-mark::after { content: ""; position: absolute; inset: 5px; border-radius: 50%; background: var(--lt-accent); }
+.sv-brand { display: inline-flex; align-items: center; gap: var(--lt-space-2); font-family: var(--lt-font-display); font-weight: 700; letter-spacing: -0.02em; color: var(--lt-ink); white-space: nowrap; }
+.sv-brand .lt-mark { width: 1.75rem; height: 1.75rem; background-size: 78.75px auto; background-position: -17px -9.6px; }
 .sv-title { min-width: 0; flex: 1; display: grid; gap: 1px; }
 .sv-title h1 { font: 600 var(--lt-text-xl)/1.2 var(--lt-font-display); letter-spacing: -0.015em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .sv-title p { font-size: var(--lt-text-xs); color: var(--lt-ink-3); }
-.sv-theme { min-height: 2.25rem; padding: 0 var(--lt-space-3); border: 1px solid var(--lt-edge); border-radius: var(--lt-radius-2); background: var(--lt-panel); color: var(--lt-ink-2); font-size: var(--lt-text-sm); }
+.sv-theme { display: inline-flex; align-items: center; gap: var(--lt-space-2); min-height: 2.25rem; padding: 0 var(--lt-space-3); border: 1px solid var(--lt-edge); border-radius: var(--lt-radius-2); background: var(--lt-panel); color: var(--lt-ink-2); font-size: var(--lt-text-sm); }
 .sv-theme:hover { background: var(--lt-panel-sunk); color: var(--lt-ink); }
 .js .sv-theme[hidden] { display: inline-flex !important; }
+.sv-theme svg[hidden] { display: none; }
+.sv-theme svg { width: 1rem; height: 1rem; }
 
 /* body: viewer, and the comment column when comments are allowed */
 .sv-body { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr); }
 .sv-view { min-width: 0; display: grid; align-content: start; outline: none; }
 @media (min-width: 62rem) {
     .sv-body:has(.sv-comment:not([hidden])) { grid-template-columns: minmax(0, 1fr) 21rem; }
-    .sv-view { height: calc(100dvh - 3.75rem); grid-template-rows: minmax(0, 1fr); }
+    .sv-view { height: calc(100dvh - 3.75rem - 2.25rem); grid-template-rows: minmax(0, 1fr); }
     .sv-interactive:not([hidden]) { display: grid; grid-template-rows: minmax(0, 1fr) auto auto; min-height: 0; }
 }
 
@@ -37,7 +39,10 @@
 .sv-stage { position: relative; background: var(--lt-stage); height: min(70dvh, 46rem); min-height: 16rem; overflow: hidden; cursor: grab; }
 .sv-stage:active { cursor: grabbing; }
 @media (min-width: 62rem) { .sv-stage { height: auto; min-height: 0; } }
-.sv-stage .studio-stage svg { filter: drop-shadow(0 1px 2px rgb(14 18 22 / 0.18)) drop-shadow(0 8px 20px rgb(14 18 22 / 0.18)); }
+.sv-stage > div > svg { box-shadow: 0 0 0 2px var(--sv-edge), 0 6px 14px rgb(0 0 0 / 0.16), 0 28px 60px -12px rgb(0 0 0 / 0.38); }
+.sv { --sv-edge: rgb(20 24 28 / 0.18); }
+:root[data-theme="dark"] .sv { --sv-edge: rgb(255 255 255 / 0.18); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]):not([data-theme="dark"]) .sv { --sv-edge: rgb(255 255 255 / 0.18); } }
 
 .sv-toolbar { display: flex; flex-wrap: wrap; justify-content: space-between; gap: var(--lt-space-2) var(--lt-space-4); padding: var(--lt-space-2) var(--lt-space-5); background: var(--lt-panel); border-top: 1px solid var(--lt-rule); }
 .sv-toolbar__group { display: flex; align-items: center; gap: var(--lt-space-2); }
@@ -55,6 +60,10 @@
 .sv-thumb[aria-current="true"] { background: var(--lt-accent-wash); color: var(--lt-ink); }
 .sv-thumb[aria-current="true"] .sv-thumb__frame { outline: 2px solid var(--lt-accent); }
 
+/* the public page's own footer */
+.sv-foot { display: grid; align-items: center; height: 2.25rem; padding: 0 var(--lt-space-5); background: var(--lt-panel); border-top: 1px solid var(--lt-rule); font-size: var(--lt-text-xs); color: var(--lt-ink-3); text-align: center; }
+.sv-foot a { color: var(--lt-ink-2); }
+
 /* no-script fallback: every page, stacked, drawn by the server */
 .sv-fallback { display: grid; gap: var(--lt-space-6); padding: var(--lt-space-5); background: var(--lt-stage); justify-items: center; }
 .sv-fallback__page { width: min(100%, 60rem); display: grid; gap: var(--lt-space-2); }
@@ -65,7 +74,7 @@
 /* comment column */
 .sv-comment { padding: var(--lt-space-5); background: var(--lt-panel); display: grid; gap: var(--lt-space-4); align-content: start; border-top: 1px solid var(--lt-rule); }
 .js .sv-comment[hidden] { display: grid !important; }
-@media (min-width: 62rem) { .sv-comment { border-top: 0; border-left: 1px solid var(--lt-rule); height: calc(100dvh - 3.75rem); overflow-y: auto; } }
+@media (min-width: 62rem) { .sv-comment { border-top: 0; border-left: 1px solid var(--lt-rule); height: calc(100dvh - 3.75rem - 2.25rem); overflow-y: auto; } }
 .sv-comment h2 { font: 600 var(--lt-text-lg)/1.3 var(--lt-font-display); letter-spacing: -0.01em; }
 .sv-comment form { display: grid; gap: var(--lt-space-3); }
 .sv-hint { font-size: var(--lt-text-xs); color: var(--lt-ink-3); line-height: 1.5; }
@@ -97,8 +106,12 @@
 .sv-gone p { color: var(--lt-ink-2); font-size: var(--lt-text-md); line-height: 1.55; }
 
 @media (max-width: 40rem) {
-    .sv-bar { padding: var(--lt-space-3) var(--lt-space-4); gap: var(--lt-space-3); }
-    .sv-brand__name { display: none; }
+    /* phone: the wordmark and the theme control share the first row, the design's name gets a full row of its own */
+    .sv-bar { display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "brand theme" "title title"; padding: var(--lt-space-3) var(--lt-space-4); gap: var(--lt-space-2) var(--lt-space-3); }
+    .sv-brand { grid-area: brand; }
+    .sv-theme { grid-area: theme; }
+    .sv-title { grid-area: title; }
+    .sv-title h1 { white-space: normal; font-size: var(--lt-text-lg); }
     .sv-toolbar, .sv-strip, .sv-comment { padding-inline: var(--lt-space-4); }
     .sv-fallback { padding: var(--lt-space-3); }
 }

@@ -21,11 +21,14 @@ $p = $t->page();
 $p->bg('bg');
 $m = $p->m;
 
+// Diagonal split: the picture sits on the right and a slanted field carries the message on the left.
+$p->photo(540, 0, 660, 630, 'photo_1', 'plain', ['name' => 'Main picture', 'back' => 'surface']);
+$p->path('M0,0L742,0L622,630L0,630Z', 0, 0, 742, 630, 'bg', ['name' => 'Message field', 'role' => 'decor']);
+$p->path('M120,0L156,0L36,630L0,630Z', 622, 0, 156, 630, 'accent', ['name' => 'Accent band', 'role' => 'decor']);
 $p->text('Your Business', $m, $m, 400, ['font' => 'head', 'size' => 22, 'ls' => 0.1, 'case' => 'upper', 'color' => 'accent', 'role' => 'logo', 'bind' => 'business_name', 'name' => 'Business name']);
-$y = $p->text("Lunch specials,\nevery weekday", $m, 120, 640, ['font' => 'head', 'size' => 68, 'lh' => 1.03, 'ls' => -0.025, 'role' => 'headline', 'bind' => 'headline', 'name' => 'Headline']);
-$p->text('Fresh, filling and ready in ten minutes. Eat in or take away.', $m, $y + 18, 520, ['size' => 28, 'color' => 'extra', 'lh' => 1.4, 'role' => 'body', 'bind' => 'description', 'name' => 'Description']);
-$p->button('See the menu', $m, 470, 270, 64, 'accent', 'bg', ['size' => 24, 'bind' => 'cta']);
-$p->text(Sample::PHONE, $m + 300, 470, 260, ['font' => 'head', 'size' => 28, 'valign' => 'middle', 'h' => 64, 'role' => 'contact', 'bind' => 'phone', 'name' => 'Phone number']);
-$p->photo(700, 0, 500, 630, 'photo_1', 'tab', ['name' => 'Main picture']);
+$y = $p->text("Lunch specials,\nevery weekday", $m, 120, 490, ['font' => 'head', 'size' => 54, 'lh' => 1.03, 'ls' => -0.025, 'role' => 'headline', 'bind' => 'headline', 'name' => 'Headline']);
+$p->text('Fresh, filling and ready in ten minutes. Eat in or take away.', $m, $y + 14, 410, ['size' => 26, 'color' => 'extra', 'lh' => 1.4, 'role' => 'body', 'bind' => 'description', 'name' => 'Description']);
+$p->button('See the menu', $m, 470, 250, 64, 'accent', 'bg', ['size' => 24, 'bind' => 'cta']);
+$p->text(Sample::PHONE, $m + 270, 470, 180, ['font' => 'head', 'size' => 23, 'valign' => 'middle', 'h' => 64, 'role' => 'contact', 'bind' => 'phone', 'name' => 'Phone number']);
 
 return $t->done();

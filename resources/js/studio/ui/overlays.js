@@ -16,9 +16,10 @@ export function createToasts(root) {
         const kind = opts.kind === 'bad' || opts.kind === 'warn' ? opts.kind : 'ok';
         let timer = null;
         const close = () => { clearTimeout(timer); if (item.parentNode) item.remove(); };
-        const arm = () => { clearTimeout(timer); if (!opts.sticky) timer = setTimeout(close, opts.ms || (opts.action ? Math.max(9000, TOAST_MS[kind]) : TOAST_MS[kind])); };  // a message with an action (Undo) stays longer (WCAG 2.2.1)
-        const item = h('div', { class: `st-toast st-toast--${kind}`, attrs: { role: kind === 'bad' ? 'alert' : 'status' } },
-            icon(kind === 'ok' ? 'circle-check' : kind === 'warn' ? 'triangle-alert' : 'circle-alert'),
+        const arm = () => { clearTimeout(timer); if (!opts.sticky) timer = setTimeout(close, opts.ms || (opts.action ? Math.max(9000, TOAST_MS[kind]) : TOAST_MS[kind])); }; // a message with an action (Undo) stays longer (WCAG 2.2.1)
+        const warm = !!opts.warm && kind === 'ok'; // a milestone: the warm yellow tick (first saved design, approval)
+        const item = h('div', { class: `st-toast st-toast--${kind}${warm ? ' st-toast--warm' : ''}`, attrs: { role: kind === 'bad' ? 'alert' : 'status' } },
+            warm ? h('span', { class: 'st-toast__tick' }, icon('check')) : icon(kind === 'ok' ? 'circle-check' : kind === 'warn' ? 'triangle-alert' : 'circle-alert'),
             h('div', { class: 'st-toast__body', text: String(message) }),
             opts.action ? h('button', { class: 'st-toast__action', attrs: { type: 'button' }, text: opts.action.label, onClick: () => { try { opts.action.onClick(); } finally { close(); } } }) : null,
             h('button', { class: 'st-toast__close', attrs: { type: 'button', 'aria-label': 'Dismiss' }, onClick: close }, icon('x', 'lt-icon--sm')));

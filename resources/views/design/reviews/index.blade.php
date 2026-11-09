@@ -51,7 +51,7 @@
                 <li class="rv-row">
                     <span class="rv-row__stage" aria-hidden="true">
                         @if ($project)
-                            <x-ds.frame :width="$project->width ?: 4" :height="$project->height ?: 3" :blank="! $thumb">@if ($thumb)<img src="{{ $thumb }}" alt="" loading="lazy" width="{{ $project->width }}" height="{{ $project->height }}">@endif</x-ds.frame>
+                            <x-ds.frame :width="$project->width ?: 4" :height="$project->height ?: 3" :src="$thumb" />
                         @endif
                     </span>
                     <div class="rv-row__main">
@@ -71,7 +71,7 @@
                         @endif
                     </div>
                     <div class="rv-row__end">
-                        <x-ds.tag :kind="$kind">{{ $label }}</x-ds.tag>
+                        <x-ds.tag :kind="$kind">@if ($label === 'Approved')<span class="lt-seal" aria-hidden="true"><x-ds.icon name="check" /></span>@endif{{ $label }}</x-ds.tag>
                         @if ($project)
                             <x-ds.button :href="route('design.projects.show', $project)" :variant="$mineToDecide ? 'primary' : 'secondary'" size="sm">{{ $mineToDecide ? 'Open and review' : 'Open' }}</x-ds.button>
                         @endif

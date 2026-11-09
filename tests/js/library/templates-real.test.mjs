@@ -56,8 +56,8 @@ test('the metrics cover every font the editor ships, every weight and italic', (
     }
 });
 
-test('the library has the 58 templates and every text element can shrink to fit', () => {
-    assert.equal(templates.length, 58);
+test('the library has the 64 templates and every text element can shrink to fit', () => {
+    assert.equal(templates.length, 64);
     const walk = (els, out) => { for (const e of els) { if (e.type === 'group') walk(e.children, out); else if (e.type === 'text') out.push(e); } return out; };
     const bad = [];
     for (const t of templates) for (const p of t.pages) for (const e of walk(p.elements, [])) if (e.autoFit !== 'shrink') bad.push(`${t.slug}: ${e.name}`);

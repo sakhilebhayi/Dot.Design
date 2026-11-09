@@ -26,14 +26,17 @@
             }
         }
 
-        // Every other Dot platform, from the shared ecosystem registry (config/ecosystem.php): add one there and it appears here.
-        $currentPlatformName = 'Dot.Design';
-        $discover = collect(config('ecosystem.platforms', []))
-            ->reject(fn ($p) => ($p['name'] ?? null) === $currentPlatformName)
-            ->reject(fn ($p) => ($p['active'] ?? true) === false)
-            ->reject(fn ($p, $k) => ($p['internal'] ?? false) === true || in_array($k, ['memory', 'brain', 'dopemine'], true))
-            ->values()
-            ->all();
+        // Where to go next: at most three places that are useful from an error, never a directory of every platform.
+        $signedIn = false;
+        try { $signedIn = auth()->check(); } catch (\Throwable $e) { /* maintenance mode and early failures have no session */ }
+        $destinations = [];
+        if ($signedIn) {
+            foreach ([['design.projects.index', 'Your designs'], ['design.templates.index', 'Templates'], ['design.brand.index', 'Brand']] as [$routeName, $label]) {
+                if (Route::has($routeName)) { $destinations[] = ['url' => route($routeName), 'label' => $label]; }
+            }
+        } elseif (Route::has('login')) {
+            $destinations[] = ['url' => route('login'), 'label' => 'Log in'];
+        }
     @endphp
     @if (! empty($viteEntries))
         @vite($viteEntries)
@@ -58,15 +61,15 @@
                 @yield('actions')
             </div>
 
-            @if (! empty($discover))
-                <section aria-label="The rest of the Dot Ecosystem" style="width: 100%; padding-top: var(--lt-space-5); border-top: 1px solid var(--lt-rule); display: grid; gap: var(--lt-space-3);">
-                    <p class="lt-small">While you are here: the rest of the Dot Ecosystem ({{ count($discover) }})</p>
-                    <ul class="lt-strip" style="gap: var(--lt-space-2);">
-                        @foreach ($discover as $platform)
-                            <li><a href="{{ $platform['url'] }}" class="lt-chip"><span class="lt-swatch__chip" style="--c: {{ preg_match('/^#[0-9a-fA-F]{3,8}$/', $platform['accent'] ?? '') ? $platform['accent'] : 'transparent' }}; width: 0.875rem; height: 0.875rem;" aria-hidden="true"></span>{{ $platform['name'] }}</a></li>
+            @if (! empty($destinations))
+                <nav aria-label="Other places to go" class="lt-errorpage__next">
+                    <p class="lt-small">Or go to</p>
+                    <ul>
+                        @foreach ($destinations as $destination)
+                            <li><a href="{{ $destination['url'] }}">{{ $destination['label'] }}</a></li>
                         @endforeach
                     </ul>
-                </section>
+                </nav>
             @endif
 
             <p class="lt-meta">&copy; {{ date('Y') }} Dot.Design

@@ -59,6 +59,28 @@ final class Formats
         'ebook-6x9' => [432, 648, [36.9, 36.9, 36.9, 36.9]],
     ];
 
+    /** Full-screen vertical formats whose top and bottom are covered by the app's own interface. */
+    public const VERTICAL_STORIES = ['instagram-story', 'whatsapp-status', 'tiktok-cover'];
+
+    /**
+     * Stricter than the catalogue for stories (R-45 jury): copy, icons and buttons stay below the top 14% (profile bar)
+     * and above the bottom 22% (reply bar, caption, swipe-up; TikTok keeps its 25% caption band). Pictures and colour
+     * may still bleed into these bands, so the screen never looks empty there.
+     *
+     * @return array{0:float,1:float,2:float,3:float} top, right, bottom, left in px
+     */
+    public static function copyZone(string $key): array
+    {
+        $s = self::safe($key);
+        if (in_array($key, self::VERTICAL_STORIES, true)) {
+            $h = self::TABLE[$key][1];
+            $s[0] = max($s[0], round($h * 0.14, 1));
+            $s[2] = max($s[2], $key === 'tiktok-cover' ? 480 : round($h * 0.22, 1));
+        }
+
+        return $s;
+    }
+
     public static function size(string $key): array
     {
         $f = self::TABLE[$key] ?? throw new \InvalidArgumentException("Unknown format: {$key}");

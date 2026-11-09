@@ -63,7 +63,7 @@ a:not([class]):hover { text-decoration-color: currentColor; }
 ::-webkit-scrollbar { width: 10px; height: 10px; }
 ::-webkit-scrollbar-thumb { background: var(--lt-rule-strong); border-radius: 10px; border: 2px solid transparent; background-clip: content-box; }
 input::placeholder, textarea::placeholder { color: var(--lt-ink-3); opacity: 1; }
-input[type="checkbox"], input[type="radio"] { accent-color: var(--lt-accent); width: 1rem; height: 1rem; }
+input[type="checkbox"], input[type="radio"] { accent-color: var(--lt-accent); } /* drawn in controls.css; accent-color stays as the fallback */
 ::-webkit-calendar-picker-indicator { filter: var(--lt-picker-filter, none); }
 :root[data-theme="dark"] { --lt-picker-filter: invert(0.85); }
 

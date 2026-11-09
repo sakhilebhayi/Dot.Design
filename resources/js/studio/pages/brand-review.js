@@ -71,7 +71,7 @@ function solidFill(el) {
 }
 
 /** Flatten a page's elements into drawable boxes in page coordinates, in drawing order (later is on top). Rotation is not modelled. */
-function flatten(elements, ox = 0, oy = 0, out = []) {
+export function flatten(elements, ox = 0, oy = 0, out = []) {
     for (const el of elements || []) {
         if (!el || typeof el !== 'object' || el.hidden) continue;
         const x = (el.x || 0) + ox;
@@ -138,4 +138,14 @@ function describe(a) {
     const shown = Math.round(a.ratio * 10) / 10;
     const level = a.ratio < 3 ? 'Hard to read' : a.large ? 'Fine for large text only' : 'Hard to read at this size';
     return `${a.name} on page ${a.pageNumber}: ${level} (${shown} to 1).`;
+}
+
+/**
+ * The boxes (page units) of the elements the given changes touch on one page, so a preview can outline exactly what differs.
+ * `selectedOnly` limits it to ticked changes. Pure.
+ */
+export function changedBoxes(page, items, selected = null) {
+    const wanted = new Set(items.filter((i) => i.page_id === page.id && (!selected || selected.has(i.key))).map((i) => i.element_id));
+    if (!wanted.size) return [];
+    return flatten(page.elements).filter((b) => wanted.has(b.el.id) && b.w > 0 && b.h > 0).map((b) => ({ id: b.el.id, x: b.x, y: b.y, w: b.w, h: b.h }));
 }
