@@ -42,6 +42,11 @@ export function resizeBox(box, handle, dx, dy, options = {}) {
     const sx = handle.includes('e') ? 1 : handle.includes('w') ? -1 : 0;
     const sy = handle.includes('s') ? 1 : handle.includes('n') ? -1 : 0;
     const local = rotateVector(dx, dy, -rotation);
+    // a flipped element's handles sit on the opposite side: its local axes are mirrored
+    const fx = options.flipX ? -1 : 1;
+    const fy = options.flipY ? -1 : 1;
+    local.x *= fx;
+    local.y *= fy;
     const k = options.fromCenter ? 2 : 1;
 
     let width = box.width + sx * local.x * k;
@@ -63,7 +68,7 @@ export function resizeBox(box, handle, dx, dy, options = {}) {
     let cx = box.x + box.width / 2;
     let cy = box.y + box.height / 2;
     if (!options.fromCenter) {
-        const shift = rotateVector((sx * (width - box.width)) / 2, (sy * (height - box.height)) / 2, rotation);
+        const shift = rotateVector((fx * sx * (width - box.width)) / 2, (fy * sy * (height - box.height)) / 2, rotation);
         cx += shift.x;
         cy += shift.y;
     }

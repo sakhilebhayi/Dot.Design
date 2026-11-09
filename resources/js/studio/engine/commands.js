@@ -89,7 +89,7 @@ function fitText(el, env) {
 }
 
 function normOpts(env, extra = {}) {
-    return { fontKeys: env.fontKeys || undefined, assetExists: env.assetExists || undefined, ...extra };
+    return { fontKeys: env.fontKeys || undefined, ...extra };
 }
 
 function sameLevel(page, ids) {
@@ -465,7 +465,7 @@ function paste(state, args, env) {
         } else if (Array.isArray(elements)) {
             const issues = [];
             const t0 = new Set();
-            elements = elements.map((e) => normaliseElement(e, normOpts(env, { issues, taken: t0, genId: idMaker(env, t0) }))).filter(Boolean);
+            elements = elements.map((e) => normaliseElement(e, normOpts(env, { issues, taken: t0, genId: idMaker(env, t0), assetExists: env.assetExists || undefined }))).filter(Boolean);
         }
         if (!elements || !elements.length) return err('empty', 'Nothing to paste.');
         const taken = collectIds(page.elements);

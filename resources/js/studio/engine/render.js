@@ -65,10 +65,26 @@ export function toDom(node, doc) {
     return el;
 }
 
+const XML_NS = 'http://www.w3.org/XML/1998/namespace';
+
+// `style` and `xml:space` are applied through the DOM APIs (CSSOM / setAttributeNS), never as
+// markup-parsed attributes, so an enforced CSP without 'unsafe-inline' for styles keeps working.
+function setAttr(el, k, v) {
+    if (k === 'style') el.style.cssText = v;
+    else if (k.startsWith('xml:')) el.setAttributeNS(XML_NS, k, v);
+    else el.setAttribute(k, v);
+}
+
+function removeAttr(el, k) {
+    if (k === 'style') el.style.cssText = '';
+    else if (k.startsWith('xml:')) el.removeAttributeNS(XML_NS, k.slice(4));
+    else el.removeAttribute(k);
+}
+
 function setAttrs(el, attrs) {
     const keep = new Set();
-    for (const [k, v] of cleanAttrs(attrs)) { el.setAttribute(k, v); keep.add(k); }
-    for (const k of Object.keys(attrs)) if (!keep.has(k) && el.hasAttribute(k)) el.removeAttribute(k);
+    for (const [k, v] of cleanAttrs(attrs)) { setAttr(el, k, v); keep.add(k); }
+    for (const k of Object.keys(attrs)) if (!keep.has(k)) removeAttr(el, k);
 }
 
 /** URLs allowed in <image href>. Everything else (javascript:, data:text/html, …) is dropped. */
@@ -242,7 +258,7 @@ function textNodes(el, ctx) {
         'letter-spacing': ls ? `${fmt(ls)}px` : null,
         'text-anchor': lay.anchor === 'start' ? null : lay.anchor,
         'text-decoration': dec || null,
-        style: 'white-space:pre',
+        'xml:space': 'preserve',
     };
     if (el.stroke && el.stroke.width > 0) {
         attrs.stroke = el.stroke.color;
