@@ -27,7 +27,9 @@ class DesignCopyController extends StudioController
 {
     public function store(Request $request, DesignProject $project, Formats $formats, DocumentSanitiser $sanitiser, ProjectAssets $assets, ProjectMeta $meta, ActivityLog $activity): JsonResponse
     {
-        $this->authorize('view', $project);
+        // A copy is an editable duplicate in the caller's own workspace, so it needs the same right as taking a file out:
+        // a Reviewer (view, comment, approve) or a named reviewer must not be able to walk away with the design.
+        $this->authorize('export', $project);
         $this->authorize('create', DesignProject::class);
 
         $data = $request->validate([

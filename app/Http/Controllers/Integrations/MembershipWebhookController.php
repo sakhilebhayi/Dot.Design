@@ -7,6 +7,7 @@ use App\Services\Integrations\InfoDot\ApplyMembershipChange;
 use App\Services\Integrations\InfoDot\SignedMembershipRequest;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 
@@ -22,6 +23,15 @@ class MembershipWebhookController extends Controller
             Log::warning('Membership webhook refused.', ['reason' => 'switched off, not configured, or bad or stale signature']);
 
             return response()->json(['error' => 'invalid_request'], 401);
+        }
+
+        // A signed request is good for five minutes, so a captured one could be replayed inside that window (an old role change
+        // landing after a newer one). The signature is remembered a little longer than the window: a second delivery of the
+        // same request is acknowledged and not applied again (R-45 security S-10).
+        $seen = 'infodot-membership:'.hash('sha256', (string) $request->header('X-InfoDot-Signature'));
+
+        if (! Cache::add($seen, 1, 900)) {
+            return response()->json(['ok' => true], 202);
         }
 
         $change = Validator::make((array) json_decode($request->getContent(), true), [

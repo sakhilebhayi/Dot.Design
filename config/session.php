@@ -169,7 +169,9 @@ return [
     |
     */
 
-    'secure' => env('SESSION_SECURE_COOKIE'),
+    // Secure whenever the app is served over https (derived from APP_URL), unless SESSION_SECURE_COOKIE says otherwise: a session
+    // cookie that can travel over plain http is a session that can be read off the wire (R-45 security S-8).
+    'secure' => env('SESSION_SECURE_COOKIE', str_starts_with((string) env('APP_URL', ''), 'https://')),
 
     /*
     |--------------------------------------------------------------------------

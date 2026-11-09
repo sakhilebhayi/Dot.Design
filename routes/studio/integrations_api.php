@@ -8,5 +8,5 @@ use Illuminate\Support\Facades\Route;
 
 // InfoDot -> Design: a company's membership changed. Answers 401 for everything unless DESIGN_INTEGRATION_MEMBERSHIP is on and the signature is valid.
 Route::post('ecosystem/membership', MembershipWebhookController::class)
-    ->middleware('throttle:60,1')
+    ->middleware(['throttle:60,1', \App\Http\Middleware\LimitRequestBody::class.':65536'])
     ->name('design.integrations.membership');

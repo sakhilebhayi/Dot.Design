@@ -1,4 +1,5 @@
 > **Status (R-45, 2026-11-09): checklist, not an audit.** The items are generic OWASP guidance; the shipped controls (workspace scope with 404-not-403, the document sanitiser, GD re-encoding of uploads, hashed share tokens, security headers with a report-only CSP, HMAC-signed integrations) are described in `docs/R45_BACKEND.md`, `docs/R45_ARCHITECTURE.md` and, when present, `docs/R45_SECURITY.md`. Ticking an item here does not mean it was verified.
+> R-45 update (2026-11-09): the studio's security review, findings and the enforced Content-Security-Policy are in `docs/R45_SECURITY.md`; the POPIA record is `docs/R45_PRIVACY.md`. Where this older document says the policy is report-only or names the Tailwind CDN, those documents are current.
 
 # Security Improvements
 

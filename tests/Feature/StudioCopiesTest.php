@@ -191,11 +191,13 @@ class StudioCopiesTest extends TestCase
         $this->copy($reviewer->fresh(), $source, $body)->assertForbidden();
         $this->assertSame($before, DB::table('design_projects')->count());
 
-        // a viewer who has a personal workspace is placed there, never in the workspace that only lets them look
+        // R-45 security S-1: a reviewer who has a personal workspace of their own may not make an editable copy there either:
+        // a copy takes the design out of the workspace, which is the Export capability a Reviewer does not have.
         $viewer = $w['viewer'];
         $viewer->forceFill(['current_team_id' => $w['team']->id])->save();
-        $res = $this->copy($viewer->fresh(), $source, $body)->assertCreated();
-        $this->assertSame($viewer->personalTeam()->id, (int) DesignProject::withoutGlobalScopes()->find($res->json('id'))->team_id);
+        $before = DB::table('design_projects')->count();
+        $this->copy($viewer->fresh(), $source, $body)->assertForbidden();
+        $this->assertSame($before, DB::table('design_projects')->count());
     }
 
     public function test_guests_cannot_copy(): void

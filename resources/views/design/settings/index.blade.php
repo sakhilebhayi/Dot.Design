@@ -43,6 +43,9 @@
     @if (\Illuminate\Support\Facades\Route::has('design.integrations.index'))
         <p class="lt-small" style="margin-top: var(--lt-space-6);">Looking for what Dot.Design is connected to? <a href="{{ route('design.integrations.index') }}">See connections to other Dot platforms</a>.</p>
     @endif
+    @if (\Illuminate\Support\Facades\Route::has('design.settings.my-data'))
+        <p class="lt-small" style="margin-top: var(--lt-space-3);">Your information: <a href="{{ route('design.settings.my-data') }}" download>download a copy of everything Dot.Design holds about you</a> (one file). To delete your account, use Profile and security.</p>
+    @endif
 
     <script type="application/json" id="settings-boot">{!! json_encode($boot, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_SLASHES) !!}</script>
 </div>

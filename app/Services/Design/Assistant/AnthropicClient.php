@@ -86,7 +86,7 @@ class AnthropicClient implements ModelClient
 
         for ($attempt = 1; $attempt <= $attempts; $attempt++) {
             try {
-                $response = Http::withHeaders([
+                $response = Http::withoutRedirecting()->withHeaders([
                     'x-api-key' => (string) config('design_ai.api_key'),
                     'anthropic-version' => (string) config('design_ai.api_version'),
                 ])

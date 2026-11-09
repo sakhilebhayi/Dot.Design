@@ -79,7 +79,8 @@ class FilesVault implements FileVault
             $timestamp = (string) now()->timestamp;
             $timeout = max(1, (int) config('design_integrations.files.timeout', 20));
 
-            $response = Http::timeout($timeout)
+            $response = Http::withoutRedirecting()
+                ->timeout($timeout)
                 ->connectTimeout(5)
                 ->acceptJson()
                 ->withHeaders([

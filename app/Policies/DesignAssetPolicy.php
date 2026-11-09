@@ -19,6 +19,10 @@ class DesignAssetPolicy
     /** Rename, re-file, re-tag: the uploader's call only. */
     public function update(User $user, DesignAsset $asset): bool
     {
+        if ($asset->license === 'brand' && $asset->team_id !== null) {
+            return DesignAccess::canDeleteAsset($user, $asset);
+        }
+
         return (int) $asset->user_id === $user->id;
     }
 

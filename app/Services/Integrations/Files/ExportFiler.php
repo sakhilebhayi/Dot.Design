@@ -121,8 +121,89 @@ class ExportFiler
             throw new IntegrationRefused('That file is not a valid '.strtoupper($format).'.');
         }
 
-        if ($format === 'svg' && preg_match('/<script|javascript:|<foreignObject|\son[a-z]+\s*=/i', $bytes)) {
-            throw new IntegrationRefused('That SVG contains scripting and cannot be saved to Dot.Files.');
+        if ($format === 'svg') {
+            $this->assertInertSvg($bytes);
+        }
+    }
+
+    /** Elements an exported poster never needs and a hostile SVG would use to run code, move the viewer or phone home. */
+    private const SVG_FORBIDDEN_ELEMENTS = [
+        'script', 'foreignobject', 'iframe', 'embed', 'object', 'audio', 'video', 'canvas', 'set', 'animate', 'animatetransform', 'animatemotion',
+        'handler', 'listener', 'discard', 'html', 'body', 'meta', 'link',
+    ];
+
+    /**
+     * Read the SVG as XML (no DTD, no entities, no network) and refuse anything active: scripts and embedded documents, event
+     * handlers, links that are not a same-file fragment or an embedded image, and styles that load from elsewhere. The text a
+     * person typed on the poster is element content, already escaped by the exporter, so words such as "onion = tasty" pass.
+     *
+     * @throws IntegrationRefused
+     */
+    private function assertInertSvg(string $bytes): void
+    {
+        $refuse = fn (string $why) => new IntegrationRefused('That SVG contains '.$why.' and cannot be saved to Dot.Files.');
+
+        // A DTD is how an SVG pulls in files or blows up memory with nested entities: an export never has one.
+        if (preg_match('/<!DOCTYPE|<!ENTITY|<\?xml-stylesheet/i', $bytes)) {
+            throw $refuse('a DTD, entity or stylesheet instruction');
+        }
+
+        $reader = new \XMLReader;
+        $previous = libxml_use_internal_errors(true);
+
+        try {
+            if (! $reader->XML($bytes, 'UTF-8', LIBXML_NONET | LIBXML_NOCDATA)) {
+                throw new IntegrationRefused('That is not a valid SVG.');
+            }
+
+            $inStyle = false;
+
+            while (@$reader->read()) {
+                if ($reader->nodeType === \XMLReader::ELEMENT) {
+                    $name = strtolower($reader->localName);
+                    $inStyle = $name === 'style' && ! $reader->isEmptyElement;
+
+                    if (in_array($name, self::SVG_FORBIDDEN_ELEMENTS, true)) {
+                        throw $refuse('an active element ('.$name.')');
+                    }
+
+                    if ($reader->hasAttributes && $reader->moveToFirstAttribute()) {
+                        do {
+                            $attribute = strtolower($reader->localName);
+                            $value = trim((string) $reader->value);
+
+                            if (str_starts_with($attribute, 'on')) {
+                                throw $refuse('an event handler');
+                            }
+
+                            if (in_array($attribute, ['href', 'src'], true) && ! preg_match('/^(#[\w.:-]*|data:image\/(png|jpe?g|webp|gif);base64,[A-Za-z0-9+\/=\s]*)$/i', $value)) {
+                                throw $refuse('a link that leaves the file');
+                            }
+
+                            if (preg_match('/^\s*(javascript|vbscript|data:text)/i', $value) || preg_match('/expression\s*\(|@import|url\(\s*[\'"]?(?!#|data:(image|font))/i', $value)) {
+                                throw $refuse('active or external content in an attribute');
+                            }
+                        } while ($reader->moveToNextAttribute());
+
+                        $reader->moveToElement();
+                    }
+                } elseif ($inStyle && in_array($reader->nodeType, [\XMLReader::TEXT, \XMLReader::CDATA], true)
+                    && preg_match('/@import|expression\s*\(|url\(\s*[\'"]?(?!#|data:(image|font))/i', (string) $reader->value)) {
+                    throw $refuse('a style that loads from elsewhere');
+                } elseif ($reader->nodeType === \XMLReader::END_ELEMENT && strtolower($reader->localName) === 'style') {
+                    $inStyle = false;
+                } elseif ($reader->nodeType === \XMLReader::DOC_TYPE || $reader->nodeType === \XMLReader::ENTITY_REF) {
+                    throw $refuse('a DTD or entity');
+                }
+            }
+
+            if (libxml_get_errors() !== []) {
+                throw new IntegrationRefused('That is not a valid SVG.');
+            }
+        } finally {
+            $reader->close();
+            libxml_clear_errors();
+            libxml_use_internal_errors($previous);
         }
     }
 

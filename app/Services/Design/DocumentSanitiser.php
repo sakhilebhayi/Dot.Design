@@ -292,6 +292,11 @@ final class DocumentSanitiser
         }
 
         if ($type === 'group' && $depth > (int) $this->schema->limit('max_group_depth')) {
+            if (! $run->strict) {
+                // A read never throws: a stored group nested too deep is dropped and counted (R-45 security S-4).
+                return $this->unusable($run, $path, 'Groups are nested too deeply.');
+            }
+
             throw new DocumentRejected('Groups can be nested at most '.$this->schema->limit('max_group_depth').' levels deep.', [$path => ['Groups are nested too deeply.']]);
         }
 

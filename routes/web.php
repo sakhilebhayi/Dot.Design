@@ -59,6 +59,7 @@ Route::get('/cookies', function () {
 })->name('cookies');
 
 Route::middleware([
+    \App\Http\Middleware\RefuseBearerTokens::class,
     'auth:sanctum',
     config('jetstream.auth_session'),
     'verified',
@@ -126,7 +127,7 @@ Route::middleware([
     });
 
     // R-45 studio routes (docs/R45_ARCHITECTURE.md section 6): one file per owner so parallel work does not collide.
-    foreach (['backend', 'business', 'collab', 'ai', 'output', 'integrations', 'editorui'] as $studioRoutes) {
+    foreach (['backend', 'business', 'collab', 'ai', 'output', 'integrations', 'editorui', 'privacy'] as $studioRoutes) {
         require __DIR__.'/studio/'.$studioRoutes.'.php';
     }
 

@@ -10,6 +10,7 @@ use App\Services\Design\ProjectAssets;
 use App\Services\Design\ShareService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -27,10 +28,14 @@ class PublicShareController extends Controller
 
     public function show(Request $request, string $token): Response
     {
+        if ($this->probing($request)) {
+            return $this->tooMany();
+        }
+
         $share = $this->shares->findActive($token);
 
         if ($share === null) {
-            return $this->unavailable();
+            return $this->unavailable($request);
         }
 
         $this->shares->recordView($share);
@@ -55,10 +60,14 @@ class PublicShareController extends Controller
     /** A short-lived signed URL for one picture of the shared project. The link must still be live. */
     public function asset(Request $request, string $token, int $asset, ProjectAssets $assets): Response
     {
+        if ($this->probing($request)) {
+            return $this->tooMany();
+        }
+
         $share = $this->shares->findActive($token);
 
         if ($share === null) {
-            return $this->unavailable();
+            return $this->unavailable($request);
         }
 
         $row = in_array($asset, $assets->referencedIds($share->project), true)
@@ -67,13 +76,14 @@ class PublicShareController extends Controller
 
         if ($row === null || ! $row->isStoredUpload() || ! in_array($row->mime_type, DesignAsset::SERVABLE_MIME_TYPES, true)
             || ! Storage::disk($row->disk)->exists($row->file_path)) {
-            return $this->unavailable();
+            return $this->unavailable($request);
         }
 
         $response = Storage::disk($row->disk)->response($row->file_path, null, [
             'Content-Type' => $row->mime_type,
             'Content-Disposition' => 'inline',
             'Content-Security-Policy' => "default-src 'none'; sandbox",
+            'Cross-Origin-Resource-Policy' => 'same-origin',
         ]);
 
         return $response;
@@ -81,10 +91,23 @@ class PublicShareController extends Controller
 
     public function comment(Request $request, string $token): JsonResponse
     {
+        if ($this->probing($request)) {
+            return response()->json(['message' => 'Too many attempts. Wait a few minutes and try again.'], 429);
+        }
+
         $share = $this->shares->findActive($token);
 
         if ($share === null || $share->permission !== 'comment') {
+            $this->recordMiss($request);
+
             return response()->json(['message' => 'This link is not available.'], 404);
+        }
+
+        // A ceiling on one link however many addresses a spammer comes from: the per-visitor throttle alone does not stop a botnet.
+        $perLink = (int) config('design.studio.public_comments_per_link_per_day', 200);
+
+        if (RateLimiter::tooManyAttempts('share-comments:'.$share->id, $perLink)) {
+            return response()->json(['message' => 'This link has received a lot of comments today. Try again tomorrow, or contact the person who shared it.'], 429);
         }
 
         // A field real visitors never see. A bot that fills it gets the same answer as a person and nothing is stored.
@@ -114,14 +137,44 @@ class PublicShareController extends Controller
         }
 
         $comment = $this->shares->addGuestComment($share, ['guest_name' => $name, 'body' => $body] + $data);
+        RateLimiter::hit('share-comments:'.$share->id, 86400);
 
         return response()->json(['status' => 'created', 'comment' => [
             'id' => $comment->id, 'guest_name' => $comment->guest_name, 'body' => $comment->body, 'created_at' => $comment->created_at?->toIso8601String(),
         ]], 201);
     }
 
-    private function unavailable(): Response
+    /**
+     * Link probing control: a visitor who keeps asking for links that do not work is stopped, however the tokens vary
+     * (the ordinary throttle is keyed by link, so a different guess each time would never meet it). Real viewers never
+     * fail, so they never count. Only a hash of the address is used as the key and it lives for ten minutes.
+     */
+    private function probing(Request $request): bool
     {
+        return RateLimiter::tooManyAttempts($this->probeKey($request), (int) config('design.studio.public_misses_per_ten_minutes', 30));
+    }
+
+    private function recordMiss(Request $request): void
+    {
+        RateLimiter::hit($this->probeKey($request), 600);
+    }
+
+    private function probeKey(Request $request): string
+    {
+        return 'share-probe:'.hash('sha256', (string) $request->ip());
+    }
+
+    private function tooMany(): Response
+    {
+        return response()->view('design.share-unavailable', ['message' => 'Too many attempts. Wait a few minutes and try again.'], 429);
+    }
+
+    private function unavailable(?Request $request = null): Response
+    {
+        if ($request !== null) {
+            $this->recordMiss($request);
+        }
+
         return response()->view('design.share-unavailable', ['message' => 'This link is not available. It may have expired, or the person who shared it turned it off.'], 404);
     }
 }

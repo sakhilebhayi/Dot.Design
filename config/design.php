@@ -84,6 +84,10 @@ return [
         // Public share-link comments per minute per link and visitor address (the address is hashed by the limiter, never stored by us).
         'public_comments_per_minute' => (int) env('DESIGN_PUBLIC_COMMENTS_PER_MINUTE', 6),
         'public_views_per_minute' => (int) env('DESIGN_PUBLIC_VIEWS_PER_MINUTE', 120),
+        // Link probing: this many unusable-link answers per visitor address per ten minutes, then a 429 (R-45 security S-6).
+        'public_misses_per_ten_minutes' => (int) env('DESIGN_PUBLIC_MISSES_PER_TEN_MINUTES', 30),
+        // Guest comments one link accepts per day in total, whoever sends them.
+        'public_comments_per_link_per_day' => (int) env('DESIGN_PUBLIC_COMMENTS_PER_LINK_PER_DAY', 200),
 
         'versions' => [
             // An automatic snapshot is taken at most this often while a project is being edited.
@@ -115,6 +119,26 @@ return [
 
         // Request body ceiling (bytes) for the page-save endpoint: the document limit plus envelope headroom.
         'max_request_bytes' => 1_400_000,
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Retention (R-45, docs/R45_PRIVACY.md)
+    |--------------------------------------------------------------------------
+    |
+    | How long personal and operational records are kept. `php artisan design:prune-expired` (scheduled daily) enforces these.
+    | Versions (newest 50 automatic ones) and assistant proposals (design_ai.retention_days) are pruned elsewhere. Designs,
+    | comments and reviews are the business's own records and are kept until the business deletes them.
+    */
+    'retention' => [
+        // The audit trail of shares, exports, reviews, deletions: two years, then gone.
+        'activity_days' => (int) env('DESIGN_RETENTION_ACTIVITY_DAYS', 730),
+        // The export log (format, pages, size) feeding Analytics counts.
+        'exports_days' => (int) env('DESIGN_RETENTION_EXPORTS_DAYS', 365),
+        // A share link that expired or was turned off is removed this long afterwards (its guest comments stay with the design).
+        'dead_shares_days' => (int) env('DESIGN_RETENTION_DEAD_SHARES_DAYS', 90),
+        // Prompts sent for the (mock) image generator.
+        'ai_image_logs_days' => (int) env('DESIGN_RETENTION_AI_IMAGE_LOGS_DAYS', 90),
     ],
 
 ];
