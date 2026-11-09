@@ -82,7 +82,7 @@ export function scenarios({ fx, readError }) {
 }
 
 function editorScenarios(fx) {
-    const E = (id, open, extra = {}) => ({ id: `editor-${id}`, open, settle: 700, ...extra });
+    const E = (id, open, extra = {}) => ({ id: `editor-${id}`, open, settle: 1400, ...extra });
     const rich = (ctx, mode) => openEditor(ctx, fx.rich, { mode });
     const out = [
         E('simple-nothing-selected', (ctx) => rich(ctx, 'simple')),

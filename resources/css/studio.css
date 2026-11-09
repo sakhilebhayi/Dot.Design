@@ -603,6 +603,8 @@ button.st-layer__fold:hover { color: var(--lt-ink); background: var(--lt-panel);
     .st-app, .st-app[data-mode="pro"] { --st-rail-w: 4.5rem; --st-left-w: 15rem; --st-drawer-w: 18.5rem;
         grid-template-columns: var(--st-rail-w) minmax(0, var(--st-left-w)) minmax(0, 1fr);
         grid-template-areas: "top top top" "banner banner banner" "rail left stage" "rail left pages"; }
+    /* a closed left panel gives its column back to the stage (the docked column stayed 15rem wide and left 160px for the canvas) */
+    .st-app[data-left="closed"], .st-app[data-left="closed"][data-mode="pro"] { --st-left-w: 0px; }
     .st-right { grid-area: stage; justify-self: end; width: var(--st-drawer-w); z-index: 4; box-shadow: -1px 0 0 var(--lt-rule-strong), -12px 0 24px -16px rgb(14 18 22 / 0.35); transition: transform var(--lt-dur-3) var(--lt-ease), visibility 0s linear 0s; }
     .st-app[data-right="closed"] .st-right { transform: translateX(100%); visibility: hidden; transition: transform var(--lt-dur-3) var(--lt-ease), visibility 0s linear var(--lt-dur-3); }
     .st-app[data-right="open"] .st-stage { right: var(--st-drawer-w); }

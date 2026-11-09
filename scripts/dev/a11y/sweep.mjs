@@ -57,7 +57,7 @@ try {
                     if (s.after) await s.after(ctx);
                     await c.eval('typeof axe') !== 'object' && await c.injectAxe();
                     const res = await c.eval(`axe.run({ include: [document], exclude: ${JSON.stringify(ARTWORK)} }, { runOnly: { type: 'tag', values: ${JSON.stringify(AXE_TAGS)} }, resultTypes: ['violations', 'incomplete'] }).then(r => ({
-                        v: r.violations.map(v => ({ id: v.id, impact: v.impact, help: v.help, nodes: v.nodes.length, sample: v.nodes.slice(0, 3).map(n => ({ target: n.target.join(' '), html: n.html.slice(0, 140), why: (n.any.concat(n.all, n.none)[0] || {}).message })) })),
+                        v: r.violations.map(v => ({ id: v.id, impact: v.impact, help: v.help, nodes: v.nodes.length, sample: v.nodes.slice(0, 3).map(n => ({ target: n.target.join(' '), html: n.html.slice(0, 140), why: (n.any.concat(n.all, n.none)[0] || {}).message, related: ((n.any.concat(n.all, n.none)[0] || {}).relatedNodes || []).slice(0, 2).map((x) => x.html.slice(0, 100)) })) })),
                         inc: r.incomplete.filter(i => i.id === 'color-contrast').reduce((a, i) => a + i.nodes.length, 0) }))`);
                     row.violations = res.v; row.incomplete = res.inc;
                     row.overflowX = await c.eval('document.documentElement.scrollWidth > document.documentElement.clientWidth + 1');
