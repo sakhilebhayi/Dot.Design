@@ -134,11 +134,14 @@ class DesignAsset extends Model
      * only, never named). Deleting an asset has to account for both, otherwise a colleague's private design would be left
      * with a hole.
      *
+     * @param  int|null  $visiblePages  how many visible pages the caller already counted (the usage index did); passing it
+     *                                  skips a second full scan of the viewer's pages, and `visible` is then left empty
      * @return array{visible: list<array{project: string, page: int}>, hidden: int}
      */
-    public function placementsIncludingHidden(): array
+    public function placementsIncludingHidden(?int $visiblePages = null): array
     {
-        $visible = $this->placements();
+        $visible = $visiblePages === null ? $this->placements() : [];
+        $visibleCount = $visiblePages ?? count($visible);
         $total = 0;
 
         DesignCanvas::query()
@@ -153,7 +156,7 @@ class DesignAsset extends Model
                 }
             });
 
-        return ['visible' => $visible, 'hidden' => max(0, $total - count($visible))];
+        return ['visible' => $visible, 'hidden' => max(0, $total - $visibleCount)];
     }
 
     /** A file we hold on a private disk, as opposed to an external URL such as the mock AI placeholder. */

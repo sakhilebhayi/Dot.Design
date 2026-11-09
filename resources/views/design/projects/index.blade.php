@@ -1,5 +1,4 @@
 @php
-    $listing = \App\Support\Ui\DesignListing::apply($projects, request());
     $items = $listing['items'];
     $createRoute = route('design.start');
     $query = array_filter(['q' => $listing['q'], 'type' => $listing['type'], 'status' => $listing['status'], 'sort' => $listing['sort'] !== 'recent' ? $listing['sort'] : null]);
@@ -72,7 +71,7 @@
             <x-slot name="actions"><x-ds.button :href="route('design.projects.index')" variant="secondary">Clear search and filters</x-ds.button></x-slot>
         </x-ds.empty>
     @else
-        <p class="lt-meta" role="status" style="margin-bottom: var(--lt-space-4);">@if ($listing['filtered']) Showing {{ $items->count() }} of {{ $listing['total'] }} @else {{ $items->count() }} {{ \Illuminate\Support\Str::plural('design', $items->count()) }} @endif</p>
+        <p class="lt-meta" role="status" style="margin-bottom: var(--lt-space-4);">@if ($listing['filtered']) Showing {{ $listing['matched'] }} of {{ $listing['total'] }} @else {{ $listing['total'] }} {{ \Illuminate\Support\Str::plural('design', $listing['total']) }} @endif @if ($listing['paginator']->hasPages()) · page {{ $listing['paginator']->currentPage() }} of {{ $listing['paginator']->lastPage() }} @endif</p>
         <ul class="lt-contacts lt-views">
             @foreach ($items as $project)
                 <li class="lt-contact">
@@ -97,6 +96,12 @@
                 </li>
             @endforeach
         </ul>
+        @if ($listing['paginator']->hasPages())
+            <nav class="lt-toolbar" aria-label="Pages of designs" style="margin-top: var(--lt-space-5); justify-content: center; gap: var(--lt-space-3);">
+                @if ($listing['paginator']->onFirstPage())<span class="lt-btn lt-btn--secondary lt-btn--sm" aria-disabled="true" style="opacity: .5;">Newer</span>@else<x-ds.button :href="$listing['paginator']->previousPageUrl()" variant="secondary" size="sm" rel="prev">Newer</x-ds.button>@endif
+                @if ($listing['paginator']->hasMorePages())<x-ds.button :href="$listing['paginator']->nextPageUrl()" variant="secondary" size="sm" rel="next">Older</x-ds.button>@else<span class="lt-btn lt-btn--secondary lt-btn--sm" aria-disabled="true" style="opacity: .5;">Older</span>@endif
+            </nav>
+        @endif
     @endif
 
     <x-ds.dialog id="delete-design" title="Delete this design?">

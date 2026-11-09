@@ -1,0 +1,402 @@
+[
+    {
+        "endpoint": "GET \/dashboard",
+        "status": 200,
+        "queries": 15,
+        "db_ms": 29,
+        "wall_ms": 54.7,
+        "kb": 43.7,
+        "repeat": 1,
+        "top_shape": "select count(*) as \"aggregate\" from \"design_projects\" where (\"design_projects\".\"user_id\" = ? or (\"design_proje @ "
+    },
+    {
+        "endpoint": "GET \/design\/projects (designs list)",
+        "status": 200,
+        "queries": 6,
+        "db_ms": 7.9,
+        "wall_ms": 32.2,
+        "kb": 119.6,
+        "repeat": 1,
+        "top_shape": "select type, count(*) as total from \"design_projects\" where (\"design_projects\".\"user_id\" = ? or (\"design_proje @ DesignListing.php:72 < DesignProjectController.php:34"
+    },
+    {
+        "endpoint": "GET \/design\/new (start)",
+        "status": 200,
+        "queries": 2,
+        "db_ms": 1.4,
+        "wall_ms": 8.6,
+        "kb": 103.5,
+        "repeat": 1,
+        "top_shape": "select * from \"design_projects\" where (\"design_projects\".\"user_id\" = ? or (\"design_projects\".\"visibility\" = ?  @ StartController.php:31"
+    },
+    {
+        "endpoint": "GET \/design\/templates (page)",
+        "status": 200,
+        "queries": 16,
+        "db_ms": 6.5,
+        "wall_ms": 13.7,
+        "kb": 43.8,
+        "repeat": 12,
+        "top_shape": "select \"brief\" from \"design_projects\" where \"id\" = ? limit N @ ProjectMeta.php:80 < ProjectMeta.php:20 < StartScreen.php:89"
+    },
+    {
+        "endpoint": "GET \/design\/templates json 24 + first_page",
+        "status": 200,
+        "queries": 3,
+        "db_ms": 3.4,
+        "wall_ms": 11.6,
+        "kb": 145.5,
+        "repeat": 1,
+        "top_shape": "select count(*) as \"aggregate\" from \"design_templates\" where \"status\" = ? and ((\"design_templates\".\"source\" =  @ TemplateRepository.php:52 < TemplateController.php:31 < TemplateBrowserController.php:24"
+    },
+    {
+        "endpoint": "GET \/design\/templates json q=sale",
+        "status": 200,
+        "queries": 2,
+        "db_ms": 2.1,
+        "wall_ms": 4.7,
+        "kb": 40.1,
+        "repeat": 1,
+        "top_shape": "select count(*) as \"aggregate\" from \"design_templates\" where \"status\" = ? and (lower(name) like ? or lower(coa @ TemplateRepository.php:52 < TemplateController.php:31 < TemplateBrowserController.php:24"
+    },
+    {
+        "endpoint": "GET \/design\/templates\/facets",
+        "status": 200,
+        "queries": 2,
+        "db_ms": 1.1,
+        "wall_ms": 2,
+        "kb": 2.9,
+        "repeat": 1,
+        "top_shape": "select category as facet, count(*) as total from \"design_templates\" where \"status\" = ? and ((\"design_templates @ TemplateRepository.php:130 < TemplateRepository.php:132 < TemplateController.php:57"
+    },
+    {
+        "endpoint": "GET \/design\/templates\/{id}",
+        "status": 200,
+        "queries": 1,
+        "db_ms": 0.6,
+        "wall_ms": 1.6,
+        "kb": 6.3,
+        "repeat": 1,
+        "top_shape": "select * from \"design_templates\" where \"design_templates\".\"id\" = ? and ((\"design_templates\".\"source\" = ? and \" @ TemplateRepository.php:110 < TemplateController.php:174 < TemplateController.php:70"
+    },
+    {
+        "endpoint": "GET \/design\/formats",
+        "status": 200,
+        "queries": 0,
+        "db_ms": 0,
+        "wall_ms": 1.1,
+        "kb": 51.5,
+        "repeat": 0,
+        "top_shape": ""
+    },
+    {
+        "endpoint": "GET \/design\/brand (page)",
+        "status": 200,
+        "queries": 3,
+        "db_ms": 1.1,
+        "wall_ms": 6.7,
+        "kb": 37.3,
+        "repeat": 1,
+        "top_shape": "select * from \"brand_kits\" where (\"brand_kits\".\"user_id\" = ? or \"brand_kits\".\"team_id\" in (?)) order by \"is_de @ BrandKitService.php:39 < BrandStudioController.php:28"
+    },
+    {
+        "endpoint": "GET \/design\/brand\/kits",
+        "status": 200,
+        "queries": 1,
+        "db_ms": 0.3,
+        "wall_ms": 1.4,
+        "kb": 0.7,
+        "repeat": 1,
+        "top_shape": "select * from \"brand_kits\" where (\"brand_kits\".\"user_id\" = ? or \"brand_kits\".\"team_id\" in (?)) order by \"is_de @ BrandKitService.php:39 < BrandKitController.php:18 < AcceptsJson.php:16"
+    },
+    {
+        "endpoint": "GET \/design\/assets (page)",
+        "status": 200,
+        "queries": 4,
+        "db_ms": 9,
+        "wall_ms": 17.1,
+        "kb": 35.8,
+        "repeat": 1,
+        "top_shape": "select * from \"design_assets\" where (\"design_assets\".\"user_id\" = ? or (\"design_assets\".\"license\" = ? and (\"des @ AssetLibraryController.php:46"
+    },
+    {
+        "endpoint": "GET \/design\/assets\/library",
+        "status": 200,
+        "queries": 16,
+        "db_ms": 70.9,
+        "wall_ms": 117.7,
+        "kb": 14.2,
+        "repeat": 6,
+        "top_shape": "select \"id\", \"design_project_id\", \"page_number\", \"elements\", \"background\" from \"design_canvases\" where exists  @ AssetUsageIndex.php:32 < AssetUsageIndex.php:51 < AssetStudioController.php:354"
+    },
+    {
+        "endpoint": "GET \/design\/assets\/library?q=photo&sort=name",
+        "status": 200,
+        "queries": 16,
+        "db_ms": 52.9,
+        "wall_ms": 97.5,
+        "kb": 14.2,
+        "repeat": 6,
+        "top_shape": "select \"id\", \"design_project_id\", \"page_number\", \"elements\", \"background\" from \"design_canvases\" where exists  @ AssetUsageIndex.php:32 < AssetUsageIndex.php:51 < AssetStudioController.php:354"
+    },
+    {
+        "endpoint": "GET \/design\/assets\/meta",
+        "status": 200,
+        "queries": 6,
+        "db_ms": 9.5,
+        "wall_ms": 13.1,
+        "kb": 0.3,
+        "repeat": 1,
+        "top_shape": "select \"folder\", count(*) as total from \"design_assets\" where \"folder\" is not null and (\"design_assets\".\"user_ @ AssetStudioController.php:317 < AssetStudioController.php:74 < JsonApi.php:19"
+    },
+    {
+        "endpoint": "GET \/design\/assets\/folders",
+        "status": 200,
+        "queries": 1,
+        "db_ms": 1.8,
+        "wall_ms": 2.7,
+        "kb": 0.1,
+        "repeat": 1,
+        "top_shape": "select \"folder\", count(*) as total from \"design_assets\" where \"folder\" is not null and (\"design_assets\".\"user_ @ AssetLibraryController.php:73 < AssetLibraryController.php:78 < JsonApi.php:19"
+    },
+    {
+        "endpoint": "GET \/design\/assets\/{id}\/usage",
+        "status": 200,
+        "queries": 21,
+        "db_ms": 118.1,
+        "wall_ms": 261.8,
+        "kb": 0.2,
+        "repeat": 7,
+        "top_shape": "select \"id\", \"design_project_id\", \"page_number\", \"elements\", \"background\" from \"design_canvases\" where exists  @ AssetUsageIndex.php:32 < AssetUsageIndex.php:46 < AssetStudioController.php:81"
+    },
+    {
+        "endpoint": "GET \/design\/activity",
+        "status": 200,
+        "queries": 5,
+        "db_ms": 2.7,
+        "wall_ms": 5.7,
+        "kb": 10.3,
+        "repeat": 2,
+        "top_shape": "select \"teams\".\"user_id\" as \"owner_id\", \"team_user\".\"id\" as \"member_row\", \"team_user\".\"role\" as \"role\" from \"t @ DesignAccess.php:34 < DesignAccess.php:76 < ActivityController.php:34"
+    },
+    {
+        "endpoint": "GET \/design\/activity\/log (page)",
+        "status": 200,
+        "queries": 9,
+        "db_ms": 4.4,
+        "wall_ms": 14.2,
+        "kb": 58,
+        "repeat": 3,
+        "top_shape": "select \"teams\".\"user_id\" as \"owner_id\", \"team_user\".\"id\" as \"member_row\", \"team_user\".\"role\" as \"role\" from \"t @ DesignAccess.php:34 < DesignAccess.php:76 < ActivityPageController.php:36"
+    },
+    {
+        "endpoint": "GET \/design\/review (inbox page)",
+        "status": 200,
+        "queries": 4,
+        "db_ms": 1.5,
+        "wall_ms": 7.6,
+        "kb": 29.7,
+        "repeat": 1,
+        "top_shape": "select * from \"design_reviews\" where \"reviewer_id\" = ? order by case status when ? then N else N end, \"id\" des @ ReviewService.php:175 < ReviewInboxController.php:32"
+    },
+    {
+        "endpoint": "GET \/design\/reviews",
+        "status": 200,
+        "queries": 1,
+        "db_ms": 0.2,
+        "wall_ms": 0.9,
+        "kb": 0,
+        "repeat": 1,
+        "top_shape": "select * from \"design_reviews\" where \"reviewer_id\" = ? order by case status when ? then N else N end, \"id\" des @ ReviewService.php:175 < ReviewController.php:36 < JsonApi.php:19"
+    },
+    {
+        "endpoint": "GET \/design\/settings",
+        "status": 200,
+        "queries": 2,
+        "db_ms": 0.8,
+        "wall_ms": 1.8,
+        "kb": 0.2,
+        "repeat": 1,
+        "top_shape": "select * from \"design_user_settings\" where (\"user_id\" = ?) limit N @ SettingsController.php:46 < SettingsController.php:17 < JsonApi.php:19"
+    },
+    {
+        "endpoint": "GET \/design\/studio-settings (page)",
+        "status": 200,
+        "queries": 2,
+        "db_ms": 0.6,
+        "wall_ms": 4.9,
+        "kb": 32.1,
+        "repeat": 1,
+        "top_shape": "select * from \"design_user_settings\" where (\"user_id\" = ?) limit N @ SettingsPageController.php:15"
+    },
+    {
+        "endpoint": "GET \/design\/studio\/elements",
+        "status": 200,
+        "queries": 0,
+        "db_ms": 0,
+        "wall_ms": 1.5,
+        "kb": 0,
+        "repeat": 0,
+        "top_shape": ""
+    },
+    {
+        "endpoint": "GET \/design\/projects\/{id} (editor boot, 21 pages)",
+        "status": 200,
+        "queries": 24,
+        "db_ms": 19.3,
+        "wall_ms": 41.4,
+        "kb": 826.8,
+        "repeat": 4,
+        "top_shape": "select a.attname as name, t.typname as type_name, format_type(a.atttypid, a.atttypmod) as type, (select tc.col @ Columns.php:25 < ProjectMeta.php:76 < ProjectMeta.php:48"
+    },
+    {
+        "endpoint": "GET ...\/document",
+        "status": 200,
+        "queries": 13,
+        "db_ms": 10.9,
+        "wall_ms": 24.4,
+        "kb": 733.3,
+        "repeat": 3,
+        "top_shape": "select \"teams\".\"user_id\" as \"owner_id\", \"team_user\".\"id\" as \"member_row\", \"team_user\".\"role\" as \"role\" from \"t @ DesignAccess.php:34 < DesignAccess.php:118 < DesignAccess.php:166"
+    },
+    {
+        "endpoint": "GET ...\/comments",
+        "status": 200,
+        "queries": 9,
+        "db_ms": 3.7,
+        "wall_ms": 5.7,
+        "kb": 0,
+        "repeat": 3,
+        "top_shape": "select \"teams\".\"user_id\" as \"owner_id\", \"team_user\".\"id\" as \"member_row\", \"team_user\".\"role\" as \"role\" from \"t @ DesignAccess.php:34 < DesignAccess.php:118 < DesignAccess.php:166"
+    },
+    {
+        "endpoint": "GET ...\/shares",
+        "status": 200,
+        "queries": 5,
+        "db_ms": 2.6,
+        "wall_ms": 4.3,
+        "kb": 0,
+        "repeat": 1,
+        "top_shape": "select * from \"design_projects\" where \"id\" = ? and (\"design_projects\".\"user_id\" = ? or (\"design_projects\".\"vis @ "
+    },
+    {
+        "endpoint": "GET ...\/reviews",
+        "status": 200,
+        "queries": 5,
+        "db_ms": 1.4,
+        "wall_ms": 2.6,
+        "kb": 0,
+        "repeat": 1,
+        "top_shape": "select * from \"design_projects\" where \"id\" = ? and (\"design_projects\".\"user_id\" = ? or (\"design_projects\".\"vis @ "
+    },
+    {
+        "endpoint": "GET ...\/activity",
+        "status": 200,
+        "queries": 6,
+        "db_ms": 2.2,
+        "wall_ms": 3.9,
+        "kb": 2.7,
+        "repeat": 1,
+        "top_shape": "select * from \"design_projects\" where \"id\" = ? and (\"design_projects\".\"user_id\" = ? or (\"design_projects\".\"vis @ "
+    },
+    {
+        "endpoint": "GET ...\/grants",
+        "status": 200,
+        "queries": 5,
+        "db_ms": 1.8,
+        "wall_ms": 3.2,
+        "kb": 0,
+        "repeat": 1,
+        "top_shape": "select * from \"design_projects\" where \"id\" = ? and (\"design_projects\".\"user_id\" = ? or (\"design_projects\".\"vis @ "
+    },
+    {
+        "endpoint": "GET ...\/people",
+        "status": 200,
+        "queries": 25,
+        "db_ms": 6.4,
+        "wall_ms": 8.9,
+        "kb": 1,
+        "repeat": 7,
+        "top_shape": "select \"teams\".\"user_id\" as \"owner_id\", \"team_user\".\"id\" as \"member_row\", \"team_user\".\"role\" as \"role\" from \"t @ DesignAccess.php:34 < DesignAccess.php:118 < DesignAccess.php:166"
+    },
+    {
+        "endpoint": "GET \/design\/brand\/notices",
+        "status": 200,
+        "queries": 1,
+        "db_ms": 1.2,
+        "wall_ms": 2.3,
+        "kb": 0,
+        "repeat": 1,
+        "top_shape": "select * from \"design_brand_updates\" where \"status\" = ? and exists (select * from \"design_projects\" where \"des @ BrandService.php:291 < BrandProjectController.php:93 < AcceptsJson.php:16"
+    },
+    {
+        "endpoint": "GET ...\/versions (200 versions)",
+        "status": 200,
+        "queries": 6,
+        "db_ms": 2.4,
+        "wall_ms": 4.4,
+        "kb": 4.1,
+        "repeat": 1,
+        "top_shape": "select * from \"design_projects\" where \"id\" = ? and (\"design_projects\".\"user_id\" = ? or (\"design_projects\".\"vis @ "
+    },
+    {
+        "endpoint": "GET ...\/versions\/{id}",
+        "status": 200,
+        "queries": 7,
+        "db_ms": 2.8,
+        "wall_ms": 4.9,
+        "kb": 54.6,
+        "repeat": 1,
+        "top_shape": "select * from \"design_projects\" where \"id\" = ? and (\"design_projects\".\"user_id\" = ? or (\"design_projects\".\"vis @ "
+    },
+    {
+        "endpoint": "GET ...\/versions\/{id}\/diff",
+        "status": 200,
+        "queries": 7,
+        "db_ms": 3.4,
+        "wall_ms": 5.9,
+        "kb": 0.6,
+        "repeat": 1,
+        "top_shape": "select * from \"design_projects\" where \"id\" = ? and (\"design_projects\".\"user_id\" = ? or (\"design_projects\".\"vis @ "
+    },
+    {
+        "endpoint": "PUT page save: 300 elements (36 KB)",
+        "status": 200,
+        "queries": 12,
+        "db_ms": 14,
+        "wall_ms": 25.3,
+        "kb": 0.1,
+        "repeat": 1,
+        "top_shape": "select * from \"design_projects\" where \"id\" = ? and (\"design_projects\".\"user_id\" = ? or (\"design_projects\".\"vis @ "
+    },
+    {
+        "endpoint": "PUT page save again (CAS ok, 2nd): 300 elements",
+        "status": 200,
+        "queries": 12,
+        "db_ms": 9.1,
+        "wall_ms": 16.4,
+        "kb": 0.1,
+        "repeat": 1,
+        "top_shape": "select * from \"design_projects\" where \"id\" = ? and (\"design_projects\".\"user_id\" = ? or (\"design_projects\".\"vis @ "
+    },
+    {
+        "endpoint": "PUT page save: ~1 MB payload (476 KB)",
+        "status": 200,
+        "queries": 12,
+        "db_ms": 17.8,
+        "wall_ms": 27.4,
+        "kb": 0.1,
+        "repeat": 1,
+        "top_shape": "select * from \"design_projects\" where \"id\" = ? and (\"design_projects\".\"user_id\" = ? or (\"design_projects\".\"vis @ "
+    },
+    {
+        "endpoint": "PUT page save again (CAS ok, 2nd): ~1 MB payload",
+        "status": 200,
+        "queries": 12,
+        "db_ms": 17.2,
+        "wall_ms": 27.1,
+        "kb": 0.1,
+        "repeat": 1,
+        "top_shape": "select * from \"design_projects\" where \"id\" = ? and (\"design_projects\".\"user_id\" = ? or (\"design_projects\".\"vis @ "
+    }
+]

@@ -7,8 +7,8 @@ use App\Models\DesignCanvas;
 use App\Models\DesignProject;
 use App\Models\DesignTemplate;
 use App\Models\User;
+use App\Support\Db\Columns;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
@@ -208,7 +208,7 @@ class TemplateLibrary
 
     private function column(DesignCanvas $canvas, string $column): mixed
     {
-        return Schema::hasColumn('design_canvases', $column) ? DB::table('design_canvases')->where('id', $canvas->id)->value($column) : null;
+        return Columns::has('design_canvases', $column) ? DB::table('design_canvases')->where('id', $canvas->id)->value($column) : null;
     }
 
     /**

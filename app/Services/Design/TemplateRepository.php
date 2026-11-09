@@ -124,12 +124,17 @@ class TemplateRepository
     /** @return array<string, int> filter facets (counts) so the browser can show what is available */
     public function facets(?User $user = null): array
     {
-        $rows = $this->visibleTo($user)->where('status', 'published')->get(['kind', 'category']);
+        // Counted by the database: the browser asks for this on every open, and it must not read every template row.
+        $count = fn (string $column): array => $this->visibleTo($user)->where('status', 'published')->toBase()->reorder()
+            ->selectRaw("{$column} as facet, count(*) as total")->groupBy($column)->orderByRaw('min(id)')
+            ->pluck('total', 'facet')->map(fn ($n) => (int) $n)->all();
+
+        $byCategory = $count('category');
 
         return [
-            'total' => $rows->count(),
-            'by_category' => $rows->countBy('category')->all(),
-            'by_kind' => $rows->countBy('kind')->all(),
+            'total' => array_sum($byCategory),
+            'by_category' => $byCategory,
+            'by_kind' => $count('kind'),
         ];
     }
 

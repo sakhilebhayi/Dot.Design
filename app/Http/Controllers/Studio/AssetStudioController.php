@@ -80,7 +80,7 @@ class AssetStudioController extends StudioController
 
         $designs = collect($usage->designsFor($asset->id))->map(fn (array $row) => $row + ['url' => route('design.projects.show', $row['project_id'])])->all();
         $visiblePages = array_sum(array_map(fn (array $d) => count($d['pages']), $designs));
-        $everywhere = $asset->placementsIncludingHidden();
+        $everywhere = $asset->placementsIncludingHidden($visiblePages);
 
         return response()->json([
             'asset_id' => $asset->id,

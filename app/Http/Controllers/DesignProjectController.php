@@ -9,6 +9,7 @@ use App\Services\Design\ActivityLog;
 use App\Services\Design\Formats;
 use App\Services\Design\ProjectMeta;
 use App\Services\Design\ThumbnailStore;
+use App\Support\Ui\DesignListing;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -28,11 +29,11 @@ class DesignProjectController extends Controller
 {
     private const TYPES = ['graphic', 'presentation', 'social', 'banner', 'poster', 'logo'];
 
-    public function index(): View
+    public function index(Request $request): View
     {
-        $projects = DesignProject::withCount('canvases')->latest()->get();
+        $listing = DesignListing::paginate(DesignProject::query(), $request);
 
-        return view('design.projects.index', compact('projects'));
+        return view('design.projects.index', compact('listing'));
     }
 
     /** The old form is gone: starting a design is the Start screen now. A `?format=` link keeps working. */
