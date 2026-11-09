@@ -176,13 +176,22 @@ class DesignAsset extends Model
         return $this->isStoredUpload() ? route('design.assets.file', $this) : (string) $this->file_path;
     }
 
-    /** The shape the editor's asset panel and image elements are built from. */
+    /** Path of the editor's lighter WebP copy on this asset's disk, or null when it has none (small picture, or uploaded before copies existed). */
+    public function previewPath(): ?string
+    {
+        $path = $this->meta['preview']['path'] ?? null;
+
+        return $this->isStoredUpload() && is_string($path) && $path !== '' && ! str_contains($path, '..') ? $path : null;
+    }
+
+    /** The shape the editor's asset panel and image elements are built from. `preview_url` is the lighter copy the canvas draws. */
     public function toEditorArray(): array
     {
         return [
             'id' => $this->id,
             'name' => $this->name,
             'url' => $this->displayUrl(),
+            'preview_url' => $this->previewPath() === null ? null : $this->displayUrl().'?size=preview',
             'placeholder' => $this->isPlaceholder(),
             'placeholder_label' => $this->isPlaceholder() ? AiImageResult::PLACEHOLDER_LABEL : null,
             'stored' => $this->isStoredUpload(),
@@ -232,6 +241,11 @@ class DesignAsset extends Model
             : array_unique(['public', config('filesystems.default')]);
 
         $deleted = false;
+
+        // The lighter editor copy lives and dies with the original.
+        if (($previewPath = $this->previewPath()) !== null && Storage::disk($this->disk)->exists($previewPath)) {
+            Storage::disk($this->disk)->delete($previewPath);
+        }
 
         foreach ($disks as $disk) {
             $storage = Storage::disk($disk);

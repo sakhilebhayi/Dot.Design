@@ -113,7 +113,7 @@ export function mountImagery(host, ctx) {
                 const label = el('input', { class: 'lt-input', value: a.label || '', maxlength: 80, placeholder: 'Label (optional)', 'aria-label': `Label for ${a.asset.name}`, disabled: !ctx.canEdit });
                 label.addEventListener('input', () => { a.label = label.value; ctx.change(); });
                 return el('div', { class: 'br-img', role: 'listitem' }, [
-                    el('div', { class: 'br-img__pic' }, el('img', { src: a.asset.url, alt: a.asset.name, loading: 'lazy', width: 128, height: 128 })),
+                    el('div', { class: 'br-img__pic' }, el('img', { src: a.asset.preview_url || a.asset.url, alt: a.asset.name, loading: 'lazy', width: 128, height: 128 })),
                     label,
                     ctx.canEdit ? button('Remove', { variant: 'ghost', onclick: () => ctx.removeAsset(a) }) : null,
                 ]);

@@ -233,7 +233,7 @@ function tile(a) {
     const node = el('div', { class: 'as-tile' + (selected ? ' is-selected' : ''), role: 'listitem', draggable: 'true', 'data-id': a.id }, [
         el('button', { type: 'button', class: 'as-tile__open', 'aria-label': `Open details of ${a.name}`, onclick: () => openDetail({ asset: a, boot, state, onChanged: refresh, onDeleted: refresh }) }),
         el('div', { class: 'as-tile__check' }, box),
-        el('div', { class: 'as-tile__pic' }, el('img', { src: a.url, alt: a.name, loading: 'lazy', width: a.width || 128, height: a.height || 128 })),
+        el('div', { class: 'as-tile__pic' }, el('img', { src: a.preview_url || a.url, alt: a.name, loading: 'lazy', width: a.width || 128, height: a.height || 128 })),
         el('div', { class: 'as-tile__meta' }, [
             el('span', { class: 'as-tile__name', text: a.name, title: a.name }),
             el('span', { class: 'as-tile__sub' }, [`${a.width} x ${a.height}`, a.used_in ? el('span', { class: 'as-used', text: `In ${plural(a.used_in, 'design', 'designs')}` }) : el('span', { class: 'as-unused', text: 'Not used yet' })]),

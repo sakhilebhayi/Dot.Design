@@ -59,9 +59,10 @@ class AssetUploader
     {
         $disk = (string) config('design.assets.disk');
         $written = null;
+        $writtenPreview = null;
 
         try {
-            $result = DB::transaction(function () use ($user, $project, $image, $hash, $name, $disk, $library, &$written) {
+            $result = DB::transaction(function () use ($user, $project, $image, $hash, $name, $disk, $library, &$written, &$writtenPreview) {
                 User::query()->whereKey($user->id)->lockForUpdate()->first();
 
                 $existing = $this->findByHash($user, $hash);
@@ -82,12 +83,24 @@ class AssetUploader
                     ), 'quota');
                 }
 
-                $path = $user->id.'/'.Str::random(40).'.'.$image->extension;
+                $name40 = Str::random(40);
+                $path = $user->id.'/'.$name40.'.'.$image->extension;
 
                 if (! Storage::disk($disk)->put($path, $image->bytes)) {
                     throw new \RuntimeException('Could not write the uploaded file to the asset disk.');
                 }
                 $written = $path;
+
+                // The editor's lighter copy (see ImageSanitiser::previewCopy). Failing to write it is not a failed upload.
+                $preview = null;
+                if ($image->preview !== null) {
+                    $previewPath = $user->id.'/'.$name40.'.preview.webp';
+
+                    if (Storage::disk($disk)->put($previewPath, $image->preview)) {
+                        $preview = ['path' => $previewPath, 'width' => $image->previewWidth, 'height' => $image->previewHeight, 'bytes' => strlen($image->preview)];
+                        $writtenPreview = $previewPath;
+                    }
+                }
 
                 $asset = DesignAsset::create([
                     'user_id' => $user->id,
@@ -105,7 +118,7 @@ class AssetUploader
                     'file_size' => $size,
                     'width' => $image->width,
                     'height' => $image->height,
-                    'meta' => ['reencoded' => $image->reencoded, 'source' => 'upload'],
+                    'meta' => ['reencoded' => $image->reencoded, 'source' => 'upload'] + ($preview !== null ? ['preview' => $preview] : []),
                 ]);
 
                 return [$asset, true];
@@ -114,6 +127,9 @@ class AssetUploader
             // The row never committed, so the file must not outlive it.
             if ($written !== null) {
                 Storage::disk($disk)->delete($written);
+            }
+            if ($writtenPreview !== null) {
+                Storage::disk($disk)->delete($writtenPreview);
             }
 
             throw $e;

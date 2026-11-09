@@ -32,7 +32,7 @@ export function createPageStrip(ctx, shell) {
         const i = studio.getState().doc.pages.indexOf(page);
         if (i < 0) return;
         let markup = '';
-        try { markup = studio.renderPageToSvg(i, { forExport: true, idPrefix: 'ps' + String(page.id).replace(/[^A-Za-z0-9]/g, '') + '-' }); } catch (e) { markup = ''; }
+        try { markup = studio.renderPageToSvg(i, { forExport: true, preview: true, idPrefix: 'ps' + String(page.id).replace(/[^A-Za-z0-9]/g, '') + '-' }); } catch (e) { markup = ''; }
         const svg = markup ? parseSvg(markup) : null;
         if (svg) { cache.set(page, svg); node.replaceChildren(svg.cloneNode(true)); }
     }

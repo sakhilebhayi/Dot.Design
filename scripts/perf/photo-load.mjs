@@ -1,0 +1,21 @@
+import { launch, login } from './cdp.mjs';
+const base = 'http://127.0.0.1:8497'; const id = process.argv[2] || '7'; const asset = process.argv[3] || '1';
+const c = await launch({ mobile: true }); await login(c, base);
+await c.goto(`${base}/design/projects/${id}`);
+await c.throttle('mid');
+const t = async (url) => c.evaluate(`(async () => { const t0 = performance.now(); const r = await fetch(${JSON.stringify(url)}, { cache: 'reload' }); const b = await r.arrayBuffer(); return { ms: Math.round(performance.now() - t0), kb: Math.round(b.byteLength / 1024), type: r.headers.get('content-type') }; })()`);
+console.log('original', JSON.stringify(await t(`/design/projects/${id}/assets/${asset}/file`)));
+console.log('preview ', JSON.stringify(await t(`/design/projects/${id}/assets/${asset}/file?size=preview`)));
+await c.throttle('none');
+await c.goto(`${base}/design/projects/${id}`);
+for (let i = 0; i < 60; i++) { if (await c.evaluate(`document.getElementById('studio-app')?.dataset.ready === '1'`)) break; await c.sleep(100); }
+await c.sleep(1500);
+console.log('canvas img hrefs:', JSON.stringify(await c.evaluate(`[...new Set([...document.querySelectorAll('.studio-page image')].map(i => i.getAttribute('href') || i.getAttributeNS('http://www.w3.org/1999/xlink','href')))]`)));
+console.log('page strip thumb imgs:', JSON.stringify(await c.evaluate(`[...new Set([...document.querySelectorAll('.st-page__thumb image')].map(i => i.getAttribute('href')))]`)));
+await c.evaluate(`localStorage.setItem('dot-design-debug','1')`);
+await c.goto(`${base}/design/projects/${id}`); await c.sleep(2500);
+await c.evaluate(`window.__studio.studio.viewport.setZoom(2)`); await c.sleep(800);
+console.log('after zoom 200%:', JSON.stringify(await c.evaluate(`[...new Set([...document.querySelectorAll('.studio-page image')].map(i => i.getAttribute('href')))]`)));
+await c.evaluate(`window.__studio.studio.viewport.fit()`); await c.sleep(800);
+console.log('after fit:', JSON.stringify(await c.evaluate(`[...new Set([...document.querySelectorAll('.studio-page image')].map(i => i.getAttribute('href')))]`)));
+await c.close();

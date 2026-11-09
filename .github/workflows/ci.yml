@@ -59,3 +59,89 @@ jobs:
           MAIL_MAILER: array
           BROADCAST_CONNECTION: log
         run: ./vendor/bin/phpunit --colors=never
+
+  # ==== R-45 perf: PostgreSQL parity (own block; production runs PostgreSQL, the job above runs SQLite) ====
+  pgsql-tests:
+    name: PHP suite on PostgreSQL
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: design_perf_ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.4"
+          tools: composer:v2
+          coverage: none
+          extensions: pgsql, pdo_pgsql, mbstring, intl, bcmath, curl, gd, exif, fileinfo
+
+      - name: Cache Composer dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.composer/cache/files
+          key: ${{ runner.os }}-php-8.4-composer-${{ hashFiles('**/composer.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-php-8.4-composer-
+
+      - name: Prepare environment
+        run: cp .env.example .env
+
+      - name: Install dependencies
+        run: composer install --no-interaction --prefer-dist
+
+      - name: Generate application key
+        run: php artisan key:generate
+
+      # phpunit.pgsql.xml mirrors phpunit.xml but connects to PostgreSQL; the DB_* values below win over its defaults.
+      - name: Run tests on PostgreSQL
+        env:
+          DB_HOST: 127.0.0.1
+          DB_PORT: 5432
+          DB_DATABASE: design_perf_ci
+          DB_USERNAME: postgres
+          DB_PASSWORD: postgres
+        run: php artisan test -c phpunit.pgsql.xml --compact
+
+  # ==== R-45 perf: front-end tests and production build (own block) ====
+  js:
+    name: JS tests and build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      - name: Install
+        run: npm ci
+
+      - name: JS unit tests
+        run: npm run test:js
+
+      - name: Build
+        run: npm run build
+
+      # The entry chunk of the editor is a budget, not a hope (docs/R45_PERF.md): fail loudly if it grows past it.
+      - name: Editor entry size budget
+        run: node scripts/perf/bundle-budget.mjs

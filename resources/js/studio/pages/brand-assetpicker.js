@@ -53,7 +53,7 @@ export function pickAsset({ boot, title = 'Choose a picture' }) {
             status.textContent = list.length ? '' : (q ? 'No pictures match that search.' : 'You have not uploaded any pictures yet. Upload one to start.');
             for (const a of list) {
                 grid.appendChild(el('div', { role: 'listitem' }, el('button', { type: 'button', class: 'br-img', onclick: () => finish(a), 'aria-label': `Use ${a.name}` }, [
-                    el('span', { class: 'br-img__pic' }, el('img', { src: a.url, alt: '', loading: 'lazy', width: 128, height: 128 })),
+                    el('span', { class: 'br-img__pic' }, el('img', { src: a.preview_url || a.url, alt: '', loading: 'lazy', width: 128, height: 128 })),
                     el('span', { class: 'lt-small', text: a.name, style: { 'overflow-wrap': 'anywhere' } }),
                 ])));
             }

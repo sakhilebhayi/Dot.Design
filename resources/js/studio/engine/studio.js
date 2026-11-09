@@ -22,6 +22,7 @@ import { selectionFrame } from './selection.js';
 import { createTextEditor } from './text-edit.js';
 import { createCanvasMeasurer, createStubMeasurer } from './text-layout.js';
 import { createViewport, pinchView } from './viewport.js';
+import { lighterUrl, originalUrl, wantsOriginals } from './asset-urls.js';
 
 export const EVENTS = ['change', 'selection', 'save-state', 'page', 'error', 'viewport', 'history', 'contextmenu', 'activate', 'text-edit', 'font', 'recoverable', 'paste-files', 'ready'];
 
@@ -75,7 +76,10 @@ export function createStudio(options = {}) {
     const canvasOk = typeof OffscreenCanvas !== 'undefined' || typeof doc.createElement === 'function';
     const measure = canvasOk ? createCanvasMeasurer({ stackFor: fonts.stackFor, resolveWeight: fonts.resolveWeight }) : createStubMeasurer();
     const icons = createIconRegistry(options.icons);
-    const assetUrl = (id) => { const a = assets.get(Number(id)); return a ? a.url || a.src || null : null; };
+    const assetUrl = (id) => originalUrl(assets.get(Number(id)));
+    const previewUrl = (id) => lighterUrl(assets.get(Number(id)));
+    let canvasOriginals = false;
+    const canvasUrl = (id) => (canvasOriginals ? assetUrl(id) : previewUrl(id));
     const assetSize = (id) => { const a = assets.get(Number(id)); return a && a.width && a.height ? { width: a.width, height: a.height } : null; };
 
     const core = createCore({
@@ -116,7 +120,7 @@ export function createStudio(options = {}) {
     root.appendChild(stage);
     root.appendChild(overlaySvg);
 
-    const renderer = createLiveRenderer(pageSvg, { document: doc, measure, icons, assetUrl, assetSize, fonts });
+    const renderer = createLiveRenderer(pageSvg, { document: doc, measure, icons, assetUrl: canvasUrl, assetSize, fonts });
     const viewport = createViewport({ width: root.clientWidth || 800, height: root.clientHeight || 600, pageWidth: core.activePage().width, pageHeight: core.activePage().height, padding: options.fitPadding });
     const overlay = createOverlay(overlaySvg, viewport, { root, document: doc });
 
@@ -330,6 +334,11 @@ export function createStudio(options = {}) {
     });
 
     viewport.onChange((v) => {
+        const wantOriginals = wantsOriginals(v.zoom);
+        if (wantOriginals !== canvasOriginals) {
+            canvasOriginals = wantOriginals;
+            if ([...assets.values()].some((a) => a && a.preview_url)) { renderer.setAssetResolvers({ assetUrl: canvasUrl, assetSize }); render(true); }
+        }
         stage.style.transform = `translate(${v.x}px, ${v.y}px) scale(${v.zoom})`;
         ev.emit('viewport', { zoom: v.zoom, x: v.x, y: v.y });
         scheduleDraw();
@@ -400,7 +409,7 @@ export function createStudio(options = {}) {
         renderPageToSvg(pageIndex, opts = {}) {
             const page = core.getState().doc.pages[pageIndex];
             if (!page) return '';
-            return renderPageToSvgString(page, { forExport: true, ...opts, measure, icons, assetUrl, assetSize, fonts });
+            return renderPageToSvgString(page, { forExport: true, ...opts, measure, icons, assetUrl: opts.preview ? previewUrl : assetUrl, assetSize, fonts });
         },
         /** Waits for the page's fonts and (optionally) embeds them, then renders. Use for exports. */
         async renderPageToSvgAsync(pageIndex, opts = {}) {
@@ -410,7 +419,7 @@ export function createStudio(options = {}) {
             await fonts.ensureLoaded(specs);
             measure.clear && measure.clear();
             const fontCss = opts.embedFonts ? await fonts.embedCss(specs) : undefined;
-            return renderPageToSvgString(page, { forExport: true, ...opts, fontCss, measure, icons, assetUrl, assetSize, fonts });
+            return renderPageToSvgString(page, { forExport: true, ...opts, fontCss, measure, icons, assetUrl: opts.preview ? previewUrl : assetUrl, assetSize, fonts });
         },
         viewport: {
             fit: () => viewport.fit(),
@@ -457,7 +466,7 @@ export function createStudio(options = {}) {
         get prefs() { return { ...prefs }; },
         setBrand(b) { brand = b || null; },
         get brand() { return brand; },
-        setAssets(list) { assets = assetIndex(list); renderer.setAssetResolvers({ assetUrl, assetSize }); render(true); },
+        setAssets(list) { assets = assetIndex(list); renderer.setAssetResolvers({ assetUrl: canvasUrl, assetSize }); render(true); },
         get formats() { return options.formats || []; },
         get limits() { return { ...LIMITS, ...(options.limits || {}) }; },
         get loadIssues() { return core.loadIssues; },

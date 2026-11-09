@@ -53,7 +53,7 @@ const toBlob = (canvas, type, q) => new Promise((resolve) => canvas.toBlob(resol
 
 /** Render page 1 to a PNG no bigger than 300 KB (smaller canvas, then WebP, until it fits). */
 export async function renderThumbnail(studio) {
-    let svg = await studio.renderPageToSvgAsync(0, { embedFonts: true, idPrefix: 'th-' });
+    let svg = await studio.renderPageToSvgAsync(0, { embedFonts: true, preview: true, idPrefix: 'th-' });
     if (!svg) return null;
     svg = await inlineImages(svg);
     const url = URL.createObjectURL(new Blob([svg], { type: 'image/svg+xml' }));

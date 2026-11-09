@@ -38,6 +38,11 @@ return [
         'reencode' => (bool) env('DESIGN_ASSET_REENCODE', true),
         'jpeg_quality' => 90,
         'webp_quality' => 90,
+
+        // The editor canvas draws a WebP copy no wider than this (px), a few hundred KB instead of a multi-MB original; exports
+        // always use the original. Pictures at or under this edge (plus 15%) get no copy.
+        'preview_edge' => (int) env('DESIGN_ASSET_PREVIEW_EDGE', 1600),
+        'preview_quality' => 82,
     ],
 
     'canvas' => [
