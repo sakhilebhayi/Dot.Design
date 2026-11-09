@@ -121,7 +121,7 @@ Limits you will hit: a page save is at most 1.4 MB on the wire and 1 MB of norma
 | POST | `/login` | `login.store` | public | `throttle:login` | `Laravel\Fortify\Http\Controllers\AuthenticatedSessionController@store` |
 | POST | `/logout` | `logout` | signed in |  | `Laravel\Fortify\Http\Controllers\AuthenticatedSessionController@destroy` |
 | GET | `/privacy-policy` | `policy.show` | public |  | `Laravel\Jetstream\Http\Controllers\Livewire\PrivacyPolicyController@show` |
-| GET/POST/PUT/PATCH/DELETE/OPTIONS | `/register` | `register` | public |  | `Illuminate\Routing\RedirectController` |
+| ANY | `/register` | `register` | public |  | `Illuminate\Routing\RedirectController` |
 | POST | `/reset-password` | `password.update` | public |  | `Laravel\Fortify\Http\Controllers\NewPasswordController@store` |
 | GET | `/reset-password/{token}` | `password.reset` | public |  | `Laravel\Fortify\Http\Controllers\NewPasswordController@create` |
 | GET | `/team-invitations/{invitation}` | `team-invitations.accept` | signed in |  | `Laravel\Jetstream\Http\Controllers\TeamInvitationController@accept` |

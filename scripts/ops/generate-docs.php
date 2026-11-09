@@ -53,7 +53,10 @@ foreach ($routes as $r) {
         continue;
     }
 
-    $methods = array_values(array_diff(explode('|', $r['method']), ['HEAD']));
+    // HEAD is implied by GET, and the QUERY verb only appears in newer Laravel/Symfony versions: leave both out so the table
+    // is the same whichever patch release is installed. A route that answers every remaining verb is shown as ANY.
+    $methods = array_values(array_diff(explode('|', $r['method']), ['HEAD', 'QUERY']));
+    $methods = count($methods) >= 6 ? ['ANY'] : $methods;
     $mw = (array) $r['middleware'];
     $auth = match (true) {
         in_array('App\Http\Middleware\EnsurePlatformOperator', $mw, true) || in_array('operator', $mw, true) => 'operator',
