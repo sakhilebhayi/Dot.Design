@@ -30,7 +30,7 @@ Severity is the worst realistic outcome for a business that trusts this product 
 
 ## 2. The authorisation matrix (task 1)
 
-`tests/Support/RouteCatalog.php` reads the live router and sorts every route into public (an explicit allowlist, each entry with its reason), vendor (Fortify, Jetstream, Livewire, Sanctum, framework) or ours. `tests/Support/SecurityWorld.php` builds a whole business (owner, admin, editor, reviewer, a design with a page, version, comment, review, share link, grant, picture, brand kit with a logo, team template, assistant proposal) with a sentinel string in every name, so any leak is a substring search. `RouteAuthorisationMatrixTest` (13 tests, about 540 route requests per run):
+`tests/Support/RouteCatalog.php` reads the live router and sorts every route into public (an explicit allowlist, each entry with its reason), vendor (Fortify, Jetstream, Livewire, Sanctum, framework) or ours. `tests/Support/SecurityWorld.php` builds a whole business (owner, admin, editor, reviewer, a design with a page, version, comment, review, share link, grant, picture, brand kit with a logo, team template, assistant proposal) with a sentinel string in every name, so any leak is a substring search. `RouteAuthorisationMatrixTest` (13 tests, several hundred requests per run):
 
 - a route nobody classified, or one of ours outside `auth:sanctum`, fails; so does a stale public-allowlist entry; the operator-only routes must be exactly the 14 expected;
 - every route of ours: guest gets 401 (JSON) or a redirect to login, with no data in the body;
@@ -69,7 +69,7 @@ Rate limits are per person when there is one (`design-saves`, `-shares`, `-comme
 
 ## 4. Verification record (browser)
 
-Own headless Chrome 140-series over the DevTools protocol, own profile directory, dev server on port 8496 (the assigned 8486 was already held by another agent's server, so it was left alone), all processes stopped afterwards. Dev data: the seeded `dev@example.test` account plus a hostile workspace created for the run (`/private/tmp/.../scratchpad/sec-cdp/seed.php`, not committed).
+Own headless Chrome 157 over the DevTools protocol, own profile directory, dev server on port 8496 (the assigned 8486 was already held by another agent's server, so it was left alone), all processes stopped afterwards. Dev data: the seeded `dev@example.test` account plus a hostile workspace created for the run (`/private/tmp/.../scratchpad/sec-cdp/seed.php`, not committed).
 
 | Check | Result |
 |---|---|
@@ -117,7 +117,7 @@ Own headless Chrome 140-series over the DevTools protocol, own profile directory
 
 ## 8. Tests
 
-`tests/Feature/Security/` (17 files, 102 tests, about 70,000 assertions) plus `tests/Support/{SecurityWorld,RouteCatalog,EnforcedCsrf}.php`; `SecurityHeadersTest` and `StudioCopiesTest::test_capability_matrix` were updated for the behaviours that legitimately changed (decisions D-1401, D-1403). Run `php artisan test tests/Feature/Security`.
+`tests/Feature/Security/` (16 files, 104 tests, about 70,000 assertions) plus `tests/Support/{SecurityWorld,RouteCatalog,EnforcedCsrf}.php`; `SecurityHeadersTest` and `StudioCopiesTest::test_capability_matrix` were updated for the behaviours that legitimately changed (decisions D-1401, D-1403). Run `php artisan test tests/Feature/Security`.
 
 | File | Tests | Covers |
 |---|---|---|
@@ -136,3 +136,4 @@ Own headless Chrome 140-series over the DevTools protocol, own profile directory
 | `ErrorLeakTest` | 5 | debug-off error pages |
 | `AccountErasureTest` | 5 | S-13 |
 | `PrivacyRightsAndRetentionTest` | 7 | S-14 |
+| `SecurityEventLogTest` | 2 | the `security.*` log lines (`docs/R45_PRIVACY.md` section 7) |
