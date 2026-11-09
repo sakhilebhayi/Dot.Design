@@ -13,4 +13,11 @@ return [
     | have blocked (to /csp-report) and blocks nothing.
     */
     'csp_report_only' => (bool) env('SECURITY_CSP_REPORT_ONLY', false),
+
+    /*
+    | Sign-in throttles beyond Fortify's per-account-and-address rule: attempts per address per minute (spraying many accounts) and
+    | per account per hour across all addresses (many addresses at one account).
+    */
+    'login_per_ip_per_minute' => (int) env('SECURITY_LOGIN_PER_IP_PER_MINUTE', 20),
+    'login_per_account_per_hour' => (int) env('SECURITY_LOGIN_PER_ACCOUNT_PER_HOUR', 60),
 ];
