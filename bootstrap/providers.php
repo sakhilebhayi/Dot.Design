@@ -3,9 +3,10 @@
 use App\Providers\AppServiceProvider;
 use App\Providers\FortifyServiceProvider;
 use App\Providers\JetstreamServiceProvider;
+use App\Providers\StudioAiServiceProvider;
+use App\Providers\StudioBackendServiceProvider;
 use App\Providers\StudioBusinessServiceProvider;
 use App\Providers\StudioIntegrationsServiceProvider;
-use App\Providers\StudioBackendServiceProvider;
 
 return [
     AppServiceProvider::class,
@@ -14,4 +15,5 @@ return [
     StudioBusinessServiceProvider::class,
     StudioIntegrationsServiceProvider::class,
     StudioBackendServiceProvider::class,
+    StudioAiServiceProvider::class,
 ];

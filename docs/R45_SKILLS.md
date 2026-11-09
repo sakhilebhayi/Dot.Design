@@ -33,3 +33,13 @@ Verification tools actually run: `@google/design.md lint`, `impeccable detect` (
 | `hallmark`, `gsap-*`, `scroll-world`, `react-bits`, `canvas-ui`, `terminal-dark`, `design-md`, `awesome-design-md`, `open-design` | not used | Not in scope (no new landing page, no scroll cinematics, no new design tokens; DESIGN.md was read, not changed). |
 
 Browser verification used an isolated Playwright browser session (`playwright-cli -s=cf`, real Chromium) because the shared Browser pane was being driven by other agents at the same time.
+## ai agent (assistant panel, 2026-11-09)
+| Skill | Status | How it was used |
+|---|---|---|
+| `claude-api` | available, invoked before writing API code | Read the Messages API shape from its cURL reference (no PHP SDK used, see D-1100), the model table and the Sonnet 5.5 notes (forced tool_choice 400, `between_tools`, effort, strict tools). Not verified against the live API. |
+| `impeccable` | available, invoked | Ran `impeccable context` (no PRODUCT.md; the incumbent Light Table system in DESIGN.md is the authority, Operate mode), read `craft-floor.md` and `operate.md`, then built the panel with the DS tokens only: ruled rows instead of cards, no eyebrows, no gradient text, no side stripes, tone steps not shadows, skeleton bars not spinners, states for empty, loading, error, off, limit and success. `impeccable detect` on the CSS and JS: 0 findings after fixing a width transition and three off-scale radii. |
+| `design-taste-frontend`, `hallmark`, `open-design`, `awesome-design-md`, `design-md`, `gsap-*`, `scroll-world`, `react-bits`, `canvas-ui`, `terminal-dark` | not used | This is an editor side panel inside a fixed direction (DESIGN.md), not a page, brand surface or animation. |
+| `ui-ux-pro-max` | UNAVAILABLE | Dangling symlink (see above). Not used, not claimed. |
+| `emil-design-eng` | UNAVAILABLE (empty) | Dangling symlink. Not used, not claimed. |
+
+Verification actually run: `impeccable detect`, headless Chrome through the DevTools protocol (own browser, so it does not fight the shared pane) at 1280 px dark and light and at 390 px, with a horizontal-overflow and touch-target check.

@@ -1,3 +1,5 @@
+> **R-45 update (2026-11-09):** the assistant that actually ships is documented in `docs/R45_AI.md` (compose, improve, copy, deterministic quick fixes). AI image generation described below is NOT offered: there is no provider contract, and nothing in the product links to the mock driver.
+
 # AI Integration Improvements
 
 > Upgrades for Dot.Design's generative AI features. Each section is independently applicable.
