@@ -32,7 +32,7 @@ class ResponsiveShellTest extends TestCase
         return [
             'dashboard' => ['dashboard'],
             'projects index' => ['design.projects.index'],
-            'new project form' => ['design.projects.create'],
+            'start screen' => ['design.start'],
             'token sets' => ['design-system.token-sets.index'],
             'components' => ['design-system.components.index'],
             'profile' => ['profile.show'],
@@ -126,9 +126,9 @@ class ResponsiveShellTest extends TestCase
         $index->assertSee('class="lt-contacts lt-views"', false);
         $index->assertSee('Responsive Poster Fixture');
 
-        $create = $this->actingAs($user)->get(route('design.projects.create'));
-        $create->assertSee('lt-page lt-page--narrow', false);
-        $create->assertSee('form-grid-3', false);
+        $create = $this->actingAs($user)->get(route('design.start'));
+        $create->assertSee('lt-page', false);
+        $create->assertSee('class="lt-contacts"', false);
     }
 
     public function test_the_component_pages_use_the_page_wrapper(): void

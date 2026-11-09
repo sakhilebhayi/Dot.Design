@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\DesignProject;
 use App\Models\User;
 use App\Support\Ui\DesignListing;
+use App\Support\Ui\Icons;
 use App\Support\Ui\Navigation;
 use App\Support\Ui\StartFormats;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -159,7 +160,7 @@ class DesignSystemShellTest extends TestCase
             'forgot password' => ['/forgot-password', false],
             'dashboard' => ['/dashboard', true],
             'designs' => ['/design/projects', true],
-            'new design' => ['/design/projects/create', true],
+            'new design' => ['/design/new', true],
             'profile' => ['/user/profile', true],
             'token sets' => ['/design-system/token-sets', true],
         ];
@@ -209,8 +210,10 @@ class DesignSystemShellTest extends TestCase
             'home' => ['/dashboard', true],
             'designs' => ['/design/projects', true],
             'designs filtered' => ['/design/projects?q=poster&type=poster&sort=name', true],
-            'new design' => ['/design/projects/create', true],
-            'new design from a format' => ['/design/projects/create?format=poster', true],
+            'new design' => ['/design/new', true],
+            'new design from a format' => ['/design/new?format=poster', true],
+            'guided brief' => ['/design/new/brief?goal=announce_sale', true],
+            'templates' => ['/design/templates', true],
             'token sets' => ['/design-system/token-sets', true],
             'components' => ['/design-system/components', true],
             'profile' => ['/user/profile', true],
@@ -283,24 +286,25 @@ class DesignSystemShellTest extends TestCase
         $this->assertStringNotContainsString('AI Generation Activity', $html);
     }
 
-    public function test_the_start_strip_links_to_the_create_route_with_a_format_key(): void
+    public function test_the_start_strip_links_to_the_start_screen_with_a_format_key(): void
     {
         $html = $this->actingAs($this->user())->get('/dashboard')->assertOk()->getContent();
 
         foreach (StartFormats::all() as $format) {
-            $this->assertStringContainsString(route('design.projects.create').'?format='.$format['key'], $html);
+            $this->assertStringContainsString(route('design.start').'?format='.$format['key'], $html);
         }
     }
 
-    public function test_the_create_form_prefills_from_a_known_format_and_ignores_an_unknown_one(): void
+    public function test_the_old_create_form_redirects_to_the_start_screen_and_keeps_the_format(): void
     {
         $user = $this->user();
 
-        $this->actingAs($user)->get('/design/projects/create?format=poster')
-            ->assertOk()->assertSee('value="297"', false)->assertSee('value="420"', false)->assertSee('<option value="mm" selected>', false);
+        $this->actingAs($user)->get('/design/projects/create?format=poster')->assertRedirect(route('design.start', ['format' => 'poster']));
+        $this->actingAs($user)->get('/design/projects/create')->assertRedirect(route('design.start'));
 
-        $this->actingAs($user)->get('/design/projects/create?format=nonsense')
-            ->assertOk()->assertSee('value="1200"', false);
+        // the old key means the catalogue's A3 portrait (297 x 420 mm = 842 x 1191 px); an unknown key is ignored
+        $this->actingAs($user)->get('/design/new?format=poster')->assertOk()->assertSee('A3 portrait')->assertSee('name="format_key" value="a3-portrait"', false);
+        $this->actingAs($user)->get('/design/new?format=nonsense')->assertOk()->assertDontSee('id="preset-title"', false);
     }
 
     public function test_the_designs_list_searches_filters_and_explains_an_empty_result(): void
@@ -351,10 +355,10 @@ class DesignSystemShellTest extends TestCase
     public function test_the_icon_set_is_inline_svg_with_the_names_the_editor_will_need(): void
     {
         foreach (['select', 'text', 'shape', 'image', 'align-left', 'layers', 'undo', 'redo', 'zoom-in', 'download', 'share', 'comment', 'history', 'template', 'sparkle', 'page', 'grid', 'lock', 'eye', 'registration', 'swatch', 'artboard'] as $name) {
-            $this->assertTrue(\App\Support\Ui\Icons::exists($name), "icon {$name} is missing");
+            $this->assertTrue(Icons::exists($name), "icon {$name} is missing");
         }
-        $this->assertGreaterThanOrEqual(70, count(\App\Support\Ui\Icons::names()));
+        $this->assertGreaterThanOrEqual(70, count(Icons::names()));
         $this->assertFileExists(resource_path('views/components/ds/icons/LICENSE-lucide.txt'));
-        $this->assertNull(\App\Support\Ui\Icons::path('../../.env'), 'icon names cannot escape the icon directory');
+        $this->assertNull(Icons::path('../../.env'), 'icon names cannot escape the icon directory');
     }
 }

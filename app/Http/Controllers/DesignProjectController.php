@@ -8,11 +8,14 @@ use App\Models\AiGenerationLog;
 use App\Models\DesignAsset;
 use App\Models\DesignProject;
 use App\Services\Design\ActivityLog;
+use App\Services\Design\Formats;
+use App\Services\Design\ProjectMeta;
 use App\Services\Design\ThumbnailStore;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
 /**
@@ -34,27 +37,37 @@ class DesignProjectController extends Controller
         return view('design.projects.index', compact('projects'));
     }
 
-    public function create(): View
+    /** The old form is gone: starting a design is the Start screen now. A `?format=` link keeps working. */
+    public function create(Request $request): RedirectResponse
     {
-        $types = self::TYPES;
-
-        return view('design.projects.create', compact('types'));
+        return redirect()->route('design.start', $request->query());
     }
 
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request, Formats $formats, ProjectMeta $meta): RedirectResponse
     {
         $this->authorize('create', DesignProject::class);
 
-        $data = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'type' => ['required', 'string', 'in:'.implode(',', self::TYPES)],
-            'width' => ['required', 'integer', 'min:1', 'max:10000'],
-            'height' => ['required', 'integer', 'min:1', 'max:10000'],
-            'unit' => ['required', 'string', 'in:px,in,cm,mm'],
-        ]);
+        // A catalogue `format_key` fixes the type and the size (px at 72 dpi); otherwise the fields below are the size.
+        $format = $request->filled('format_key') ? $formats->find((string) $request->input('format_key')) : null;
+        if ($request->filled('format_key') && $format === null) {
+            throw ValidationException::withMessages(['format_key' => 'That size is not in the list. Pick another.']);
+        }
+
+        $data = $format !== null
+            ? ['name' => ($request->validate(['name' => ['nullable', 'string', 'max:255']])['name'] ?? null) ?: $format['label'], 'type' => $format['type'], 'width' => $format['px']['width'], 'height' => $format['px']['height'], 'unit' => 'px']
+            : $request->validate([
+                'name' => ['required', 'string', 'max:255'],
+                'type' => ['required', 'string', 'in:'.implode(',', self::TYPES)],
+                'width' => ['required', 'integer', 'min:1', 'max:10000'],
+                'height' => ['required', 'integer', 'min:1', 'max:10000'],
+                'unit' => ['required', 'string', 'in:px,in,cm,mm'],
+            ]);
         $data['user_id'] = $request->user()->id;
 
         $project = DesignProject::create($data);
+        if ($format !== null) {
+            $meta->write($project, ['format_key' => $format['key']]);
+        }
 
         // Every project starts with one editable page -- the editor
         // (show()) assumes a project always has at least one canvas.
