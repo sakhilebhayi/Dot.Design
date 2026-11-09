@@ -1,13 +1,15 @@
 <?php
+
 // Image sanitiser: time and peak memory for one file at the PHP memory_limit this process was started with.
 //   php -d memory_limit=256M scripts/perf/image-bench.php /tmp/perf-img/photo-6000x4000.jpg
 use App\Services\Assets\AssetRejected;
 use App\Services\Assets\ImageSanitiser;
+use Illuminate\Contracts\Console\Kernel;
 
 error_reporting(E_ALL & ~E_DEPRECATED);
 require __DIR__.'/../../vendor/autoload.php';
 $app = require __DIR__.'/../../bootstrap/app.php';
-$app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap();
+$app->make(Kernel::class)->bootstrap();
 
 $file = $argv[1];
 $bytes = (string) file_get_contents($file);

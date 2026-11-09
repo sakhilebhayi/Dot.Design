@@ -9,11 +9,12 @@
 use App\Models\DesignProject;
 use App\Models\DesignTemplate;
 use App\Models\User;
+use Illuminate\Contracts\Console\Kernel;
 use Illuminate\Support\Str;
 
 require __DIR__.'/../../vendor/autoload.php';
 $app = require __DIR__.'/../../bootstrap/app.php';
-$app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap();
+$app->make(Kernel::class)->bootstrap();
 
 $user = User::where('email', 'dev@example.test')->firstOrFail();
 mt_srand(7);

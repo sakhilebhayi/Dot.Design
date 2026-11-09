@@ -12,11 +12,12 @@ use App\Models\DesignCanvas;
 use App\Models\DesignProject;
 use App\Models\User;
 use App\Services\Design\PageStore;
+use Illuminate\Contracts\Console\Kernel;
 
 error_reporting(E_ALL & ~E_DEPRECATED);
 require __DIR__.'/../../vendor/autoload.php';
 $app = require __DIR__.'/../../bootstrap/app.php';
-$app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap();
+$app->make(Kernel::class)->bootstrap();
 
 if (($argv[1] ?? '') === 'worker') {
     [, , $mode, $at, $projectId, $pageId, $revision, $n] = $argv;
