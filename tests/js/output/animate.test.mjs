@@ -164,7 +164,7 @@ test('animated matrix: identity at rest, translate, scale about centre, rotation
     assert.deepEqual(nz(animatedMatrix(e, rest)), [1, 0, 0, 1, 100, 50]);
     assert.deepEqual(nz(animatedMatrix(e, { ...rest, translateX: 10, translateY: -5 })), [1, 0, 0, 1, 110, 45]);
     const s = animatedMatrix(e, { ...rest, scale: 0.5 }); // centre (200,100) stays fixed
-    near(s[0], 0.5); near(s[3], 0.5); near(s[4], 100 + 0.5 * 0 + (200 - 0.5 * 200), 1e-9); near(s[5], 50 + (100 - 0.5 * 100), 1e-9);
+    near(s[0], 0.5); near(s[3], 0.5); near(s[4], 150, 1e-9); near(s[5], 75, 1e-9); // top-left moves toward the fixed centre (200,100)
     const r = animatedMatrix(e, { ...rest, rotate: 90 }); // centre stays at (200,100): local (100,50) -> (200,100)
     near(r[0] * 100 + r[2] * 50 + r[4], 200, 1e-9); near(r[1] * 100 + r[3] * 50 + r[5], 100, 1e-9);
 });
