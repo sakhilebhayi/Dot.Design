@@ -114,6 +114,7 @@ async function initGoalPreviews() {
     let previewer = null;
     const shown = new Set();
     const queue = createRenderQueue();
+    const iconsReady = loadIcons(); // its own chunk: fetch it now, in step with the first card's list request
     for (const card of cards) {
         const frame = card.querySelector('.cf-goal__frame');
         whenVisible(card, async () => {
@@ -124,7 +125,7 @@ async function initGoalPreviews() {
             if (t) shown.add(t.id);
             if (!t || !t.preview) return; // nothing to show: the neutral frame stays, which is honest
             try {
-                if (!previewer) previewer = createPreviewer({ manifest: boot.fonts || [], icons: await loadIcons() });
+                if (!previewer) previewer = createPreviewer({ manifest: boot.fonts || [], icons: await iconsReady });
                 await drawInto(frame, previewer, queue, { ...t, pages: [t.preview] }, 0);
             } catch (e) { /* the neutral frame stays */ }
         });
