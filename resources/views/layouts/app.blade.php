@@ -22,7 +22,7 @@
     <link rel="preload" href="{{ asset('fonts/ui/atkinson-hyperlegible-next-latin-wght.woff2') }}" as="font" type="font/woff2" crossorigin>
     <script src="{{ asset('js/ds-theme.js') }}"></script>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
-    @livewireStyles
+    {{-- No @livewireStyles / @livewireScripts here: Livewire (83 KB with Alpine) is only needed by the Jetstream account and team pages, and it injects its own assets into a page that holds a Livewire component. Every other page was waiting for it before its own script could run. --}}
     @stack('head')
 </head>
 <body>
@@ -159,6 +159,5 @@
 
     <x-ds.toast />
     @stack('modals')
-    @livewireScripts
 </body>
 </html>

@@ -61,7 +61,7 @@ export function mountBrand(el, ctx) {
         if (fontRows.length) body.append(h('section', { class: 'st-group' }, h('h3', { class: 'st-group__title', text: 'Fonts' }), ...fontRows));
         const logos = (kit.assets || []).filter((a) => a.asset);
         if (logos.length) {
-            body.append(h('section', { class: 'st-group' }, h('h3', { class: 'st-group__title', text: 'Logos and pictures' }), h('div', { class: 'st-pics' }, ...logos.map((a) => h('button', { class: 'st-pic st-pic--logo', attrs: { type: 'button', 'aria-label': `Add ${a.label || a.role_label}` }, onClick: () => ctx.uploads.usePicture(a.asset) }, h('img', { class: 'st-pic__img', attrs: { src: a.asset.url, alt: '', loading: 'lazy' } }), h('span', { class: 'st-pic__cap', text: a.label || a.role_label }))))));
+            body.append(h('section', { class: 'st-group' }, h('h3', { class: 'st-group__title', text: 'Logos and pictures' }), h('div', { class: 'st-pics' }, ...logos.map((a) => h('button', { class: 'st-pic st-pic--logo', attrs: { type: 'button', 'aria-label': `Add ${a.label || a.role_label}` }, onClick: () => ctx.uploads.usePicture(a.asset) }, h('img', { class: 'st-pic__img', attrs: { src: a.asset.preview_url || a.asset.url, alt: '', loading: 'lazy' } }), h('span', { class: 'st-pic__cap', text: a.label || a.role_label }))))));
         } else body.append(h('p', { class: 'st-note', text: 'No logo in your brand kit yet. Add one in Brand Studio.' }));
         const url = brandStudioUrl(ctx);
         if (url) body.append(h('a', { class: 'lt-btn lt-btn--ghost lt-btn--sm', href: url, target: '_blank', rel: 'noopener' }, 'Open Brand Studio', icon('external')));

@@ -23,6 +23,14 @@ class ImageSanitiser
         'image/webp' => ['ext' => 'webp', 'imagetype' => IMAGETYPE_WEBP],
     ];
 
+    /**
+     * How many times the decoded size (width x height x 4 bytes) a decode-and-re-encode of each type holds at its peak,
+     * measured as peak resident memory on a 24 megapixel photo (R-45 perf, docs/R45_PERF.md): JPEG 2x, PNG 3x (libpng
+     * keeps a second copy of every row while writing), WebP 4.7x (libwebp's own work buffers), rounded up. The input
+     * bytes come on top. A rotated copy (EXIF orientation) adds one more decoded size.
+     */
+    private const PEAK_FACTOR = ['image/jpeg' => 2, 'image/png' => 3, 'image/webp' => 5];
+
     public const TYPE_MESSAGE = 'Only JPG, PNG or WebP images can be uploaded. SVG and other formats are not accepted.';
 
     public function canReencode(): bool
@@ -49,7 +57,7 @@ class ImageSanitiser
         }
 
         $orientation = $mime === 'image/jpeg' ? $this->exifOrientation($bytes) : 1;
-        $this->checkMemory($width, $height, $orientation !== 1);
+        $this->checkMemory($mime, $width, $height, $orientation !== 1, strlen($bytes));
 
         $image = $this->decode($bytes);
         $image = $this->applyOrientation($image, $orientation);
@@ -57,9 +65,86 @@ class ImageSanitiser
         $out = $this->encode($image, $mime);
         $outWidth = imagesx($image);
         $outHeight = imagesy($image);
+        [$preview, $previewWidth, $previewHeight] = $this->previewCopy($image);
         unset($image);
 
-        return new SanitisedImage($out, $mime, self::TYPES[$mime]['ext'], $outWidth, $outHeight, true);
+        return new SanitisedImage($out, $mime, self::TYPES[$mime]['ext'], $outWidth, $outHeight, true, $preview, $previewWidth, $previewHeight);
+    }
+
+    /**
+     * The editor copy of an already stored (already sanitised, already upright) picture: for pictures uploaded before copies
+     * existed. Same memory guard as an upload. Returns null when the picture is small enough not to need one.
+     *
+     * @return array{bytes: string, width: int, height: int}|null
+     *
+     * @throws AssetRejected when it cannot be decoded here (too large for this server's memory, or damaged)
+     */
+    public function previewOf(string $storedBytes): ?array
+    {
+        $mime = $this->detectMime($storedBytes);
+        $info = @getimagesizefromstring($storedBytes);
+
+        if ($info === false) {
+            throw new AssetRejected('That file could not be read as an image.');
+        }
+
+        $edge = (int) config('design.assets.preview_edge', 1600);
+
+        if (max($info[0], $info[1]) <= $edge * 1.15) {
+            return null;
+        }
+
+        $this->checkMemory($mime, $info[0], $info[1], false, strlen($storedBytes));
+        $image = $this->decode($storedBytes);
+        [$bytes, $width, $height] = $this->previewCopy($image);
+        unset($image);
+
+        return $bytes === null ? null : ['bytes' => $bytes, 'width' => $width, 'height' => $height];
+    }
+
+    /**
+     * A smaller WebP copy for the editor canvas, made from the pixels already in memory (no second decode). The original stays
+     * the file exports use. Only worth making when the picture is larger than the edge in config('design.assets.preview_edge')
+     * (default 1600 px: the page is rarely wider than that on screen). A failure here never fails the upload: the editor then
+     * simply loads the original.
+     *
+     * @return array{0: ?string, 1: int, 2: int}
+     */
+    private function previewCopy(\GdImage $image): array
+    {
+        $edge = (int) config('design.assets.preview_edge', 1600);
+        $width = imagesx($image);
+        $height = imagesy($image);
+
+        if ($edge < 200 || max($width, $height) <= $edge * 1.15) {
+            return [null, 0, 0];
+        }
+
+        try {
+            $newWidth = $width >= $height ? $edge : (int) max(1, round($width * $edge / $height));
+            $newHeight = $width >= $height ? (int) max(1, round($height * $edge / $width)) : $edge;
+
+            // IMG_BICUBIC returns false on some GD builds (it does here), and the filters that work differ in cost: IMG_TRIANGLE
+            // (73 ms for 24 MP) is the first choice, the fixed bilinear one (13 ms, harsher) the fallback.
+            $scaled = imagescale($image, $newWidth, $newHeight, IMG_TRIANGLE) ?: imagescale($image, $newWidth, $newHeight, IMG_BILINEAR_FIXED);
+
+            if ($scaled === false) {
+                return [null, 0, 0];
+            }
+
+            imagealphablending($scaled, false);
+            imagesavealpha($scaled, true);
+            ob_start();
+            $ok = imagewebp($scaled, null, (int) config('design.assets.preview_quality', 82));
+            $bytes = (string) ob_get_clean();
+            [$w, $h] = [imagesx($scaled), imagesy($scaled)];
+            unset($scaled);
+
+            // A copy that is not clearly smaller than the picture is not worth serving.
+            return $ok && $bytes !== '' ? [$bytes, $w, $h] : [null, 0, 0];
+        } catch (\Throwable) {
+            return [null, 0, 0];
+        }
     }
 
     private function detectMime(string $bytes): string
@@ -96,12 +181,18 @@ class ImageSanitiser
 
     /**
      * Refuse cleanly when the decoded image would not fit in PHP's
-     * memory_limit (see MemoryGuard). A rotated copy (EXIF orientation)
-     * needs the pixels twice.
+     * memory_limit (see MemoryGuard), using the measured peak of each type
+     * (PEAK_FACTOR) rather than the decoded size alone.
      */
-    private function checkMemory(int $width, int $height, bool $needsRotation): void
+    /** Bytes a decode-and-re-encode of this image holds at its peak (see PEAK_FACTOR). */
+    public static function peakBytes(string $mime, int $width, int $height, bool $rotated = false, int $inputBytes = 0): int
     {
-        $bytes = MemoryGuard::imageBytes($width, $height) * ($needsRotation ? 2 : 1);
+        return MemoryGuard::imageBytes($width, $height) * (self::PEAK_FACTOR[$mime] + ($rotated ? 1 : 0)) + $inputBytes;
+    }
+
+    private function checkMemory(string $mime, int $width, int $height, bool $needsRotation, int $inputBytes): void
+    {
+        $bytes = self::peakBytes($mime, $width, $height, $needsRotation, $inputBytes);
         $mb = MemoryGuard::shortfallMegabytes($bytes);
 
         if ($mb !== null) {

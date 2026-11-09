@@ -7,7 +7,7 @@
 .lt-sheet { background: var(--lt-panel); min-width: 0; min-height: 100vh; min-height: 100dvh; box-shadow: -1px 0 0 var(--lt-rule); display: flex; flex-direction: column; }
 
 .lt-brand { display: flex; align-items: center; gap: var(--lt-space-3); padding: var(--lt-space-1) var(--lt-space-2); min-height: 2.5rem; border-radius: var(--lt-radius-2); }
-.lt-mark { flex: none; display: inline-block; width: 2rem; height: 2rem; border-radius: 50%; background: url("/images/logo.png") no-repeat; background-size: 90px auto; background-position: -19.5px -11px; }
+.lt-mark { flex: none; display: inline-block; width: 2rem; height: 2rem; border-radius: 50%; background: url("/images/logo-180.webp") no-repeat; background-size: 90px auto; background-position: -19.5px -11px; }
 .lt-mark--lg { width: 3rem; height: 3rem; background-size: 135px auto; background-position: -29.5px -17px; }
 .lt-brand__name { font-family: var(--lt-font-display); font-weight: 700; font-size: 1.0625rem; letter-spacing: -0.02em; line-height: 1; }
 .lt-brand__name b { color: var(--lt-accent); font-weight: 700; }

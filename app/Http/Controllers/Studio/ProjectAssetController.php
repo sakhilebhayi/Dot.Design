@@ -29,8 +29,14 @@ class ProjectAssetController extends StudioController
         $disk = Storage::disk($row->disk);
         abort_unless($disk->exists($row->file_path), 404);
 
-        $response = $disk->response($row->file_path, null, [
-            'Content-Type' => $mime,
+        // ?size=preview: the lighter WebP copy the editor canvas draws (falls back to the original when there is none).
+        $previewPath = $request->query('size') === 'preview' ? $row->previewPath() : null;
+        $usePreview = $previewPath !== null && $disk->exists($previewPath);
+        $servedPath = $usePreview ? $previewPath : $row->file_path;
+        $servedMime = $usePreview ? 'image/webp' : $mime;
+
+        $response = $disk->response($servedPath, null, [
+            'Content-Type' => $servedMime,
             'Content-Disposition' => 'inline',
             'X-Content-Type-Options' => 'nosniff',
             'Content-Security-Policy' => "default-src 'none'; sandbox",
@@ -39,7 +45,7 @@ class ProjectAssetController extends StudioController
 
         $response->setPrivate();
         $response->setMaxAge(3600);
-        $response->setEtag((string) ($row->content_hash ?: sha1($row->file_path)));
+        $response->setEtag(($usePreview ? 'p-' : '').(string) ($row->content_hash ?: sha1($row->file_path)));
         $response->isNotModified($request);
 
         return $response;

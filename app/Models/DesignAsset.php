@@ -134,11 +134,14 @@ class DesignAsset extends Model
      * only, never named). Deleting an asset has to account for both, otherwise a colleague's private design would be left
      * with a hole.
      *
+     * @param  int|null  $visiblePages  how many visible pages the caller already counted (the usage index did); passing it
+     *                                  skips a second full scan of the viewer's pages, and `visible` is then left empty
      * @return array{visible: list<array{project: string, page: int}>, hidden: int}
      */
-    public function placementsIncludingHidden(): array
+    public function placementsIncludingHidden(?int $visiblePages = null): array
     {
-        $visible = $this->placements();
+        $visible = $visiblePages === null ? $this->placements() : [];
+        $visibleCount = $visiblePages ?? count($visible);
         $total = 0;
 
         DesignCanvas::query()
@@ -153,7 +156,7 @@ class DesignAsset extends Model
                 }
             });
 
-        return ['visible' => $visible, 'hidden' => max(0, $total - count($visible))];
+        return ['visible' => $visible, 'hidden' => max(0, $total - $visibleCount)];
     }
 
     /** A file we hold on a private disk, as opposed to an external URL such as the mock AI placeholder. */
@@ -173,13 +176,22 @@ class DesignAsset extends Model
         return $this->isStoredUpload() ? route('design.assets.file', $this) : (string) $this->file_path;
     }
 
-    /** The shape the editor's asset panel and image elements are built from. */
+    /** Path of the editor's lighter WebP copy on this asset's disk, or null when it has none (small picture, or uploaded before copies existed). */
+    public function previewPath(): ?string
+    {
+        $path = $this->meta['preview']['path'] ?? null;
+
+        return $this->isStoredUpload() && is_string($path) && $path !== '' && ! str_contains($path, '..') ? $path : null;
+    }
+
+    /** The shape the editor's asset panel and image elements are built from. `preview_url` is the lighter copy the canvas draws. */
     public function toEditorArray(): array
     {
         return [
             'id' => $this->id,
             'name' => $this->name,
             'url' => $this->displayUrl(),
+            'preview_url' => $this->previewPath() === null ? null : $this->displayUrl().'?size=preview',
             'placeholder' => $this->isPlaceholder(),
             'placeholder_label' => $this->isPlaceholder() ? AiImageResult::PLACEHOLDER_LABEL : null,
             'stored' => $this->isStoredUpload(),
@@ -229,6 +241,11 @@ class DesignAsset extends Model
             : array_unique(['public', config('filesystems.default')]);
 
         $deleted = false;
+
+        // The lighter editor copy lives and dies with the original.
+        if (($previewPath = $this->previewPath()) !== null && Storage::disk($this->disk)->exists($previewPath)) {
+            Storage::disk($this->disk)->delete($previewPath);
+        }
 
         foreach ($disks as $disk) {
             $storage = Storage::disk($disk);

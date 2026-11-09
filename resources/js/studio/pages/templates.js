@@ -15,7 +15,8 @@ if (boot && root) start();
 function start() {
     const queue = createRenderQueue();
     let previewer = null;
-    let iconsPromise = null;
+    // The icon set is its own chunk: start fetching it now, in step with the list request, not when the first card appears.
+    let iconsPromise = loadIcons();
     const getPreviewer = async () => {
         if (!previewer) { iconsPromise ||= loadIcons(); previewer = createPreviewer({ manifest: boot.fonts || [], icons: await iconsPromise }); }
         return previewer;

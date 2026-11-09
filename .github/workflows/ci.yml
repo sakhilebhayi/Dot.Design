@@ -98,6 +98,10 @@ jobs:
       - name: Every @vite entry is built, every manifest file exists
         run: node scripts/ops/check-vite-manifest.mjs
 
+      # The editor entry chunk is a budget, not a hope (docs/R45_PERF.md): fail loudly if it grows past it.
+      - name: Editor entry size budget
+        run: node scripts/perf/bundle-budget.mjs
+
       - name: Keep the build for the smoke job
         uses: actions/upload-artifact@v4
         with:
@@ -148,3 +152,52 @@ jobs:
       # The script sets its own production environment, database, storage and caches under a temp folder.
       - name: Signed-in smoke
         run: tests/Support/signed-in-smoke.sh
+
+  # ==== R-45 perf: PostgreSQL parity (production runs PostgreSQL, the tests job above runs SQLite) ====
+  pgsql-tests:
+    name: PHP suite on PostgreSQL
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: design_perf_ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.4"
+          tools: composer:v2
+          coverage: none
+          extensions: pgsql, pdo_pgsql, mbstring, intl, bcmath, curl, gd, exif, fileinfo
+
+      - name: Prepare environment
+        run: cp .env.example .env
+
+      - name: Install dependencies
+        run: composer install --no-interaction --prefer-dist --no-progress
+
+      - name: Generate application key
+        run: php artisan key:generate
+
+      # phpunit.pgsql.xml mirrors phpunit.xml but connects to PostgreSQL; the DB_* values below win over its defaults.
+      - name: Run tests on PostgreSQL
+        env:
+          DB_HOST: 127.0.0.1
+          DB_PORT: 5432
+          DB_DATABASE: design_perf_ci
+          DB_USERNAME: postgres
+          DB_PASSWORD: postgres
+        run: php artisan test -c phpunit.pgsql.xml --compact

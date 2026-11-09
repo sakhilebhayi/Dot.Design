@@ -51,7 +51,7 @@ export function mountUploads(el, ctx) {
     ctx.on('asset-added', ({ asset }) => { if (!state.items.some((a) => a.id === asset.id)) { state.items.unshift({ ...asset, owned: true }); paint(); } });
 
     function tile(a) {
-        const img = h('img', { class: 'st-pic__img', attrs: { src: a.url, alt: '', loading: 'lazy', decoding: 'async', draggable: 'false' } });
+        const img = h('img', { class: 'st-pic__img', attrs: { src: a.preview_url || a.url, alt: '', loading: 'lazy', decoding: 'async', draggable: 'false' } });
         const b = h('button', { class: 'st-pic', attrs: { type: 'button', 'aria-label': `${ctx.uploadTarget || ctx.selection().emptyPicture ? 'Use' : 'Add'} ${a.name}` }, onClick: () => { if (!ctx.readOnly) ctx.uploads.usePicture(a); } }, img, a.placeholder ? h('span', { class: 'lt-tag st-pic__tag', text: 'Placeholder' }) : null);
         const menu = h('button', { class: 'st-pic__menu', attrs: { type: 'button', 'aria-label': 'Options for ' + a.name, 'aria-haspopup': 'menu' } }, icon('more', 'lt-icon--sm'));
         menu.addEventListener('click', (e) => { e.stopPropagation(); openMenu(menu, [

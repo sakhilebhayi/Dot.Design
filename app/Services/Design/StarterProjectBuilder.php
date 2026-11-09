@@ -7,8 +7,8 @@ use App\Models\BrandKit;
 use App\Models\DesignProject;
 use App\Models\DesignTemplate;
 use App\Models\User;
+use App\Support\Db\Columns;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Schema;
 
 /**
  * Creates the project (and its first pages) for "start from a brief": from a chosen template with slots
@@ -70,7 +70,7 @@ class StarterProjectBuilder
                 'brief' => $this->storableBrief($brief),
             ];
 
-            if ($user->current_team_id !== null && Schema::hasColumn('design_projects', 'team_id')) {
+            if ($user->current_team_id !== null && Columns::has('design_projects', 'team_id')) {
                 $values['team_id'] = DB::table('design_projects')->where('id', $project->id)->value('team_id') ?? $user->current_team_id;
             }
 
@@ -118,12 +118,12 @@ class StarterProjectBuilder
         ];
 
         foreach (self::V2_COLUMNS as $column) {
-            if (isset($page[$column]) && Schema::hasColumn('design_canvases', $column)) {
+            if (isset($page[$column]) && Columns::has('design_canvases', $column)) {
                 $row[$column] = $page[$column];
             }
         }
         foreach (self::V2_JSON_COLUMNS as $column) {
-            if (isset($page[$column]) && Schema::hasColumn('design_canvases', $column)) {
+            if (isset($page[$column]) && Columns::has('design_canvases', $column)) {
                 $row[$column] = json_encode($page[$column], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
             }
         }

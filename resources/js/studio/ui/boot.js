@@ -21,7 +21,7 @@ import { installThumbnails } from './thumbnail.js';
 import { createTopbar } from './topbar.js';
 import { createDialogs, createToasts } from './overlays.js';
 import { createUploads } from './uploads.js';
-import { modules } from './modules/index.js';
+import { modules, warmModules } from './modules/index.js';
 
 function fatal(root, message) {
     root.replaceChildren(h('div', { class: 'st-boot st-boot--bad', attrs: { role: 'alert' } }, h('strong', { text: 'The editor could not start.' }), h('p', { text: message }), h('a', { class: 'lt-btn lt-btn--secondary', href: window.location.href, text: 'Reload' })));
@@ -136,6 +136,7 @@ function start(root, config) {
 
     document.title = config.project.name + ' | Dot.Design';
     root.dataset.ready = '1';
+    warmModules(ctx);
     try { if (localStorage.getItem('dot-design-debug') === '1') window.__studio = { studio, ctx }; } catch (e) { /* storage blocked: no debug handle */ }
     return ctx;
 }

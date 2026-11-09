@@ -15,6 +15,8 @@ export function whenVisible(el, fn, { rootMargin = '200px' } = {}) {
 export async function drawInto(frame, previewer, queue, template, pageIndex = 0, opts = {}) {
     frame.style.setProperty('--w', String(template.width));
     frame.style.setProperty('--h', String(template.height));
+    // Fonts first, outside the one-at-a-time queue and in parallel with every other visible preview (see createPreviewer).
+    if (typeof previewer.prepare === 'function') await previewer.prepare(template, pageIndex, opts);
     const svg = await queue(() => previewer.svgFor(template, pageIndex, opts));
     mountSvg(frame, svg);
     frame.classList.remove('lt-frame--blank');

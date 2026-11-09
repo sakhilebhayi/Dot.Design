@@ -3,8 +3,8 @@
 namespace App\Services\Design;
 
 use App\Models\DesignProject;
+use App\Support\Db\Columns;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Schema;
 
 /**
  * Reads and writes the design_projects columns the business agent owns (brief, format_key, template_id,
@@ -57,7 +57,7 @@ class ProjectMeta
         $row = [];
 
         foreach ($values as $column => $value) {
-            if (! Schema::hasColumn('design_projects', $column)) {
+            if (! Columns::has('design_projects', $column)) {
                 continue;
             }
             $row[$column] = $column === 'brief' ? json_encode($value, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) : $value;
@@ -73,7 +73,7 @@ class ProjectMeta
 
     private function column(DesignProject $project, string $column): mixed
     {
-        if (! Schema::hasColumn('design_projects', $column)) {
+        if (! Columns::has('design_projects', $column)) {
             return null;
         }
 

@@ -2,6 +2,8 @@
 
 # Performance Improvements
 
+> **Measured state (R-45):** see `docs/R45_PERF.md`. This file is the earlier list of ideas (it still mentions Livewire, Fabric, Scout and Redis, none of which the studio uses); where the two disagree, R45_PERF.md is right.
+
 > Performance upgrades for Dot.Design. Each section is independently applicable and safe to implement incrementally.
 
 ---

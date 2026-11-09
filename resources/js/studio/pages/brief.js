@@ -25,7 +25,7 @@ function start() {
     const kitKey = `dot-design-brief-logokit:${boot.goal.key}`;
     const queue = createRenderQueue();
     let previewer = null;
-    let iconsLoaded = null;
+    let iconsLoaded = loadIcons();
     async function getPreviewer() {
         if (!previewer) { iconsLoaded ||= loadIcons(); previewer = createPreviewer({ manifest: boot.fonts || [], icons: await iconsLoaded }); }
         return previewer;
