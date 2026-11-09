@@ -22,7 +22,8 @@ class DesignCanvasExportController extends Controller
 {
     public function svg(DesignProject $project, DesignCanvas $canvas, CanvasSvgExporter $exporter): Response
     {
-        $this->authorize('view', $project);
+        // Exporting is its own capability (owner, admin, editor): a Reviewer or a named reviewer can look, not take a file.
+        $this->authorize('export', $project);
         abort_unless($canvas->design_project_id === $project->id, 404);
 
         $svg = $exporter->export($canvas);
@@ -37,7 +38,7 @@ class DesignCanvasExportController extends Controller
 
     public function png(DesignProject $project, DesignCanvas $canvas, CanvasPngExporter $exporter): Response|RedirectResponse
     {
-        $this->authorize('view', $project);
+        $this->authorize('export', $project);
         abort_unless($canvas->design_project_id === $project->id, 404);
 
         try {
