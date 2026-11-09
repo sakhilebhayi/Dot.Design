@@ -95,6 +95,13 @@ export function setBox(el, box) {
     }
 }
 
+/** Replace an element's children, skipping null and false (replaceChildren would print them as text). */
+export function replace(el, ...children) {
+    const flat = children.flat(Infinity).filter((c) => c !== null && c !== undefined && c !== false);
+    el.replaceChildren(...flat);
+    return el;
+}
+
 export function clear(el) { while (el.firstChild) el.removeChild(el.firstChild); return el; }
 
 export function debounce(fn, ms) {
@@ -133,7 +140,8 @@ export function uid(prefix = 'st') {
 }
 
 export const isTouch = () => typeof matchMedia === 'function' && matchMedia('(pointer: coarse)').matches;
-export const isCompact = () => typeof matchMedia === 'function' && matchMedia('(max-width: 48rem)').matches;
+export const COMPACT_QUERY = '(max-width: 60rem)';
+export const isCompact = () => typeof matchMedia === 'function' && matchMedia(COMPACT_QUERY).matches;
 export const reducedMotion = () => typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 /** Trap Tab inside a container (dialogs, sheets). Returns a release function. */

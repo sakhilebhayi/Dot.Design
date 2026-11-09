@@ -13,6 +13,8 @@ export function actionButton(label, iconName, onClick, { danger, primary, block 
 }
 
 export function rowOf(...nodes) { return h('div', { class: 'st-row' }, ...nodes); }
+/** A row of text buttons that stack when the panel is narrow. */
+export function wrapRow(...nodes) { return h('div', { class: 'st-row st-row--wrap' }, ...nodes); }
 
 /** Brand colour chips plus "more colours" for the current selection. Returns {el, update(sel)}. */
 export function quickColours(ctx, sel0) {

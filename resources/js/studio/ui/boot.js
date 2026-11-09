@@ -42,9 +42,19 @@ function start(root, config) {
     const stageEl = h('div', { id: 'st-stage', class: 'st-stage', attrs: { 'aria-label': 'Design canvas. Use Tab to move between elements, arrow keys to nudge.' } });
     root.appendChild(stageEl);
 
+    // The engine asks the browser to confirm leaving while changes are unsaved. When the person has just chosen to leave (or to reload the
+    // latest version), that second question is noise. The engine has no switch for it, so its beforeunload listener is wrapped as it registers.
+    let allowUnload = false;
+    const nativeAdd = window.addEventListener;
+    window.addEventListener = function patched(type, fn, opts) {
+        if (type === 'beforeunload' && typeof fn === 'function') return nativeAdd.call(this, type, (e) => (allowUnload ? undefined : fn.call(this, e)), opts);
+        return nativeAdd.call(this, type, fn, opts);
+    };
+
     let studio;
     const urls = config.urls;
-    const saveAdapter = readOnly ? undefined : createSaveAdapter({ urls, csrf, getPages: () => studio.getState().doc.pages });
+    let ctx = null;
+    const saveAdapter = readOnly ? undefined : createSaveAdapter({ urls, csrf, getPages: () => studio.getState().doc.pages, onSession: (r) => { if (ctx) ctx._hooks.onSession(r); } });
     studio = createStudio({
         root: stageEl,
         document: { id: config.project.id, format: { width: config.project.width, height: config.project.height }, pages: config.pages },
@@ -60,10 +70,12 @@ function start(root, config) {
         fitPadding: 56,
         onReload: () => location.reload(),
     });
+    window.addEventListener = nativeAdd;
     stageEl.setAttribute('aria-label', 'Design canvas. Tab moves between elements, arrow keys nudge the selection.');
 
-    const ctx = createContext({ studio, config, root, csrf });
+    ctx = createContext({ studio, config, root, csrf });
     if (config.brand && config.brand.assets) ctx.addAssets(config.brand.assets.map((a) => a.asset).filter(Boolean));
+    ctx.allowUnload = () => { allowUnload = true; };
     ctx.announce = announce;
     ctx.insert = (payload, opts) => insert(ctx, payload, opts);
     ctx.textPreset = (kind) => textPreset(ctx, kind);

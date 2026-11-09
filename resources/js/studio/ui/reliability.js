@@ -7,7 +7,7 @@
  *   - offline indicator
  *   - expired session: sign in again in another tab, the document stays, saving resumes
  */
-import { h, icon } from './dom.js';
+import { h, icon, replace } from './dom.js';
 
 export function recoveryDialog() {
     return {
@@ -21,7 +21,7 @@ export function recoveryDialog() {
             el.append(h('p', { text: 'Last time, changes were made that never reached the server. This can happen if the connection dropped or the window closed.' }),
                 h('ul', { class: 'st-recovlist' }, ...items.map((i) => { const idx = pages.findIndex((p) => p.id === i.pageId); return h('li', {}, h('strong', { text: `Page ${idx + 1}` }), ' ', h('span', { class: 'st-note', text: `changed ${fmt(i.at)}` }), i.stale ? h('span', { class: 'lt-tag lt-tag--warn', text: 'A newer version was saved since' }) : null); })));
             if (stale) el.append(h('div', { class: 'st-notebox st-notebox--warn' }, icon('triangle-alert'), h('div', {}, h('strong', { text: 'Restoring replaces a newer saved version.' }), h('p', { text: 'Someone saved this design after your unsaved changes were made. If you restore, their later changes on that page are replaced. A restore point of the current version is not kept, so only restore if you are sure.' }))));
-            const restore = h('button', { class: ['lt-btn', stale && 'lt-btn--danger'], attrs: { type: 'button' }, text: stale ? 'Restore my changes anyway' : 'Restore my changes' });
+            const restore = h('button', { class: ['lt-btn', stale && 'lt-btn--danger'], attrs: { type: 'button', autofocus: true }, text: stale ? 'Restore my changes anyway' : 'Restore my changes' });
             const discard = h('button', { class: 'lt-btn lt-btn--secondary', attrs: { type: 'button' }, text: 'Discard them' });
             const later = h('button', { class: 'lt-btn lt-btn--ghost', attrs: { type: 'button' }, text: 'Decide later', onClick: () => ctx.closeDialog() });
             restore.addEventListener('click', () => {
@@ -44,10 +44,14 @@ export function conflictDialog() {
         mount(el, props, ctx) {
             el.append(h('p', { text: 'Someone else, or you in another window, saved this design after you opened it. To protect their work, we have stopped saving yours. Choose what should happen.' }),
                 h('div', { class: 'st-choices' },
-                    h('div', { class: 'st-choice' }, h('strong', { text: 'Load the latest version' }), h('p', { text: 'You see what was saved. The changes you made since opening are thrown away.' }), h('button', { class: 'lt-btn lt-btn--secondary', attrs: { type: 'button' }, text: 'Load the latest', onClick: () => { ctx.studio.save.resolveReload(); } })),
-                    h('div', { class: 'st-choice' }, h('strong', { text: 'Keep my version' }), h('p', { text: 'Your page is saved over theirs. Their changes on this page are replaced. A restore point of their version is kept in the version history.' }), h('button', { class: 'lt-btn lt-btn--danger', attrs: { type: 'button' }, text: 'Save mine over theirs', onClick: async () => {
-                        const ok = await ctx.confirm({ title: 'Replace their changes?', body: 'Their changes on this page will be replaced by yours.', confirmLabel: 'Replace', danger: true });
-                        if (ok) { ctx.studio.save.resolveOverwrite(); ctx.closeDialog(); }
+                    h('div', { class: 'st-choice' }, h('strong', { text: 'Load the latest version' }), h('p', { text: 'You see what was saved. The changes you made since opening are thrown away.' }), h('button', { class: 'lt-btn lt-btn--secondary', attrs: { type: 'button' }, text: 'Load the latest', onClick: () => { ctx.allowUnload(); ctx.studio.save.resolveReload(); } })),
+                    h('div', { class: 'st-choice' }, h('strong', { text: 'Keep my version' }), h('p', { text: 'Your page is saved over theirs. Their changes on this page are replaced. We save their version as a restore point first, so it can be brought back.' }), h('button', { class: 'lt-btn lt-btn--danger', attrs: { type: 'button' }, text: 'Save mine over theirs', onClick: async () => {
+                        const ok = await ctx.confirm({ title: 'Replace their changes?', body: 'Their changes on this page will be replaced by yours. We save their version as a restore point first.', confirmLabel: 'Replace', danger: true });
+                        if (!ok) return;
+                        // Their version is what the server holds right now: keep it before it is overwritten.
+                        const cp = await ctx.api.post(ctx.url('design.projects.versions.store'), { label: 'Their version, before I saved mine' });
+                        if (!cp.ok) { ctx.toast('We could not save a restore point, so nothing was replaced. ' + (cp.message || ''), { kind: 'bad' }); return; }
+                        ctx.studio.save.resolveOverwrite(); ctx.closeDialog();
                     } }))));
             return null;
         },
@@ -95,7 +99,7 @@ export function installReliability(ctx, shell) {
         banner.hidden = !spec;
         if (!spec) { banner.replaceChildren(); return; }
         banner.dataset.kind = spec.kind;
-        banner.replaceChildren(icon(spec.icon), h('div', { class: 'st-banner__text', attrs: { role: 'status' } }, h('strong', { text: spec.title + ' ' }), h('span', { text: spec.text })), spec.action ? h('button', { class: 'lt-btn lt-btn--sm lt-btn--secondary', attrs: { type: 'button' }, text: spec.action[0], onClick: spec.action[1] }) : null);
+        replace(banner, icon(spec.icon), h('div', { class: 'st-banner__text', attrs: { role: 'status' } }, h('strong', { text: spec.title + ' ' }), h('span', { text: spec.text })), spec.action ? h('button', { class: 'lt-btn lt-btn--sm lt-btn--secondary', attrs: { type: 'button' }, text: spec.action[0], onClick: spec.action[1] }) : null);
     }
 
     ctx.registerDialog('recovery', recoveryDialog());

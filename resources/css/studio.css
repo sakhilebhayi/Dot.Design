@@ -1,7 +1,7 @@
 /*
  * The editor workspace ("The Light Table", docs/R45_UI_EDITOR.md). Built on the ds tokens (--lt-*) and the
  * canvas chrome properties (--studio-*). No literal colours except where a design page itself is drawn.
- * Layout: top bar / tab rail / panel / stage / properties / page strip. Below 48rem the panels become sheets.
+ * Layout: top bar / tab rail / panel / stage / properties / page strip. Below 60rem the panels become sheets.
  */
 @import './ds/tokens.css';
 @import './ds/base.css';
@@ -105,11 +105,15 @@
 .st-group__title { font-size: var(--lt-text-sm); font-weight: 600; color: var(--lt-ink); }
 .st-row { display: flex; gap: var(--lt-space-2); flex-wrap: wrap; align-items: center; }
 .st-row > * { flex: 1 1 0; min-width: 0; }
-.st-btn { justify-content: flex-start; gap: var(--lt-space-3); }
+.st-row--wrap > * { flex: 1 1 8.5rem; }
+.st-row > .st-tog { flex: 0 0 auto; }
+.st-row > .st-seg { flex: 1 1 auto; }
+.st-group > *, .st-isec__body > *, .st-simple > *, .st-brandbody > * { min-width: 0; max-width: 100%; }
+.st-btn { justify-content: flex-start; gap: var(--lt-space-3); white-space: normal; text-align: left; line-height: 1.25; padding-block: 0.45rem; height: auto; max-width: 100%; }
 .st-btn.lt-btn:not(.lt-btn--secondary) { justify-content: center; }
 .st-btn--danger { color: var(--lt-bad); }
 .st-btn--danger:hover { background: var(--lt-bad-wash); }
-.st-linkbtn { justify-self: start; }
+.st-linkbtn { justify-self: start; padding-left: 0; }
 .st-note { font-size: var(--lt-text-sm); color: var(--lt-ink-2); line-height: 1.45; }
 .st-note--bad { color: var(--lt-bad); }
 .st-notebox { display: flex; gap: var(--lt-space-3); padding: var(--lt-space-3); border-radius: var(--lt-radius-2); background: var(--lt-panel-sunk); font-size: var(--lt-text-sm); margin: var(--lt-space-2) 0; }
@@ -449,14 +453,14 @@
     .st-top__primary .st-top__btnlabel { display: inline; }
 }
 @media (max-width: 64rem) {
-    .st-app { --st-rail-w: 4rem; --st-left-w: 15.5rem; --st-right-w: 16rem; }
+    .st-app { --st-rail-w: 4.75rem; --st-left-w: 15.5rem; --st-right-w: 16rem; }
     .st-app[data-mode="pro"] { --st-right-w: 17rem; }
     .st-top__fit, .st-top__keys { display: none; }
     .st-top__slots .st-top__btnlabel { display: none; }
 }
 
 /* ---- compact: phones and small tablets -------------------------------------------------------- */
-@media (max-width: 48rem) {
+@media (max-width: 60rem) {
     .st-app, .st-app[data-mode="pro"], .st-app[data-left="closed"] {
         grid-template-columns: minmax(0, 1fr);
         grid-template-rows: auto auto minmax(0, 1fr) auto auto auto auto;
@@ -464,16 +468,12 @@
     }
     .st-top { padding: 0 var(--lt-space-2); gap: 2px; }
     .st-top__name { flex: 1 1 auto; }
-    .st-name__size { max-width: 10rem; }
-    .st-save { padding: 0 var(--lt-space-2); }
-    .st-save__text { display: none; }
-    .st-top__mode, .st-top__slots, .st-top__btn, .st-top__primary, .st-zoom, .st-top__keys, .st-top__group.st-zoom { display: none; }
     .st-top__more { display: inline-flex; }
-    .st-top__spacer { display: none; }
     .st-rail { overflow-x: auto; overflow-y: hidden; padding: 0; box-shadow: 0 -1px 0 var(--lt-rule-strong); padding-bottom: env(safe-area-inset-bottom); }
-    .st-rail__list { flex-direction: row; padding: 2px var(--lt-space-2); width: max-content; min-width: 100%; justify-content: space-around; }
-    .st-rail__tab { min-width: 4.25rem; min-height: 3.25rem; width: auto; }
-    .st-left, .st-right { max-height: 52dvh; min-height: 14rem; border-radius: var(--lt-radius-3) var(--lt-radius-3) 0 0; box-shadow: 0 -1px 0 var(--lt-rule-strong), 0 -8px 24px -12px rgb(14 18 22 / 0.35); position: relative; z-index: 3; }
+    .st-rail__list { flex-direction: row; padding: 2px var(--lt-space-1); width: 100%; justify-content: space-between; }
+    .st-rail__tab { min-width: 3.5rem; flex: 1 1 0; min-height: 3.25rem; width: auto; }
+    .st-app[data-left="open"] .st-pages, .st-app[data-right="open"] .st-pages { display: none; }
+    .st-left, .st-right { max-height: 46dvh; min-height: 12rem; border-radius: var(--lt-radius-3) var(--lt-radius-3) 0 0; box-shadow: 0 -1px 0 var(--lt-rule-strong), 0 -8px 24px -12px rgb(14 18 22 / 0.35); position: relative; z-index: 3; }
     .st-left[hidden], .st-right[hidden] { display: none; }
     .st-right .st-panel__close { display: inline-flex; }
     .st-sheet__grip { display: block; position: absolute; left: 50%; top: 6px; width: 2.5rem; height: 4px; transform: translateX(-50%); border-radius: 2px; background: var(--lt-rule-strong); }
@@ -490,6 +490,19 @@
     .st-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .st-reposition { bottom: 4.5rem; }
     .st-empty { width: min(20rem, calc(100% - 1.5rem)); }
+}
+
+@media (max-width: 48rem) {
+    .st-name__size { max-width: 10rem; }
+    .st-save { padding: 0 var(--lt-space-2); }
+    .st-save__text { display: none; }
+    .st-top__mode, .st-top__slots, .st-top__btn, .st-top__primary, .st-zoom, .st-top__keys, .st-top__group.st-zoom { display: none; }
+    .st-top__spacer { display: none; }
+}
+@media (min-width: 48.01rem) and (max-width: 60rem) {
+    .st-top__more { display: none; }
+    .st-top__btnlabel { display: none; }
+    .st-top__fit { display: none; }
 }
 
 @media (prefers-reduced-motion: reduce) {

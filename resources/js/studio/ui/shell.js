@@ -4,7 +4,7 @@
  * runs the compact (phone and tablet) model where panels become bottom sheets.
  * It holds no editing logic; panels and the engine do that.
  */
-import { h, icon, isCompact } from './dom.js';
+import { COMPACT_QUERY, h, icon, isCompact } from './dom.js';
 
 const TAB_KEY = 'dot-design-tab';
 const store = {
@@ -182,7 +182,7 @@ export function createShell(ctx) {
         if (c) { right.hidden = root.dataset.right !== 'open'; left.hidden = !activeTab; } else { right.hidden = false; left.hidden = !activeTab; }
         renderRightTabs(); applyRightTab();
     }
-    const mq = typeof matchMedia === 'function' ? matchMedia('(max-width: 48rem)') : null;
+    const mq = typeof matchMedia === 'function' ? matchMedia(COMPACT_QUERY) : null;
     if (mq && mq.addEventListener) mq.addEventListener('change', onCompactChange);
 
     // swipe down on a sheet header closes it (touch)

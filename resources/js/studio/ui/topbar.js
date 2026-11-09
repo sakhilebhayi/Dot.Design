@@ -30,7 +30,7 @@ export function createTopbar(ctx, shell, { onPreview, openShortcuts }) {
         const state = await studio.save.flush();
         if (state === 'saved' || state === 'idle') { location.href = back.href; return; }
         const ok = await ctx.confirm({ title: 'Leave without saving?', body: 'Your latest changes are not saved to the server yet. They are kept on this device, and you can recover them next time you open this design.', confirmLabel: 'Leave anyway', cancelLabel: 'Stay here', danger: true });
-        if (ok) { window.onbeforeunload = null; location.href = back.href; }
+        if (ok) { ctx.allowUnload(); location.href = back.href; }
     });
     const name = h('input', { class: 'st-name', attrs: { type: 'text', 'aria-label': 'Design name', maxlength: 255, spellcheck: 'false', autocomplete: 'off' } });
     name.value = project.name;
@@ -90,7 +90,11 @@ export function createTopbar(ctx, shell, { onPreview, openShortcuts }) {
         const r = hi.redoLabel ? 'Redo ' + String(hi.redoLabel).toLowerCase() : 'Redo';
         undo.setAttribute('aria-label', u); undo.dataset.tip = u; redo.setAttribute('aria-label', r); redo.dataset.tip = r;
     }
-    ctx.on('history', renderHistory); renderHistory();
+    // A drag commits its undo step without a store change, so no 'history' event follows: refresh after any gesture ends too.
+    for (const ev of ['history', 'change', 'selection', 'save-state']) ctx.on(ev, renderHistory);
+    window.addEventListener('pointerup', () => setTimeout(renderHistory, 0));
+    window.addEventListener('keyup', renderHistory);
+    renderHistory();
     const history = h('div', { class: 'st-top__group st-top__history' }, undo, redo);
     history.hidden = ctx.readOnly;
 

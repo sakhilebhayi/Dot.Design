@@ -7,7 +7,7 @@ import { MIXED, announceSelection, common, elementLabel } from '../describe.js';
 import { h, icon } from '../dom.js';
 import { fieldRow, segmented, sliderField, swatch } from '../fields.js';
 import { openFontPopover, opacityOf, textSize, fontLabel } from '../quick.js';
-import { actionButton, group, quickColours, rowOf } from './parts.js';
+import { actionButton, group, quickColours, rowOf, wrapRow } from './parts.js';
 
 const TITLES = { none: 'Page', text: 'Text', image: 'Picture', shape: 'Shape', icon: 'Icon', group: 'Group', multi: 'Several items' };
 
@@ -18,7 +18,7 @@ export function mountSimplePanel(ctx, shell) {
 
     function orderRow(sel) {
         return group('Arrange',
-            rowOf(actionButton('Bring forward', 'chevrons-up', () => ctx.run('element.reorder', { ids: sel.ids, to: 'forward' }), { block: false }), actionButton('Send backward', 'chevrons-down', () => ctx.run('element.reorder', { ids: sel.ids, to: 'back' }), { block: false })));
+            wrapRow(actionButton('Move forward', 'chevrons-up', () => ctx.run('element.reorder', { ids: sel.ids, to: 'forward' }), { block: false }), actionButton('Move back', 'chevrons-down', () => ctx.run('element.reorder', { ids: sel.ids, to: 'back' }), { block: false })));
     }
     function transparency(sel) {
         const f = sliderField({ label: 'Make it transparent', min: 0, max: 100, step: 1, value: 100 - (opacityOf(sel) === MIXED ? 100 : opacityOf(sel)), format: (v) => (v === 0 ? 'Solid' : v + '% see-through'), onInput: (v) => ctx.run('element.update', { ids: sel.ids, changes: { opacity: (100 - v) / 100 } }, { key: 'opacity:' + sel.ids.join(',') }) });
@@ -26,7 +26,7 @@ export function mountSimplePanel(ctx, shell) {
     }
     function finish(sel) {
         return group('',
-            rowOf(actionButton('Duplicate', 'copy', () => ctx.run('element.duplicate', { ids: sel.ids }), { block: false }), actionButton(sel.locked ? 'Unlock' : 'Lock', sel.locked ? 'unlock' : 'lock', () => ctx.run('element.lock', { ids: sel.ids, value: !sel.locked }), { block: false, pressed: sel.locked })),
+            wrapRow(actionButton('Duplicate', 'copy', () => ctx.run('element.duplicate', { ids: sel.ids }), { block: false }), actionButton(sel.locked ? 'Unlock' : 'Lock', sel.locked ? 'unlock' : 'lock', () => ctx.run('element.lock', { ids: sel.ids, value: !sel.locked }), { block: false, pressed: sel.locked })),
             actionButton('Delete', 'trash', () => ctx.run('element.remove', { ids: sel.ids }), { danger: true }));
     }
 
@@ -114,8 +114,8 @@ export function mountSimplePanel(ctx, shell) {
         const al = (label, iconName, name) => actionButton(label, iconName, () => ctx.run(name, { ids: sel.ids }), { block: false });
         out.push({ el: group('Line up', h('div', { class: 'st-iconrow' }, ...[['Left', 'align-left', 'align.left'], ['Middle', 'align-center', 'align.center'], ['Right', 'align-right', 'align.right'], ['Top', 'align-top', 'align.top'], ['Centre', 'align-middle', 'align.middle'], ['Bottom', 'align-bottom', 'align.bottom']].map(([l, i, n]) => h('button', { class: 'st-tog', attrs: { type: 'button', 'aria-label': 'Line up: ' + l, title: 'Line up: ' + l }, onClick: () => ctx.run(n, { ids: sel.ids }) }, icon(i))))), update() {} });
         void al;
-        if (sel.count >= 3) out.push({ el: group('Spread evenly', rowOf(actionButton('Across', 'distribute', () => ctx.run('distribute.horizontal', { ids: sel.ids }), { block: false }), actionButton('Down', 'distribute', () => ctx.run('distribute.vertical', { ids: sel.ids }), { block: false }))), update() {} });
-        out.push({ el: group('Make same size', rowOf(actionButton('Width', 'rect-h', () => ctx.run('size.match', { ids: sel.ids, dimension: 'width' }), { block: false }), actionButton('Height', 'rect-v', () => ctx.run('size.match', { ids: sel.ids, dimension: 'height' }), { block: false }))), update() {} });
+        if (sel.count >= 3) out.push({ el: group('Spread evenly', wrapRow(actionButton('Across', 'distribute', () => ctx.run('distribute.horizontal', { ids: sel.ids }), { block: false }), actionButton('Down', 'distribute', () => ctx.run('distribute.vertical', { ids: sel.ids }), { block: false }))), update() {} });
+        out.push({ el: group('Make same size', wrapRow(actionButton('Width', 'rect-h', () => ctx.run('size.match', { ids: sel.ids, dimension: 'width' }), { block: false }), actionButton('Height', 'rect-v', () => ctx.run('size.match', { ids: sel.ids, dimension: 'height' }), { block: false }))), update() {} });
         out.push({ el: actionButton('Group together', 'group', () => ctx.run('element.group', { ids: sel.ids }), { primary: true }), update() {} });
         const tr = transparency(sel); out.push(tr);
         return out;

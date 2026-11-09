@@ -4,7 +4,7 @@
  * and applied deliberately. Brand updates are never applied silently.
  */
 import { applyColour, applyFont, colourPropFor } from '../actions.js';
-import { h, icon } from '../dom.js';
+import { h, icon, replace } from '../dom.js';
 import { swatch } from '../fields.js';
 import { fontLabel } from '../quick.js';
 import { emptyState } from './common.js';
@@ -103,7 +103,7 @@ export function brandReviewDialog() {
                     cb.addEventListener('change', () => { if (cb.checked) checked.add(it.key); else checked.delete(it.key); apply.disabled = !checked.size; });
                     return h('label', { class: 'st-review', attrs: { for: 'br-' + it.key } }, cb, h('span', { class: 'st-review__what', text: `Page ${it.page_number}: ${it.element_name || it.element_type}, ${it.kind === 'color' ? 'colour' : 'font'}` }), chip(it), icon('arrow-right', 'lt-icon--sm'), chip2(it));
                 }));
-                el.replaceChildren(h('p', { class: 'st-note', text: 'Pick what to change. A restore point is saved first, so you can go back.' }), list, foot);
+                replace(el, h('p', { class: 'st-note', text: 'Pick what to change. A restore point is saved first, so you can go back.' }), list, foot);
                 apply.disabled = !checked.size;
             }
             apply.addEventListener('click', async () => {

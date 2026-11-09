@@ -6,7 +6,7 @@
  */
 import { buildBrief, summariseFill } from '../brief.js';
 import { activePage } from '../describe.js';
-import { h, icon } from '../dom.js';
+import { h, icon, isCompact, replace } from '../dom.js';
 import { createPreviewRenderer, whenVisible } from '../template-render.js';
 import { chipRow, emptyState, errorNote, searchBox, skeletonGrid } from './common.js';
 
@@ -90,7 +90,7 @@ export function mountTemplates(el, ctx) {
             if (target) ctx.studio.setActivePage(target.id);
             ctx.toast(`Added ${incoming.length === 1 ? 'a new page' : incoming.length + ' new pages'}. ${summary(result)}`.trim(), { action: { label: 'Undo', onClick: () => ctx.studio.undo() } });
             closeDetail();
-            if (ctx.activeTab() && matchMedia('(max-width: 48rem)').matches) ctx.closeTabs();
+            if (ctx.activeTab() && isCompact()) ctx.closeTabs();
         }
     }
 
@@ -124,7 +124,7 @@ export function mountTemplates(el, ctx) {
         const notes = [];
         if (!sameSize(t)) notes.push(h('p', { class: 'st-note' }, `This template is ${Math.round(t.width)} by ${Math.round(t.height)}. The new page keeps that size; your other pages do not change.`));
         const slots = (t.slots || []).map((x) => x.label).slice(0, 8);
-        detail.replaceChildren(back, frame, h('h3', { class: 'st-detail__name', text: t.name }), h('p', { class: 'st-note', text: t.description || '' }), ...notes,
+        replace(detail, back, frame, h('h3', { class: 'st-detail__name', text: t.name }), h('p', { class: 'st-note', text: t.description || '' }), ...notes,
             slots.length ? h('p', { class: 'st-note' }, h('strong', { text: 'You can fill in: ' }), slots.join(', ') + '.') : null,
             ctx.readOnly ? null : h('div', { class: 'st-stack' }, usesNew, repl));
         detail.scrollIntoView({ block: 'start' });

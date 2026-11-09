@@ -12,7 +12,7 @@ import { fillUrl } from './api.js';
 
 function key() { return 'p' + Date.now().toString(36) + Math.random().toString(36).slice(2, 10); }
 
-export function createSaveAdapter({ urls, csrf, getPages, fetchImpl }) {
+export function createSaveAdapter({ urls, csrf, getPages, fetchImpl, onSession }) {
     const doFetch = fetchImpl || ((...a) => fetch(...a));
     async function call(method, url, body, extra = {}) {
         const res = await doFetch(url, {
@@ -23,8 +23,10 @@ export function createSaveAdapter({ urls, csrf, getPages, fetchImpl }) {
         });
         let json = null;
         try { json = await res.json(); } catch (e) { /* not JSON */ }
-        if (res.redirected && res.status === 200 && json === null) return { status: 401, body: null };
-        return { status: res.status, body: json };
+        const status = res.redirected && res.status === 200 && json === null ? 401 : res.status;
+        // A lapsed session is reported at once so the shell can ask the person to sign in again, whatever message the server gave.
+        if ((status === 401 || status === 419) && onSession) onSession({ status });
+        return { status, body: status === 401 && res.status === 200 ? null : json };
     }
     const page = (id) => fillUrl(urls['design.projects.pages.update'], { page: id });
     const idKeys = new Map();

@@ -8,7 +8,7 @@ export const MAX_BYTES = 300 * 1024;
 export const THUMB_EDGE = 480;
 
 /** The scheduler is pure so it can be tested with fake timers: render() -> Blob|null, upload(blob) -> Promise<boolean>. */
-export function createThumbnailScheduler({ render, upload, signature, delay = 5000, timers = { set: setTimeout, clear: clearTimeout }, log = () => {} }) {
+export function createThumbnailScheduler({ render, upload, signature, delay = 5000, timers = { set: (fn, ms) => setTimeout(fn, ms), clear: (t) => clearTimeout(t) }, log = () => {} }) {
     let handle = null; let busy = false; let again = false; let lastSig = null; let destroyed = false;
     async function run() {
         handle = null;

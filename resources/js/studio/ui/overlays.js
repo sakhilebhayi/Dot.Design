@@ -66,14 +66,14 @@ export function createDialogs({ root, registry, getCtx, onOpenChange }) {
         const ctx = getCtx();
         const s = shell(typeof spec.title === 'function' ? spec.title(props, ctx) : spec.title || '', spec.size);
         let handle = null;
-        const finish = present(s.dlg, () => { try { if (handle && handle.destroy) handle.destroy(); } catch (e) { /* a module must not trap the dialog */ } current = null; ctx.emit('dialog', { id: null, closed: id }); });
-        s.closeBtn.addEventListener('click', () => finish(false));
+        // Mount before the dialog opens, so an `autofocus` control inside it takes the first focus.
         try { handle = spec.mount(s.body, props, ctx) || null; } catch (e) {
             console.error('[studio] dialog "' + id + '" failed to open', e);
-            finish(false);
             ctx.toast('That panel could not open. Try again.', { kind: 'bad' });
             return null;
         }
+        const finish = present(s.dlg, () => { try { if (handle && handle.destroy) handle.destroy(); } catch (e) { /* a module must not trap the dialog */ } current = null; ctx.emit('dialog', { id: null, closed: id }); });
+        s.closeBtn.addEventListener('click', () => finish(false));
         current = { id, close: () => finish(false) };
         ctx.emit('dialog', { id });
         return current;

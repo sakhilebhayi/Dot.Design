@@ -9,8 +9,8 @@ import { frameHandlePoints, selectionFrame } from '../engine/selection.js';
 import { pickFile } from './actions.js';
 import { openContextMenu } from './contextmenu.js';
 import { announceSelection } from './describe.js';
-import { announce, h, icon, isCompact, setVars, throttleFrame } from './dom.js';
-import { openColourPopover, openFontPopover, textSize } from './quick.js';
+import { COMPACT_QUERY, announce, h, icon, isCompact, setVars, throttleFrame } from './dom.js';
+import { openColourPopover, openFontPopover, openLayerMenu, textSize } from './quick.js';
 
 export function createFloating(ctx, shell) {
     const studio = ctx.studio;
@@ -25,7 +25,23 @@ export function createFloating(ctx, shell) {
     };
     const sep = () => h('span', { class: 'st-float__sep', attrs: { 'aria-hidden': 'true' } });
 
+    // The phone strip: Edit text / Replace picture, Colour, Layer, Duplicate, More (all the options in the sheet).
+    function buildCompact(sel) {
+        const items = [];
+        const el = sel.el;
+        const more = btn('All options', 'settings', () => ctx.openEditSheet(), { text: 'More' });
+        if (sel.locked) return [btn('Unlock', 'unlock', () => ctx.run('element.lock', { ids: sel.ids, value: false }), { text: 'Unlock' }), more];
+        if (sel.kind === 'text') items.push(btn('Edit text', 'pen', () => studio.beginTextEdit(el.id, { selectAll: true }), { text: 'Edit text' }), btn('Colour', 'palette', (b) => openColourPopover(ctx, b, sel)), btn('Font', 'text', (b) => openFontPopover(ctx, b, sel)));
+        else if (sel.kind === 'image') items.push(btn(sel.emptyPicture ? 'Add a picture' : 'Replace picture', 'image-plus', () => ctx.pickPicture(el.id), { text: sel.emptyPicture ? 'Add a picture' : 'Replace picture' }));
+        else if (sel.kind === 'shape' || sel.kind === 'icon') items.push(btn('Colour', 'palette', (b) => openColourPopover(ctx, b, sel)));
+        else if (sel.kind === 'multi') items.push(btn('Group together', 'group', () => ctx.run('element.group', { ids: sel.ids }), { text: 'Group' }));
+        else if (sel.kind === 'group') items.push(btn('Ungroup', 'ungroup', () => ctx.run('element.ungroup', { ids: sel.ids }), { text: 'Ungroup' }));
+        items.push(btn('Layer order', 'layers', (b) => openLayerMenu(ctx, b, sel)), btn('Duplicate', 'copy', () => ctx.run('element.duplicate', { ids: sel.ids })), btn('Delete', 'trash', () => ctx.run('element.remove', { ids: sel.ids })), more);
+        return items;
+    }
+
     function build(sel) {
+        if (isCompact()) return buildCompact(sel);
         const simple = ctx.mode === 'simple';
         const items = [];
         const el = sel.el;
@@ -55,7 +71,6 @@ export function createFloating(ctx, shell) {
         items.push(dup);
         if (!simple) items.push(lock);
         items.push(del, more);
-        if (isCompact()) items.push(sep(), btn('Open all options for this', 'settings', () => ctx.openEditSheet(), { text: 'Edit' }));
         return items;
     }
 
@@ -89,7 +104,7 @@ export function createFloating(ctx, shell) {
     function render() {
         const sel = ctx.selection();
         // rebuild only when the kind of toolbar changes, so a popover anchored to a button survives a colour edit
-        const key = [ctx.mode, sel.kind, sel.locked, sel.emptyPicture, sel.count > 1 ? sel.count : sel.ids[0]].join('|');
+        const key = [ctx.mode, isCompact(), sel.kind, sel.locked, sel.emptyPicture, sel.count > 1 ? sel.count : sel.ids[0]].join('|');
         if (key !== lastKey) { lastKey = key; bar.replaceChildren(...build(sel)); }
         place();
     }
@@ -100,6 +115,7 @@ export function createFloating(ctx, shell) {
     window.addEventListener('pointerup', () => { if (dragging) { dragging = false; place(); } });
     window.addEventListener('pointercancel', () => { if (dragging) { dragging = false; place(); } });
     new ResizeObserver(place).observe(shell.stageWrap);
+    if (typeof matchMedia === 'function') matchMedia(COMPACT_QUERY).addEventListener('change', () => { lastKey = ''; render(); });
     render();
 
     // helper used by several panels

@@ -6,7 +6,7 @@ import { applyColour, applyFont, colourPropFor, scaleText } from './actions.js';
 import { MIXED, common } from './describe.js';
 import { h } from './dom.js';
 import { colourChooser } from './fields.js';
-import { openPopover } from './popover.js';
+import { openMenu, openPopover } from './popover.js';
 
 export const FONT_GROUPS = [
     ['Clean sans', ['inter', 'dm-sans', 'poppins', 'montserrat', 'space-grotesk']],
@@ -88,3 +88,14 @@ export const textSize = {
 };
 
 export function opacityOf(sel) { const v = common(sel.elements, (e) => e.opacity); return v === MIXED ? MIXED : Math.round((v ?? 1) * 100); }
+
+/** The layer (order) choices as a menu: used by the phone strip, where there is no room for four buttons. */
+export function openLayerMenu(ctx, anchor, sel) {
+    const run = (to) => () => ctx.run('element.reorder', { ids: sel.ids, to });
+    return openMenu(anchor, [
+        { label: 'Bring to front', icon: 'bring-front', onClick: run('front') },
+        { label: 'Move forward', icon: 'chevrons-up', onClick: run('forward') },
+        { label: 'Move back', icon: 'chevrons-down', onClick: run('back') },
+        { label: 'Send to back', icon: 'send-back', onClick: run('back-most') },
+    ], { label: 'Layer order', side: 'top' });
+}

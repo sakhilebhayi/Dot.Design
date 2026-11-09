@@ -3,7 +3,7 @@
  * (presets and a two-colour builder) and a picture from the person's uploads.
  */
 import { MIXED } from '../describe.js';
-import { h, icon } from '../dom.js';
+import { h, icon, replace } from '../dom.js';
 import { colourChooser, numberField, segmented, selectField, fieldRow, swatch } from '../fields.js';
 import { insert } from '../insert.js';
 import { gradientCss } from '../inspector/index.js';
@@ -21,7 +21,7 @@ export function mountBackground(el, ctx) {
     // solid
     function paintSolid() {
         const b = page().background || {};
-        panes.solid.replaceChildren(h('p', { class: 'st-note', text: 'Pick a colour for the whole page.' }),
+        replace(panes.solid, h('p', { class: 'st-note', text: 'Pick a colour for the whole page.' }),
             colourChooser(ctx, { value: b.type === 'solid' ? b.color : null, page: true, onPick: (hex, meta) => (meta.token ? ctx.run('brand.apply', { prop: 'background', token: meta.token }) : ctx.run('page.update', { id: page().id, changes: { background: { ...page().background, type: 'solid', color: hex } } }, { key: 'bg:' + page().id })) }));
     }
 
@@ -38,7 +38,7 @@ export function mountBackground(el, ctx) {
         const cur2 = () => { const bb = page().background; const g = bb.type === 'gradient' && bb.gradient ? bb.gradient : cur; return g; };
         const build = () => setGrad({ ...cur2(), stops: [{ at: 0, color: first.value }, { at: 1, color: second.value }] }, 'bgstops');
         first.addEventListener('input', build); second.addEventListener('input', build);
-        panes.gradient.replaceChildren(h('p', { class: 'st-note', text: 'Soft gradients make good backgrounds. Choose one, or build your own.' }), presetBox,
+        replace(panes.gradient, h('p', { class: 'st-note', text: 'Soft gradients make good backgrounds. Choose one, or build your own.' }), presetBox,
             h('h3', { class: 'st-group__title', text: 'Make your own' }), h('div', { class: 'st-line' }, first, h('span', { class: 'st-note', text: 'to' }), second), kind.el, angle.el);
         const r = await loadLibrary(ctx);
         if (!r.ok) { presetBox.replaceChildren(h('p', { class: 'st-note', text: 'The presets could not be loaded. You can still build your own below.' })); return; }
@@ -50,7 +50,7 @@ export function mountBackground(el, ctx) {
         const b = page().background || {};
         const list = Array.from(ctx.assets.values()).filter((a) => !a.placeholder).sort((a, b2) => b2.id - a.id).slice(0, 36);
         const fit = selectField({ label: 'How the picture fills the page', options: [{ value: 'cover', label: 'Fill the page' }, { value: 'contain', label: 'Show the whole picture' }, { value: 'fill', label: 'Stretch' }], value: b.fit || 'cover', onChange: (v) => ctx.run('page.update', { id: page().id, changes: { background: { ...page().background, fit: v } } }) });
-        panes.image.replaceChildren(
+        replace(panes.image, 
             h('button', { class: 'lt-btn lt-btn--secondary lt-btn--block', attrs: { type: 'button' }, onClick: () => ctx.openTab('uploads', { focus: true }) }, icon('upload'), 'Upload a new picture'),
             list.length ? h('div', { class: 'st-pics' }, ...list.map((a) => h('button', { class: ['st-pic', b.asset_id === a.id && b.type === 'image' && 'is-on'], attrs: { type: 'button', 'aria-label': `Use ${a.name} as the background` }, onClick: () => ctx.run('page.update', { id: page().id, changes: { background: { type: 'image', color: b.color || '#ffffff', gradient: null, asset_id: a.id, fit: (b.fit || 'cover') } } }) }, h('img', { class: 'st-pic__img', attrs: { src: a.url, alt: '', loading: 'lazy' } })))) : h('p', { class: 'st-note', text: 'No pictures uploaded yet.' }),
             b.type === 'image' ? fieldRow('Fit', fit) : null,
