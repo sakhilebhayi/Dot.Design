@@ -36,6 +36,7 @@ class StartController extends Controller
             'groups' => $formats->grouped(),
             'preset' => $preset,
             'recent' => $recent,
+            'brandUpdated' => \App\Support\Ui\ProjectCard::brandUpdatedIds($recent),
             'assistant' => StartScreen::assistantEnabled(),
             'limits' => $start->sizeLimits(),
             'fonts' => $start->fontManifest(),

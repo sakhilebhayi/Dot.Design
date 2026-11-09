@@ -143,14 +143,7 @@
         @else
             <div class="lt-contacts">
                 @foreach ($recent as $project)
-                    <a href="{{ route('design.projects.show', $project) }}" class="lt-contact">
-                        <span class="lt-contact__stage"><x-ds.frame :width="$project->width" :height="$project->height" class="lt-crop lt-crop--link" /></span>
-                        <span class="lt-contact__meta">
-                            <span class="lt-contact__name">{{ $project->name }}</span>
-                            <span class="lt-contact__sub">{{ \App\Support\Ui\DesignListing::sizeLabel($project) }}</span>
-                            <span class="lt-contact__sub">Edited {{ $project->updated_at?->diffForHumans() ?? 'never' }}</span>
-                        </span>
-                    </a>
+                    <x-ds.design-tile :project="$project" :brand-updated="in_array($project->id, $brandUpdated, true)" />
                 @endforeach
             </div>
         @endif
