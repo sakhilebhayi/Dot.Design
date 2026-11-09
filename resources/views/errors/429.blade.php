@@ -1,8 +1,8 @@
 @extends('errors._ecosystem-layout', ['code' => 429])
 
 @section('title', 'Slow down a little')
-@section('message', 'Too many requests came in a short time. This protects everyone using the platform. Wait a minute and try again.')
+@section('message', 'You sent a lot of requests in a short time. This keeps things quick for everyone. Wait a minute, then try again.')
 
 @section('actions')
-    <a href="/" class="lt-btn">Go home</a>
+    <a href="{{ url()->current() }}" class="lt-btn">Try again</a>
 @endsection

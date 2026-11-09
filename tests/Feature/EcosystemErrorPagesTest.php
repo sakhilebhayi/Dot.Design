@@ -15,7 +15,8 @@ class EcosystemErrorPagesTest extends TestCase
         $response->assertStatus($code);
         $response->assertSee($expectedHeading);
         $response->assertSee('Dot.Design', false);
-        $response->assertSee('the rest of the Dot Ecosystem', false);
+        $response->assertDontSee('the rest of the Dot Ecosystem', false);
+        $this->assertLessThanOrEqual(1, substr_count($response->getContent(), 'class="lt-btn'), 'one primary action');
     }
 
     public static function errorCodes(): array

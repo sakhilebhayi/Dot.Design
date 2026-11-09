@@ -1,13 +1,12 @@
 @extends('errors._ecosystem-layout', ['code' => 404])
 
 @section('title', "We couldn't find that page")
-@section('message', "The page may have moved, been renamed, or never existed. Check the link, or start again from home.")
+@section('message', "The link may be old, or the design may have been deleted or shared with someone else. Go back and pick up from there.")
 
 @section('actions')
-    <a href="/" class="lt-btn">Go home</a>
     @auth
-        <a href="{{ route('dashboard') }}" class="lt-btn lt-btn--ghost">Go to Home</a>
+        <a href="{{ route('dashboard') }}" class="lt-btn">Back to Home</a>
     @else
-        @if (Route::has('login'))<a href="{{ route('login') }}" class="lt-btn lt-btn--ghost">Log in</a>@endif
+        <a href="/" class="lt-btn">Go to the start page</a>
     @endauth
 @endsection

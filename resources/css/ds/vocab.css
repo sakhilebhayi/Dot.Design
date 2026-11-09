@@ -74,3 +74,20 @@
 
 /* registration target: used once per screen at most (empty states, the landing table) */
 .lt-reg { width: 2.25rem; height: 2.25rem; color: var(--lt-ink-3); }
+
+/* the full logo: dark lettering on light surfaces, the white-lettering variant on dark ones. On the sign-in table the sheet stops being
+   white paper in the dark theme and the logo sits straight on the stage, still held by its crop marks. */
+.lt-logo { display: inline-block; line-height: 0; }
+.lt-logo__dark { display: none; }
+:root[data-theme="dark"] .lt-logo__light { display: none; }
+:root[data-theme="dark"] .lt-logo__dark { display: block; }
+:root[data-theme="dark"] .lt-auth__sheet { background: transparent; box-shadow: none; }
+@media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]):not([data-theme="dark"]) .lt-logo__light { display: none; }
+    :root:not([data-theme="light"]):not([data-theme="dark"]) .lt-logo__dark { display: block; }
+    :root:not([data-theme="light"]):not([data-theme="dark"]) .lt-auth__sheet { background: transparent; box-shadow: none; }
+}
+
+/* the product mark: the round yellow badge cut out of the logo sprite. Shared by the shell, sign-in, errors and the public viewer. */
+.lt-mark { flex: none; display: inline-block; width: 2rem; height: 2rem; border-radius: 50%; background: url("/images/logo-180.webp") no-repeat; background-size: 90px auto; background-position: -19.5px -11px; }
+.lt-mark--lg { width: 3rem; height: 3rem; background-size: 135px auto; background-position: -29.5px -17px; }
