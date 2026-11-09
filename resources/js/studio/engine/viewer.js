@@ -30,7 +30,8 @@ export function createViewer(options = {}) {
     const assetSize = (id) => { const a = assets.get(Number(id)); return a && a.width && a.height ? { width: a.width, height: a.height } : null; };
 
     root.classList.add('studio-viewer');
-    Object.assign(root.style, { position: root.style.position || 'relative', overflow: 'hidden', touchAction: 'none', userSelect: 'none' });
+    if (doc.defaultView && doc.defaultView.getComputedStyle(root).position === 'static') root.style.position = 'relative';
+    Object.assign(root.style, { overflow: 'hidden', touchAction: 'none', userSelect: 'none' });
     const stage = doc.createElement('div');
     Object.assign(stage.style, { position: 'absolute', left: '0', top: '0', transformOrigin: '0 0' });
     const svg = doc.createElementNS(SVG_NS, 'svg');

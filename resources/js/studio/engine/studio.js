@@ -96,7 +96,7 @@ export function createStudio(options = {}) {
     root.setAttribute('role', 'application');
     if (!root.getAttribute('aria-label')) root.setAttribute('aria-label', 'Design canvas');
     const rs = root.style;
-    rs.position = rs.position || 'relative';
+    if (doc.defaultView && doc.defaultView.getComputedStyle(root).position === 'static') rs.position = 'relative';
     rs.overflow = 'hidden';
     rs.touchAction = 'none';
     rs.userSelect = 'none';
@@ -295,11 +295,10 @@ export function createStudio(options = {}) {
         textEditor.sync();
         const pagesChanged = state.doc.pages !== prev.doc.pages;
         const contentMetas = metas.filter((m) => m.kind === 'command' || m.kind === 'undo' || m.kind === 'redo' || m.kind === 'rollback');
-        if (pagesChanged || state.selection !== prev.selection || state.group !== prev.group) { /* events below */ }
         if (pagesChanged) {
             const userEdit = contentMetas.some((m) => !m.system);
             ev.emit('change', { state, metas, system: !userEdit });
-            if (userEdit && autosave) { autosave.markDirty(); scheduleJournal(); checkFonts(); }
+            if (userEdit) checkFonts();
         }
         if (state.selection !== prev.selection || state.group !== prev.group) ev.emit('selection', { ids: state.selection, group: state.group });
         const pageIds = state.doc.pages.map((p) => p.id).join('|');
@@ -310,6 +309,17 @@ export function createStudio(options = {}) {
             ev.emit('history', historyInfo());
         }
         prev = state;
+    });
+    // Unsaved-work bookkeeping is synchronous: it must never wait for an animation frame
+    // (a hidden tab has none), or an edit made just before switching tabs could go unsaved.
+    let syncPages = core.getState().doc.pages;
+    core.store.subscribeSync((state, before, meta) => {
+        if (destroyed || state.doc.pages === syncPages) return;
+        syncPages = state.doc.pages;
+        if (meta && (meta.kind === 'command' || meta.kind === 'undo' || meta.kind === 'redo' || meta.kind === 'rollback') && !meta.system && autosave) {
+            autosave.markDirty();
+            scheduleJournal();
+        }
     });
     const history = core.history;
     let lastHistory = history.size;

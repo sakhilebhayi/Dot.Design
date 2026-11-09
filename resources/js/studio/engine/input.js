@@ -285,7 +285,13 @@ export function createInput(deps) {
 
         const touches = Array.from(pointers.values()).filter((p) => p.type === 'touch');
         if (touches.length >= 2) { startPinch(); return; }
-        if (session) return;
+        if (session) {
+            // a gesture whose pointerup never arrived (focus loss, lost capture) must not block new input
+            if (pointers.size > 1) return;
+            if (core.inTransaction()) core.cancel();
+            session = null;
+            resetTransient();
+        }
 
         const lp = localPoint(e);
         const pagePt = viewport.screenToPage(lp.x, lp.y);
