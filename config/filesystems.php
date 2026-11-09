@@ -33,7 +33,9 @@ return [
         'local' => [
             'driver' => 'local',
             'root' => storage_path('app/private'),
-            'serve' => true,
+            // Nothing in the app hands out a signed /storage URL for this disk, and the private design-assets disk lives inside
+            // it: leave the framework's file route off so a stray signed link can never reach it (R-45 security S-7).
+            'serve' => false,
             'throw' => false,
             'report' => false,
         ],
