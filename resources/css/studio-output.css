@@ -125,3 +125,10 @@
 @media (prefers-reduced-motion: reduce) {
     .out-adv > summary svg, .out-quick > button, .out-progress > span, .out-format { transition: none; }
 }
+
+/* ---- pmod: controls inside the output dialogs ----------------------------------------------------- */
+.out-section .mc-seg { justify-self: start; }
+.out-section .mc-cards { gap: var(--lt-space-2); }
+.out-pagelist .mc-check { min-height: 1.75rem; padding-block: 0.15rem; }
+.out-row .mc-switch { min-height: 2.25rem; }
+.out-files { display: flex; flex-wrap: wrap; align-items: center; gap: var(--lt-space-3); }

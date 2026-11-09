@@ -18,6 +18,8 @@ import { concat } from './bytes.js';
 import { buildDesignFilename, buildFilename } from './filenames.js';
 import { createZip } from './zip.js';
 import { buildPdf, pageSizePt } from './export-pdf.js';
+import { exportVectorPdf } from './export-vector.js';
+import { edgeMessage, hasPrintBoxes, padUnits } from './print-boxes.js';
 import { encodeGif, estimateGifBytes } from './gif.js';
 import { ExportError, exportSvg, prepareSvg } from './export-svg.js';
 import { drawSvgToCanvas, exportPageRaster, disposeCanvas, resolveTarget } from './export-raster.js';
@@ -183,17 +185,21 @@ export async function exportWebm(deps, { indexes, fps = 30, maxEdge = 720, signa
 }
 
 /** One PDF of the chosen pages; every page is a JPEG picture at the chosen resolution. */
-export async function exportPdf(deps, { indexes, target, project, quality = 0.92, signal, onProgress, date }) {
+export async function exportPdf(deps, { indexes, target, project, quality = 0.92, signal, onProgress, date, bleedMm = 0, marks = false }) {
     const pages = deps.studio.getState().doc.pages;
     const out = [];
     const messages = [];
+    const print = { bleedMm, marks };
     for (let n = 0; n < indexes.length; n += 1) {
         const pi = indexes[n];
         const page = pages[pi];
-        const r = await exportPageRaster(deps, { pageIndex: pi, format: 'jpg', target, quality, signal });
+        const r = await exportPageRaster(deps, { pageIndex: pi, format: 'jpg', target, quality, signal, print });
         const size = pageSizePt(page, project.unit);
-        out.push({ jpeg: await r.bytes(), pxWidth: r.width, pxHeight: r.height, widthPt: size.widthPt, heightPt: size.heightPt });
+        const pad = hasPrintBoxes(print) ? padUnits(print) * (project.unit === 'mm' || project.unit === 'in' ? 1 : 0.75) : 0;
+        out.push({ jpeg: await r.bytes(), pxWidth: r.width, pxHeight: r.height, widthPt: size.widthPt + 2 * pad, heightPt: size.heightPt + 2 * pad, trim: hasPrintBoxes(print) ? { x: pad, y: pad, w: size.widthPt, h: size.heightPt, bleed: (bleedMm * 72) / 25.4 } : null });
         if (r.message) messages.push(r.message);
+        const edge = edgeMessage(page, bleedMm);
+        if (edge) messages.push(indexes.length > 1 ? `Page ${pi + 1}: ${edge}` : edge);
         if (onProgress) onProgress((n + 1) / indexes.length);
     }
     const bytes = buildPdf({ pages: out, title: project.name || 'Design', date: date || new Date() });
@@ -204,7 +210,9 @@ export async function exportPdf(deps, { indexes, target, project, quality = 0.92
  * runExport(deps, settings, project, hooks) -> {files, zip, messages, bytes, name}
  * More than one file becomes ONE ZIP (store-only).
  */
-export async function runExport(deps, settings, project, { signal, onProgress, onStage } = {}) {
+export async function runExport(deps, settings, rawProject, { signal, onProgress, onStage } = {}) {
+    // A print design (format kind "print") is stored in 72 dpi units whatever the project's unit says, so one unit is one point.
+    const project = rawProject.kind === 'print' && rawProject.unit !== 'mm' && rawProject.unit !== 'in' ? { ...rawProject, unit: 'mm' } : rawProject;
     const pages = deps.studio.getState().doc.pages;
     const indexes = (settings.pages && settings.pages.length ? settings.pages : [0]).filter((i) => pages[i]);
     if (!indexes.length) throw new ExportError('no-page', 'No page is selected.', 'Choose at least one page.');
@@ -221,7 +229,10 @@ export async function runExport(deps, settings, project, { signal, onProgress, o
         for (const pi of indexes) {
             for (const sz of sizes) {
                 if (onStage) onStage(total > 1 ? `Making file ${done + 1} of ${total}` : 'Making the picture');
-                const r = await exportPageRaster(deps, { pageIndex: pi, format: fmt, target: sz, quality: settings.quality, transparent: !!settings.transparent, signal });
+                const print = project.unit === 'mm' || project.unit === 'in' ? { bleedMm: settings.bleedMm || 0, marks: !!settings.marks } : null;
+                const r = await exportPageRaster(deps, { pageIndex: pi, format: fmt, target: sz, quality: settings.quality, transparent: !!settings.transparent, signal, print });
+                if (print && hasPrintBoxes(print) && !messages.some((m) => m.startsWith('Print:'))) messages.push(`Print: bleed and crop marks are drawn into the ${fmt.toUpperCase()}. The picture is bigger than the page by that margin.`);
+                { const edge = edgeMessage(pages[pi], print ? print.bleedMm : 0); if (edge && !messages.includes(edge)) messages.push(edge); }
                 if (r.message) messages.push(r.message);
                 const suffix = sizes.length > 1 ? (sz.mode === 'scale' ? `${sz.scale}x` : sz.mode === 'dpi' ? `${sz.dpi}dpi` : `w${sz.width}`) : '';
                 files.push({ name: buildFilename({ design, page: pageLabel(pages[pi], pi), pageNumber: pi + 1, width: r.width, height: r.height, ext: fmt, suffix: sizes.length > 1 ? suffix : '' }), mime: r.mime, bytes: await r.bytes() });
@@ -238,7 +249,13 @@ export async function runExport(deps, settings, project, { signal, onProgress, o
         }
     } else if (fmt === 'pdf') {
         if (onStage) onStage('Making the PDF');
-        const r = await exportPdf(deps, { indexes, target: settings.pdfTarget || { mode: 'dpi', dpi: 150 }, project, quality: settings.quality || 0.92, signal, onProgress: progress });
+        const printable = project.unit === 'mm' || project.unit === 'in';
+        const bleedMm = printable ? settings.bleedMm || 0 : 0;
+        const marks = printable ? !!settings.marks : false;
+        const common = { indexes, target: settings.pdfTarget || { mode: 'dpi', dpi: 150 }, project, quality: settings.quality || 0.92, signal, onProgress: progress, bleedMm, marks };
+        const r = settings.pdfMode === 'picture'
+            ? await exportPdf(deps, common)
+            : await exportVectorPdf(deps, { indexes, pdfTarget: common.target, project, quality: common.quality, bleedMm, marks, signal, onProgress: progress, onStage });
         messages.push(...r.messages);
         files.push({ name: buildDesignFilename({ design, width: pages[indexes[0]].width, height: pages[indexes[0]].height, ext: 'pdf' }), mime: r.mime, bytes: r.bytes });
     } else if (fmt === 'gif' || fmt === 'webm') {
