@@ -29,7 +29,7 @@ try {
     }
     for (const mode of ['simple', 'pro']) {
         await c.goto(`${base}/design/projects/1`, { settle: 100 }); await editorReady(c);
-        if (mode === 'pro') await c.eval(`[...document.querySelectorAll('.st-seg__btn')].find((b) => /Pro/.test(b.getAttribute('aria-label')))?.click()`);
+        if (mode === 'pro') await c.eval(`[...document.querySelectorAll('[role=radio]')].find((b) => /^Pro/.test(b.getAttribute('aria-label') || ''))?.click()`);
         await c.eval(`window.__studio.studio.select([window.__studio.studio.getState().doc.pages[0].elements.find((e) => e.type === 'text').id])`);
         for (const tab of ['templates', 'elements', 'text', 'uploads', 'brand', 'comments', 'animate', 'background', 'versions', 'assistant']) {
             await c.eval(`document.getElementById('st-tab-${tab}')?.click()`); await c.sleep(500);

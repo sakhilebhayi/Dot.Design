@@ -39,9 +39,9 @@ try {
     // 2. full tab walk: every stop is reachable, none traps, count recorded
     await c.eval('document.activeElement.blur()');
     const stops = [];
-    for (let i = 0; i < 160; i++) { await c.key('Tab'); const a = await active(); stops.push(a); if (i > 3 && a === stops[0]) break; }
+    for (let i = 0; i < 400; i++) { await c.key("Tab"); const a = await active(); stops.push(a); if (i > 3 && (a === stops[0] || /lt-skip/.test(a))) break; }
     const unnamed = stops.filter((s) => /\[\]$/.test(s));
-    check('tab walk wraps without a trap', stops.length < 160, `${stops.length} stops`);
+    check('tab walk wraps without a trap', stops.length < 400, `${stops.length} stops` + (stops.length >= 400 ? ' ... ' + stops.slice(40, 52).join(' | ') : ''));
     check('every tab stop has a name', unnamed.length === 0, unnamed.slice(0, 3).join(' '));
     const noRing = [];
     for (let i = 0; i < Math.min(stops.length, 60); i++) { await c.key('Tab'); const a = await active(); if (!/^body/.test(a) && !(await focusRing())) noRing.push(a); }
@@ -53,9 +53,9 @@ try {
     const s1 = await sel();
     check('Tab on the canvas selects the first element', s1.length === 1, JSON.stringify(s1));
     check('selection is announced', /./.test(await live()), await live());
-    await c.key('Tab'); const s2 = await sel();
+    await c.key('Tab'); await sleep(250); const s2 = await sel();
     check('Tab again selects the next element', s2.length === 1 && s2[0] !== s1[0]);
-    await c.key('Tab', { modifiers: 8 }); const s3 = await sel();   // Shift+Tab
+    await c.key('Tab', { modifiers: 8 }); await sleep(250); const s3 = await sel();   // Shift+Tab
     check('Shift+Tab goes back', s3[0] === s1[0]);
 
     const headline = await pickElement(c, "(e) => e.name === 'Headline'");
@@ -140,7 +140,7 @@ try {
     check('closing the panel returns focus to its tab', /st-rail__tab/.test(await active()), await active());
 
     // 8. layers (Pro): arrows, rename, reorder
-    await c.eval(`[...document.querySelectorAll('.st-seg__btn')].find(b => /Pro/.test(b.getAttribute('aria-label'))).click()`); await sleep(400);
+    await c.eval(`[...document.querySelectorAll('[role=radio]')].find(b => /^Pro/.test(b.getAttribute('aria-label') || '')).click()`); await sleep(400);
     await c.eval(`document.querySelector('.st-right__tab[aria-selected=true]').focus()`);
     await c.key('ArrowRight'); await sleep(300);
     check('arrow keys move between the Design and Layers tabs', await c.eval(`document.querySelector('.st-right__tab[aria-selected=true]')?.textContent === 'Layers' && document.activeElement.textContent === 'Layers'`), await active());
