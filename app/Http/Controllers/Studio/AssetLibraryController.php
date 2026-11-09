@@ -32,8 +32,9 @@ class AssetLibraryController extends StudioController
 
         $page = DesignAsset::query()
             ->when(filled($filters['q'] ?? null), function ($q) use ($filters): void {
-                $needle = '%'.addcslashes((string) $filters['q'], '%_\\').'%';
-                $q->where('name', 'like', $needle);
+                // "!" is the escape character on both SQLite and PostgreSQL, so % and _ in the text stay literal.
+                $needle = '%'.preg_replace('/([%_!])/', '!$1', (string) $filters['q']).'%';
+                $q->whereRaw("lower(name) like lower(?) escape '!'", [$needle]);
             })
             ->when(filled($filters['folder'] ?? null), fn ($q) => $filters['folder'] === '_none' ? $q->whereNull('folder') : $q->where('folder', $filters['folder']))
             ->when(filled($filters['tag'] ?? null), fn ($q) => $q->whereJsonContains('tags', $filters['tag']))
