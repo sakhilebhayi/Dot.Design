@@ -69,10 +69,13 @@ class IntegrationsPageTest extends IntegrationTestCase
         $mia = $this->member($team);
         $project = $this->project($owner);
 
-        DesignShared::dispatch($project->id, 1, $owner->id, [$mia->id], $team->id);
-        DesignCommentAdded::dispatch($project->id, 1, $mia->id, $team->id);
-        DesignReviewRequested::dispatch($project->id, 1, $owner->id, [$mia->id], $team->id);
-        DesignReviewDecided::dispatch($project->id, 1, $mia->id, $owner->id, 'approved', $team->id);
+        $project->forceFill(['team_id' => $team->id])->save();
+        $review = $this->review($project, $owner, $mia);
+
+        DesignShared::dispatch($this->share($project, $owner), $project, $owner);
+        DesignCommentAdded::dispatch($this->comment($project, $mia), $project, []);
+        DesignReviewRequested::dispatch($review);
+        DesignReviewDecided::dispatch($review);
 
         Http::assertNothingSent();
     }

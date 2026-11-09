@@ -8,13 +8,15 @@ use App\Events\DesignReviewRequested;
 use App\Events\DesignShared;
 use App\Listeners\Integrations\SendDesignNotifications;
 use App\Models\User;
+use App\Services\Integrations\Notify\NotificationPlanner;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Http\Client\ConnectionException;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Http;
 
 /**
- * The design events end in Dot.Notify calls for the right people, and can never disturb the action that raised them.
- * The queue is sync in tests, so the listener runs inline; that is the harshest place to prove "never breaks the action".
+ * The real design events (built from real models) end in Dot.Notify calls for the right people, and can never disturb the
+ * action that raised them. The queue is sync in tests, so the listener runs inline: the harshest place to prove "never breaks".
  */
 class DesignNotificationsTest extends IntegrationTestCase
 {
@@ -31,81 +33,125 @@ class DesignNotificationsTest extends IntegrationTestCase
         return collect(Http::recorded())->map(fn ($pair) => json_decode($pair[0]->body(), true))->values()->all();
     }
 
-    public function test_a_share_with_named_members_emails_each_of_them_but_not_the_sharer_or_outsiders(): void
+    private function emails(): array
+    {
+        return array_map(fn ($b) => $b['recipient']['email'], $this->bodies());
+    }
+
+    public function test_the_listener_is_registered_for_every_real_event(): void
+    {
+        foreach ([DesignCommentAdded::class, DesignReviewRequested::class, DesignReviewDecided::class, DesignShared::class] as $event) {
+            $this->assertTrue(Event::hasListeners($event), $event);
+        }
+    }
+
+    public function test_review_requested_tells_the_reviewer_and_decided_tells_the_requester(): void
     {
         Http::fake([self::URL => Http::response(['id' => 1, 'status' => 'routed'], 202)]);
         [$owner, $team] = $this->workspace();
-        $mia = $this->member($team, 'mia@example.test');
-        $outsider = User::factory()->create(['email' => 'out@example.test']);
-        $project = $this->project($owner);
+        $reviewer = $this->member($team, 'r1@example.test');
+        $project = $this->project($owner, 'Spring Sale Poster', $team);
 
-        DesignShared::dispatch($project->id, 7, $owner->id, [$mia->id, $owner->id, $outsider->id], $team->id);
+        DesignReviewRequested::dispatch($this->review($project, $owner, $reviewer));
+        DesignReviewDecided::dispatch($this->review($project, $owner, $reviewer, 'changes_requested'));
 
         $bodies = $this->bodies();
-        $this->assertCount(1, $bodies);
-        $this->assertSame('design.shared', $bodies[0]['event']);
+        $this->assertSame(['design.review.requested', 'design.review.decided'], array_column($bodies, 'event'));
+        $this->assertSame(['r1@example.test', 'olive@example.test'], $this->emails());
         $this->assertSame(self::COMPANY, $bodies[0]['company_uuid']);
-        $this->assertSame('mia@example.test', $bodies[0]['recipient']['email']);
-        $this->assertSame('Spring Sale Poster', $bodies[0]['data']['design_name']);
-        $this->assertSame('Olive Owner', $bodies[0]['data']['shared_by']);
+        $this->assertSame('Olive Owner', $bodies[0]['data']['requested_by']);
+        $this->assertSame('Changes requested', $bodies[1]['data']['decision']);
+        $this->assertSame('R1', $bodies[1]['data']['decided_by']);
         $this->assertStringStartsWith('https://', $bodies[0]['data']['url']);
-        $this->assertSame(['design_name', 'shared_by', 'url'], array_keys($bodies[0]['data']));
-        $this->assertSame('design.shared:s7:'.sha1('mia@example.test'), $bodies[0]['idempotency_key']);
+        $this->assertSame(['design_name', 'requested_by', 'url'], array_keys($bodies[0]['data']));
     }
 
-    public function test_review_requested_tells_each_reviewer_and_decided_tells_the_requester(): void
-    {
-        Http::fake([self::URL => Http::response(['id' => 1, 'status' => 'routed'], 202)]);
-        [$owner, $team] = $this->workspace();
-        $r1 = $this->member($team, 'r1@example.test');
-        $r2 = $this->member($team, 'r2@example.test');
-        $project = $this->project($owner);
-
-        DesignReviewRequested::dispatch($project->id, 3, $owner->id, [$r1->id, $r2->id], $team->id);
-        DesignReviewDecided::dispatch($project->id, 3, $r1->id, $owner->id, 'changes_requested', $team->id);
-
-        $bodies = $this->bodies();
-        $this->assertSame(['design.review.requested', 'design.review.requested', 'design.review.decided'], array_column($bodies, 'event'));
-        $this->assertSame(['r1@example.test', 'r2@example.test', 'olive@example.test'], array_map(fn ($b) => $b['recipient']['email'], $bodies));
-        $this->assertSame('Changes requested', $bodies[2]['data']['decision']);
-    }
-
-    public function test_a_comment_tells_the_owner_and_the_mentioned_but_carries_no_comment_text(): void
+    public function test_a_comment_tells_the_owner_and_the_mentioned_but_never_the_author_and_carries_no_comment_text(): void
     {
         Http::fake([self::URL => Http::response(['id' => 1, 'status' => 'routed'], 202)]);
         [$owner, $team] = $this->workspace();
         $mia = $this->member($team, 'mia@example.test');
         $zed = $this->member($team, 'zed@example.test');
-        $project = $this->project($owner);
+        $outsider = User::factory()->create(['email' => 'out@example.test']);
+        $project = $this->project($owner, 'Spring Sale Poster', $team);
 
-        DesignCommentAdded::dispatch($project->id, 11, $mia->id, $team->id, [$zed->id]);
+        DesignCommentAdded::dispatch($this->comment($project, $mia), $project, [$zed->id, $mia->id, $outsider->id]);
 
-        $bodies = $this->bodies();
-        $this->assertEqualsCanonicalizing(['olive@example.test', 'zed@example.test'], array_map(fn ($b) => $b['recipient']['email'], $bodies));
-        $this->assertSame(['design_name', 'commented_by', 'url'], array_keys($bodies[0]['data']));
+        $this->assertEqualsCanonicalizing(['olive@example.test', 'zed@example.test'], $this->emails());
+        $this->assertSame(['design_name', 'commented_by', 'url'], array_keys($this->bodies()[0]['data']));
+        $this->assertSame('Mia', $this->bodies()[0]['data']['commented_by']);
+        $this->assertStringNotContainsString('Secret feedback text', json_encode($this->bodies()));
+    }
+
+    public function test_a_guest_comment_through_a_share_link_notifies_nobody(): void
+    {
+        Http::fake();
+        [$owner, $team] = $this->workspace();
+        $project = $this->project($owner, 'Spring Sale Poster', $team);
+
+        DesignCommentAdded::dispatch($this->comment($project, null), $project, []);
+
+        Http::assertNothingSent();
+    }
+
+    public function test_a_link_share_has_nobody_to_address_so_nothing_is_sent(): void
+    {
+        Http::fake();
+        [$owner, $team] = $this->workspace();
+        $project = $this->project($owner, 'Spring Sale Poster', $team);
+
+        DesignShared::dispatch($this->share($project, $owner), $project, $owner);
+
+        Http::assertNothingSent();
     }
 
     public function test_a_workspace_not_linked_to_infodot_sends_nothing(): void
     {
         Http::fake();
         [$owner, $team] = $this->workspace(null);
-        $mia = $this->member($team);
-        $project = $this->project($owner);
+        $reviewer = $this->member($team);
+        $project = $this->project($owner, 'Spring Sale Poster', $team);
 
-        DesignShared::dispatch($project->id, 1, $owner->id, [$mia->id], $team->id);
+        DesignReviewRequested::dispatch($this->review($project, $owner, $reviewer));
 
         Http::assertNothingSent();
     }
 
-    public function test_with_the_integration_off_nothing_is_queued_or_sent_and_the_event_still_fires(): void
+    public function test_a_design_with_no_workspace_sends_nothing(): void
+    {
+        Http::fake();
+        [$owner, $team] = $this->workspace();
+        $reviewer = $this->member($team);
+
+        $project = $this->project($owner);
+        $project->forceFill(['team_id' => null])->save();
+
+        DesignReviewRequested::dispatch($this->review($project, $owner, $reviewer));
+
+        Http::assertNothingSent();
+    }
+
+    public function test_someone_outside_the_workspace_is_never_addressed(): void
+    {
+        Http::fake();
+        [$owner, $team] = $this->workspace();
+        $stranger = User::factory()->create(['email' => 'out@example.test']);
+        $project = $this->project($owner, 'Spring Sale Poster', $team);
+
+        DesignReviewRequested::dispatch($this->review($project, $owner, $stranger));
+
+        Http::assertNothingSent();
+    }
+
+    public function test_with_the_integration_off_nothing_is_sent_and_the_event_still_fires(): void
     {
         Http::fake();
         config(['design_integrations.notify.enabled' => false]);
         [$owner, $team] = $this->workspace();
-        $mia = $this->member($team);
-        $project = $this->project($owner);
+        $reviewer = $this->member($team);
+        $project = $this->project($owner, 'Spring Sale Poster', $team);
 
-        DesignShared::dispatch($project->id, 1, $owner->id, [$mia->id], $team->id);
+        DesignReviewRequested::dispatch($this->review($project, $owner, $reviewer));
 
         Http::assertNothingSent();
     }
@@ -114,10 +160,10 @@ class DesignNotificationsTest extends IntegrationTestCase
     {
         Http::fake(fn () => throw new ConnectionException('down'));
         [$owner, $team] = $this->workspace();
-        $mia = $this->member($team);
-        $project = $this->project($owner);
+        $reviewer = $this->member($team);
+        $project = $this->project($owner, 'Spring Sale Poster', $team);
 
-        DesignShared::dispatch($project->id, 1, $owner->id, [$mia->id], $team->id);
+        DesignReviewRequested::dispatch($this->review($project, $owner, $reviewer));
 
         $this->assertTrue(true, 'reached here without an exception');
     }
@@ -126,10 +172,10 @@ class DesignNotificationsTest extends IntegrationTestCase
     {
         Http::fake(fn () => throw new \RuntimeException('unexpected'));
         [$owner, $team] = $this->workspace();
-        $mia = $this->member($team);
-        $project = $this->project($owner);
+        $reviewer = $this->member($team);
+        $project = $this->project($owner, 'Spring Sale Poster', $team);
 
-        DesignShared::dispatch($project->id, 1, $owner->id, [$mia->id], $team->id);
+        DesignReviewRequested::dispatch($this->review($project, $owner, $reviewer));
 
         $this->assertTrue(true);
     }
@@ -137,27 +183,46 @@ class DesignNotificationsTest extends IntegrationTestCase
     public function test_the_listener_is_queued_and_runs_after_commit(): void
     {
         $listener = new SendDesignNotifications;
+        [$owner, $team] = $this->workspace();
+        $project = $this->project($owner, 'Spring Sale Poster', $team);
+        $event = new DesignShared($this->share($project, $owner), $project, $owner);
 
         $this->assertInstanceOf(ShouldQueue::class, $listener);
         $this->assertTrue($listener->afterCommit);
         $this->assertSame([60, 300], $listener->backoff());
-        $this->assertTrue($listener->shouldQueue(new DesignShared(1, 1, 1)));
+        $this->assertTrue($listener->shouldQueue($event));
         config(['design_integrations.notify.enabled' => false]);
-        $this->assertFalse($listener->shouldQueue(new DesignShared(1, 1, 1)));
+        $this->assertFalse($listener->shouldQueue($event));
     }
 
-    public function test_the_same_event_twice_carries_the_same_idempotency_key(): void
+    public function test_the_same_review_twice_carries_the_same_idempotency_key_and_a_new_one_a_new_key(): void
     {
         Http::fake([self::URL => Http::response(['id' => 1, 'status' => 'routed'], 202)]);
         [$owner, $team] = $this->workspace();
-        $mia = $this->member($team);
-        $project = $this->project($owner);
+        $reviewer = $this->member($team);
+        $project = $this->project($owner, 'Spring Sale Poster', $team);
+        $review = $this->review($project, $owner, $reviewer);
 
-        DesignShared::dispatch($project->id, 5, $owner->id, [$mia->id], $team->id);
-        DesignShared::dispatch($project->id, 5, $owner->id, [$mia->id], $team->id);
+        DesignReviewRequested::dispatch($review);
+        DesignReviewRequested::dispatch($review);
+        DesignReviewRequested::dispatch($this->review($project, $owner, $reviewer));
 
         $keys = array_column($this->bodies(), 'idempotency_key');
-        $this->assertCount(2, $keys);
+        $this->assertCount(3, $keys);
         $this->assertSame($keys[0], $keys[1]);
+        $this->assertNotSame($keys[0], $keys[2]);
+        $this->assertSame('design.review.requested:r'.$review->id.':'.sha1('mia@example.test'), $keys[0]);
+    }
+
+    public function test_the_planner_alone_builds_the_same_recipients_without_a_queue(): void
+    {
+        [$owner, $team] = $this->workspace();
+        $reviewer = $this->member($team, 'r1@example.test');
+        $project = $this->project($owner, 'Spring Sale Poster', $team);
+
+        $plan = app(NotificationPlanner::class)->reviewRequested(new DesignReviewRequested($this->review($project, $owner, $reviewer)));
+
+        $this->assertCount(1, $plan);
+        $this->assertSame('r1@example.test', $plan[0]->recipientEmail);
     }
 }
