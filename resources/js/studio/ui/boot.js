@@ -84,9 +84,8 @@ function start(root, config) {
     ctx.placeFiles = (files, opts) => ctx.uploads.placeFiles(files, opts);
 
     // overlays
-    const toasts = createToasts(root);
     const dialogs = createDialogs({ root, registry: ctx.registry, getCtx: () => ctx, onOpenChange: (open) => { if (!ctx.readOnly) studio.setInputEnabled(!open); } });
-    ctx._hooks.toast = toasts.toast; ctx._hooks.confirm = dialogs.confirm; ctx._hooks.openDialog = dialogs.openDialog; ctx._hooks.closeDialog = dialogs.closeDialog;
+    ctx._hooks.confirm = dialogs.confirm; ctx._hooks.openDialog = dialogs.openDialog; ctx._hooks.closeDialog = dialogs.closeDialog;
 
     // engine refusals reach the person as a short sentence (once, even if a burst repeats it)
     let lastErr = ''; let lastErrAt = 0;
@@ -96,7 +95,7 @@ function start(root, config) {
         if (e.message === lastErr && now - lastErrAt < 2500) return;
         lastErr = e.message; lastErrAt = now;
         if (e.code === 'recovery') return;
-        toasts.toast(e.message, { kind: 'warn' });
+        ctx.toast(e.message, { kind: 'warn' });
     });
 
     // Screen readers hear what changed (once per burst), not only what is selected.
@@ -112,6 +111,8 @@ function start(root, config) {
     });
 
     const shell = createShell(ctx);
+    // The shell clears the root, so the toast region is created after it.
+    ctx._hooks.toast = createToasts(root).toast;
     const preview = createPreview(ctx);
     const openSheet = () => ctx.openDialog('shortcuts');
 

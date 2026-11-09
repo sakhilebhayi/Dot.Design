@@ -11,7 +11,7 @@ import { openMenu } from '../popover.js';
 import { ACCEPT } from '../uploads.js';
 import { emptyState, errorNote, searchBox, skeletonGrid } from './common.js';
 
-const fmtBytes = (n) => (n >= 1048576 ? (n / 1048576).toFixed(1) + ' MB' : Math.max(1, Math.round(n / 1024)) + ' KB');
+const fmtBytes = (n) => (n >= 1048576 ? (n / 1048576).toFixed(1).replace(/\.0$/, '') + ' MB' : Math.max(1, Math.round(n / 1024)) + ' KB');
 
 export function mountUploads(el, ctx) {
     const state = { q: '', folder: '', tag: '', cursor: null, items: [], loading: false, error: null, usage: null, token: 0, folders: [] };

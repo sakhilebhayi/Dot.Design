@@ -106,6 +106,8 @@
 .st-row { display: flex; gap: var(--lt-space-2); flex-wrap: wrap; align-items: center; }
 .st-row > * { flex: 1 1 0; min-width: 0; }
 .st-row--wrap > * { flex: 1 1 8.5rem; }
+.st-row > .st-btn { padding-inline: var(--lt-space-2); gap: var(--lt-space-2); }
+.st-row > .st-sizeval { flex: 0 0 auto; }
 .st-row > .st-tog { flex: 0 0 auto; }
 .st-row > .st-seg { flex: 1 1 auto; }
 .st-group > *, .st-isec__body > *, .st-simple > *, .st-brandbody > * { min-width: 0; max-width: 100%; }
@@ -439,14 +441,20 @@
 /* drag state for the whole page while a file or an item is dragged */
 .st-dragging .st-stage { outline: 2px dashed var(--lt-accent); outline-offset: -4px; }
 
-/* ---- keep targets honest on touch ------------------------------------------------------------ */
-@media (pointer: coarse) {
-    .st-tog, .st-float__btn, .st-top__btn { min-height: 2.75rem; }
+/* ---- keep targets honest on touch and on small screens: 44px ---------------------------------- */
+@media (pointer: coarse), (max-width: 60rem) {
+    .st-tog, .st-float__btn, .st-top__btn { min-height: 2.75rem; min-width: 2.75rem; }
     .st-num__input, .st-select { min-height: 2.75rem; font-size: 1rem; }
-    .st-seg__btn { min-height: 2.5rem; }
-    .st-sw { width: 2.25rem; height: 2.25rem; }
+    .st-seg__btn { min-height: 2.75rem; }
+    .st-sw { width: 2.75rem; height: 2.75rem; }
     .st-layer__main { min-height: 2.75rem; }
     .st-layer__btn { width: 2.75rem; height: 2.75rem; }
+    .st-page__btn { min-width: 2.75rem; }
+    .st-pageadd { min-width: 2.75rem; }
+    .st-colourbtn, .st-fontbtn { min-height: 2.75rem; }
+    .st-iconbtn { min-width: 2.75rem; }
+    .st-chips .lt-chip { min-height: 2.75rem; }
+    .st-unitbtn { min-height: 2.75rem; }
 }
 
 /* ---- narrow desktop: tighter panels ------------------------------------------------------------ */
@@ -476,6 +484,7 @@
     .st-rail { overflow-x: auto; overflow-y: hidden; padding: 0; box-shadow: 0 -1px 0 var(--lt-rule-strong); padding-bottom: env(safe-area-inset-bottom); }
     .st-rail__list { flex-direction: row; padding: 2px var(--lt-space-1); width: 100%; justify-content: space-between; }
     .st-rail__tab { min-width: 3.5rem; flex: 1 1 0; min-height: 3.25rem; width: auto; }
+    .st-rail__label { font-size: 0.6875rem; letter-spacing: -0.01em; }
     .st-app[data-left="open"] .st-pages, .st-app[data-right="open"] .st-pages { display: none; }
     .st-left, .st-right { max-height: 46dvh; min-height: 12rem; border-radius: var(--lt-radius-3) var(--lt-radius-3) 0 0; box-shadow: 0 -1px 0 var(--lt-rule-strong), 0 -8px 24px -12px rgb(14 18 22 / 0.35); position: relative; z-index: 3; }
     .st-left[hidden], .st-right[hidden] { display: none; }
