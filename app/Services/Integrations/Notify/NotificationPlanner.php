@@ -28,34 +28,42 @@ class NotificationPlanner
     /** @return list<DesignNotification> */
     public function commentAdded(DesignCommentAdded $e): array
     {
-        $project = $this->project($e->projectId);
-        $recipients = $project ? array_merge([$project->user_id], $e->mentionedUserIds) : [];
+        // A guest comment through a share link has no member to credit and nobody to address by name: skipped.
+        if ($e->comment->user_id === null) {
+            return [];
+        }
 
-        return $this->build(DesignNotifyEvents::COMMENT_ADDED, $project, $e->teamId, $e->authorUserId, $recipients, 'c'.$e->commentId, fn (User $actor) => ['commented_by' => $actor->name]);
+        $recipients = array_merge([$e->project->user_id], $e->mentioned);
+
+        return $this->build(DesignNotifyEvents::COMMENT_ADDED, $e->project, null, (int) $e->comment->user_id, $recipients, 'c'.$e->comment->id, fn (User $actor) => ['commented_by' => $actor->name]);
     }
 
     /** @return list<DesignNotification> */
     public function reviewRequested(DesignReviewRequested $e): array
     {
-        return $this->build(DesignNotifyEvents::REVIEW_REQUESTED, $this->project($e->projectId), $e->teamId, $e->requestedByUserId, $e->reviewerUserIds, 'r'.$e->reviewId, fn (User $actor) => ['requested_by' => $actor->name]);
+        $review = $e->review;
+
+        return $this->build(DesignNotifyEvents::REVIEW_REQUESTED, $this->project((int) $review->design_project_id), null, (int) $review->requested_by, [(int) $review->reviewer_id], 'r'.$review->id, fn (User $actor) => ['requested_by' => $actor->name]);
     }
 
     /** @return list<DesignNotification> */
     public function reviewDecided(DesignReviewDecided $e): array
     {
-        $decision = match ($e->decision) {
+        $review = $e->review;
+        $status = $review->status instanceof \BackedEnum ? (string) $review->status->value : (string) $review->status;
+        $decision = match ($status) {
             'approved' => 'Approved',
             'changes_requested' => 'Changes requested',
-            default => Str::ucfirst(str_replace('_', ' ', $e->decision)),
+            default => Str::ucfirst(str_replace('_', ' ', $status)),
         };
 
-        return $this->build(DesignNotifyEvents::REVIEW_DECIDED, $this->project($e->projectId), $e->teamId, $e->decidedByUserId, [$e->requestedByUserId], 'r'.$e->reviewId.':'.$e->decision, fn (User $actor) => ['decided_by' => $actor->name, 'decision' => $decision]);
+        return $this->build(DesignNotifyEvents::REVIEW_DECIDED, $this->project((int) $review->design_project_id), null, (int) $review->reviewer_id, [(int) $review->requested_by], 'r'.$review->id.':'.$status, fn (User $actor) => ['decided_by' => $actor->name, 'decision' => $decision]);
     }
 
-    /** @return list<DesignNotification> */
+    /** @return list<DesignNotification> A share link has no named member recipients, so nobody is addressed. */
     public function shared(DesignShared $e): array
     {
-        return $this->build(DesignNotifyEvents::SHARED, $this->project($e->projectId), $e->teamId, $e->sharedByUserId, $e->recipientUserIds, 's'.$e->shareId, fn (User $actor) => ['shared_by' => $actor->name]);
+        return [];
     }
 
     /**
