@@ -212,8 +212,8 @@ test('professional: custom canvas, Pro tools, undo, reload, exports', async (t) 
         assert.ok(dec.samples[0][0] > 240 && dec.samples[0][1] > 240, 'white corner');
         await closeDialog(page);
     });
-    await step(page, 'export PDF', async () => {
-        const d = await exportFile(page, { tab: 'PDF' });
+    await step(page, 'export PDF (as pictures)', async () => {
+        const d = await exportFile(page, { tab: 'PDF', pdfMode: 'picture' });
         const info = pdfInfo(await readStream(d));
         assert.equal(info.count, 1); assert.equal(info.declared, 1); assert.ok(info.eof);
         assert.deepEqual(info.mediaBoxes[0], { w: 675, h: 450 }, 'screen px page: 0.75 pt per px');

@@ -65,7 +65,7 @@ export function firstDiff(a, b, path = '') {
 }
 
 /** Download dialog: pick a format tab (and size chip), press Prepare file, press Download. Returns the Playwright Download. */
-export async function exportFile(page, { tab = 'PNG', scale = null, pages = null } = {}) {
+export async function exportFile(page, { tab = 'PNG', scale = null, pages = null, pdfMode = null, bleed = null, marks = false } = {}) {
     if (!(await page.locator('dialog[open] .out-adv').count())) await page.getByRole('button', { name: 'Download', exact: true }).first().click();
     await page.locator('dialog[open] .out-adv').evaluate((e) => { e.open = true; });
     await page.getByRole('tab', { name: tab, exact: true }).click();
@@ -77,6 +77,9 @@ export async function exportFile(page, { tab = 'PNG', scale = null, pages = null
             if (on !== (n === scale)) await chip.click();
         }
     }
+    if (pdfMode === 'picture') await page.getByText('PDF (as pictures)').click();
+    if (bleed) await page.getByRole('radio', { name: `${bleed} mm`, exact: true }).click();
+    if (marks) await page.getByRole('switch', { name: /Crop marks/ }).check();
     await page.getByRole('button', { name: 'Prepare file' }).click();
     const btn = page.locator('.out-actions button', { hasText: /^Download \(/ });
     await btn.waitFor({ timeout: 90000 });

@@ -146,3 +146,13 @@ test('leader line joins the anchor to the marker edge, and disappears when they 
     assert.deepEqual(l, { x1: 0, y1: 0, x2: 30, y2: 0 });
     assert.equal(leader({ x: 0, y: 0 }, { x: 8, y: 0 }, 20), null);
 });
+
+test('a marker that has to move never slides onto the element it is about', () => {
+    const box = { left: 100, right: 300, top: 100, bottom: 160 };
+    const items = Array.from({ length: 5 }, (_, i) => ({ id: i, anchor: { x: 200, y: 130 }, home: { x: 200, y: 82 }, avoid: box }));
+    const out = layoutMarkers(items, { diameter: 22, bounds: { width: 500, height: 400 } });
+    for (const m of out.values()) {
+        const d = Math.hypot(Math.max(box.left - m.x, 0, m.x - box.right), Math.max(box.top - m.y, 0, m.y - box.bottom));
+        assert.ok(d >= 11 - 1e-9, `marker at ${m.x},${m.y} touches the element`);
+    }
+});

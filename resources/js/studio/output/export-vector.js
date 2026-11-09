@@ -21,6 +21,7 @@ const REASONS = {
     font: 'uses a font that is not one of the built-in fonts',
     'gradient-stroke': 'has an outline filled with a gradient',
     image: 'has a picture that could not be read',
+    error: 'could not be drawn as live text on this device',
 };
 
 export function reasonText(reason) { return REASONS[reason] || 'uses an effect a PDF cannot hold as live shapes'; }
@@ -86,14 +87,17 @@ export async function exportVectorPdf(deps, { indexes, project, pdfTarget = { mo
             await pdf.addVectorPage(svg, { width: page.width, height: page.height, k, bleed: bleedPt, marks });
             vectorPages.push(pi + 1); done = true;
         } catch (e) {
-            if (!(e instanceof Unsupported)) throw e instanceof ExportError ? e : new ExportError('pdf', 'The PDF could not be made.', 'Try again, or choose "PDF as pictures".');
-            picturePages.push({ page: pi + 1, reason: e.reason });
-            messages.push(`Page ${pi + 1} is saved as a picture because it ${reasonText(e.reason)}. The text on that page cannot be selected.`);
+            // a page is either fully vector or fully a picture, and one bad page never loses the others
+            if (e instanceof ExportError && e.code === 'cancelled') throw e;
+            const reason = e instanceof Unsupported ? e.reason : 'error';
+            if (!(e instanceof Unsupported) && typeof console !== 'undefined') console.warn('[export] vector page failed, saving it as a picture', e);
+            picturePages.push({ page: pi + 1, reason });
+            messages.push(`Page ${pi + 1} is saved as a picture because it ${reasonText(reason)}. The text on that page cannot be selected.`);
         }
         if (!done) {
             const r = await exportPageRaster(deps, { pageIndex: pi, format: 'jpg', target: pdfTarget, quality, signal, print: { bleedMm, marks } });
             const size = pageSizePt(page, unit);
-            const padPt = padUnits({ bleedMm, marks }) * k * (unit === 'mm' || unit === 'in' ? 1 : 1);
+            const padPt = padUnits({ bleedMm, marks }) * k;
             pdf.addPicturePage({
                 jpeg: await r.bytes(), pxWidth: r.width, pxHeight: r.height,
                 widthPt: size.widthPt + 2 * padPt, heightPt: size.heightPt + 2 * padPt, pad: padPt, bleed: bleedPt, marks, trimW: size.widthPt, trimH: size.heightPt,

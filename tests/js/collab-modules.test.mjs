@@ -89,20 +89,16 @@ test('review: three dialogs and one topbar action, and the first load asks the s
     assert.ok(urls.includes('/design/projects/7/people'));
 });
 
-test('files: hidden unless the server flag is on, and its menu item hidden unless the shell can build the file', () => {
+test('files: hidden unless the server flag is on; no top bar button either way (the top bar keeps its layout)', () => {
     const off = fakeCtx({ permissions: { view: true }, flags: { filesVault: false } });
     files.register(off.ctx);
     assert.equal(off.calls.actions.length, 0);
+    assert.equal(off.calls.dialogs.size, 0, 'switched off: no dialog registered');
 
-    const noExport = fakeCtx({ permissions: { view: true }, flags: { filesVault: true } });
-    files.register(noExport.ctx);
-    assert.equal(noExport.calls.actions.length, 1);
-    assert.equal(noExport.calls.actions[0].visible(noExport.ctx), false, 'no ctx.exports.render: the item stays hidden');
-
-    const ready = fakeCtx({ permissions: { view: true }, flags: { filesVault: true }, exportsApi: { render: async () => new Blob(['x']) } });
-    files.register(ready.ctx);
-    assert.equal(ready.calls.actions[0].visible(ready.ctx), true);
-    assert.equal(ready.calls.actions[0].label, 'Save to Dot.Files');
+    const on = fakeCtx({ permissions: { view: true }, flags: { filesVault: true }, exportsApi: { render: async () => new Blob(['x']) } });
+    files.register(on.ctx);
+    assert.equal(on.calls.actions.length, 0, 'the entry lives in the Download and Share dialogs, not in the top bar');
+    assert.ok(on.calls.dialogs.has('files.save'), 'the dialog the other two open is registered');
 });
 
 test('files: only http(s) addresses become links', () => {

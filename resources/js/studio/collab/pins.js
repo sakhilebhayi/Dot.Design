@@ -130,7 +130,8 @@ const DIRS = [[1, -1], [1, 0], [0, -1], [-1, -1], [1, 1], [-1, 0], [0, 1], [-1, 
  * Where each marker goes. items: [{id, anchor:{x,y}, home:{x,y}}] where `home` is the preferred centre (the element's top-right
  * corner pushed outwards, or anchor + (14, -14) for a point). Markers are placed in order; one that would touch an earlier
  * marker is moved along 8 directions at growing distances until it fits inside `bounds` ({width, height}). Pure and deterministic,
- * so the same comments always land in the same places and a test can pin the behaviour.
+ * so the same comments always land in the same places and a test can pin the behaviour. An item's optional `avoid` box (the
+ * element the comment is about) is kept clear: a marker that has to move never slides onto the words it refers to.
  * Returns Map(id -> {x, y, moved}).
  */
 export function layoutMarkers(items, { diameter = 22, gap = 4, bounds = { width: 1000, height: 800 }, margin = 4 } = {}) {
@@ -139,15 +140,17 @@ export function layoutMarkers(items, { diameter = 22, gap = 4, bounds = { width:
     const need = diameter + gap;
     const r = diameter / 2;
     const clamp = (p) => ({ x: Math.min(bounds.width - r - margin, Math.max(r + margin, p.x)), y: Math.min(bounds.height - r - margin, Math.max(r + margin, p.y)) });
-    const free = (p) => placed.every((q) => Math.hypot(p.x - q.x, p.y - q.y) >= need);
+    // an item may carry `avoid`: the box of the element it is about; the marker's circle must stay out of it
+    const clear = (p, box) => !box || Math.hypot(Math.max(box.left - p.x, 0, p.x - box.right), Math.max(box.top - p.y, 0, p.y - box.bottom)) >= r;
+    const free = (p, it) => placed.every((q) => Math.hypot(p.x - q.x, p.y - q.y) >= need) && clear(p, it.avoid);
     for (const it of items) {
         const home = clamp(it.home);
         let pick = null;
-        if (free(home)) pick = home;
-        for (let ring = 1; !pick && ring <= 8; ring += 1) {
+        if (free(home, it)) pick = home;
+        for (let ring = 1; !pick && ring <= 10; ring += 1) {
             for (const [dx, dy] of DIRS) {
                 const cand = clamp({ x: home.x + dx * need * ring * 0.75, y: home.y + dy * need * ring * 0.75 });
-                if (free(cand)) { pick = cand; break; }
+                if (free(cand, it)) { pick = cand; break; }
             }
         }
         if (!pick) pick = home;

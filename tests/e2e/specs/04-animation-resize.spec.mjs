@@ -42,11 +42,12 @@ test('animation: animate, preview, GIF, WebM, smart resize', async (t) => {
         assert.ok(h.animation.in.preset, 'the headline has an entrance');
         // the picture: choose an entrance from the selection's own controls
         await clickElement(page, image.id);
-        const sel = page.getByLabel('Entrance').or(page.getByLabel('Comes in')).first();
-        const options = await sel.locator('option').allTextContents();
+        const sel = page.getByRole('combobox', { name: 'Entrance', exact: true }).first();
+        await sel.click();
+        const options = await page.getByRole('option').allTextContents();
         const pick = options.find((o) => /zoom|slide|rise|fade/i.test(o));
         assert.ok(pick, `an entrance preset is offered (${options.join(', ')})`);
-        await sel.selectOption({ label: pick });
+        await page.getByRole('option', { name: pick }).click();
         await page.waitForFunction((id) => window.__studio.studio.getState().doc.pages[0].elements.find((e) => e.id === id).animation?.in, image.id);
     });
 

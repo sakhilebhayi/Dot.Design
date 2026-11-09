@@ -16,7 +16,7 @@ import { can, collabUrls } from '../../collab/urls.js';
 import { explain } from '../../collab/errors.js';
 import { peopleStore } from '../../collab/people.js';
 import { countThreads, filterThreads, remove, upsert } from '../../collab/comments-state.js';
-import { anchorForClick, anchorForElement, elementScreenQuad, layoutMarkers, leader, markerHome, numberThreads, pinPagePoint, pinScreen, popoverPosition, screenToPage } from '../../collab/pins.js';
+import { anchorForClick, anchorForElement, elementScreenQuad, layoutMarkers, leader, markerHome, numberThreads, pinPagePoint, pinScreen, popoverPosition, quadBounds, screenToPage } from '../../collab/pins.js';
 import { switchControl } from './_controls.js';
 import { createComposer, threadCard } from '../../collab/comment-ui.js';
 
@@ -316,7 +316,7 @@ export function createController(ctx) {
         }
         // the open thread is placed first so it keeps its home; the rest follow in number order
         entries.sort((x, y) => (state.active && x.t && x.t.id === state.active ? -1 : 0) - (state.active && y.t && y.t.id === state.active ? -1 : 0));
-        const laid = layoutMarkers(entries.map((e, i) => ({ id: i, anchor: e.anchor, home: e.home })), { diameter: MARKER, bounds: size });
+        const laid = layoutMarkers(entries.map((e, i) => ({ id: i, anchor: e.anchor, home: e.home, avoid: e.quad ? quadBounds(e.quad) : null })), { diameter: MARKER, bounds: size });
 
         const frag = document.createDocumentFragment();
         const lines = document.createDocumentFragment();

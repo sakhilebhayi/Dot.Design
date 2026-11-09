@@ -8,7 +8,7 @@ import { h, clear, icon } from '../../output/ui-kit.js';
 import { IN_PRESETS, OUT_PRESETS, LOOP_PRESETS, EASINGS, elementTimeline, pageDuration, proposeDefaults, staggerPatches, readingOrder, contentEnd, DEFAULT_IN_MS } from '../../output/animate.js';
 import { IN_LABELS, OUT_LABELS, LOOP_LABELS, EASING_LABELS, TRANSITION_LABELS, elementLabel, describeProposal } from '../../output/anim-labels.js';
 import { createPlayback } from '../../output/playback.js';
-import { moveSegment, secs, clampN, snap } from '../../output/anim-edit.js';
+import { moveSegment, secs, clampN, snap, rulerTicks } from '../../output/anim-edit.js';
 import { fmtSeconds } from '../../output/number-format.js';
 import { select as mcSelect, numberField, switchControl, slider } from './_controls.js';
 
@@ -29,18 +29,6 @@ function pruned(anim) {
     const out = {};
     for (const k of ['in', 'out', 'loop']) if (anim[k] && anim[k].preset && anim[k].preset !== 'none') out[k] = anim[k];
     return out;
-}
-
-/** Ruler labels: whole seconds, thinned so two labels never come closer than `minGap` pixels. Pure: tested. */
-export function rulerTicks(durationMs, widthPx, minGap = 34) {
-    const total = Math.max(0.5, durationMs / 1000);
-    const whole = Math.floor(total);
-    const fit = Math.max(1, Math.floor(widthPx / minGap));
-    const step = Math.max(1, Math.ceil(whole / fit));
-    const ticks = [];
-    for (let s = 0; s <= whole; s += step) ticks.push({ at: (s * 1000) / durationMs, label: `${s}s`, major: true });
-    // a half-second page ends between labels: no label for it, the lane end is the end
-    return ticks;
 }
 
 export function register(ctx) {
