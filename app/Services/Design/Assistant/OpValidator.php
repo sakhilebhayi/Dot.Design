@@ -94,7 +94,7 @@ class OpValidator
             }
         }
 
-        $ops = $this->enforceContrast($page, $index, $ops, $kit, $notes, $dropped);
+        $ops = $this->dropNoops($this->enforceContrast($page, $index, $ops, $kit, $notes, $dropped), $index, $dropped);
 
         return new OpResult($ops, $this->describe($ops, $index), array_values(array_unique($notes)), $dropped);
     }
@@ -437,6 +437,36 @@ class OpValidator
         $notes[] = 'Fonts were matched to your brand fonts.';
 
         return is_string($replacement) && in_array($replacement, $this->fonts, true) ? $replacement : $brand[0];
+    }
+
+    /**
+     * A repaired colour can land back on the colour the element already has; that is no change at all.
+     *
+     * @param  list<array<string, mixed>>  $ops
+     * @return list<array<string, mixed>>
+     */
+    private function dropNoops(array $ops, array $index, int &$dropped): array
+    {
+        $out = [];
+
+        foreach ($ops as $op) {
+            if ($op['op'] === 'set') {
+                $element = $index[$op['id']]['el'];
+                foreach ($op['props'] as $prop => $value) {
+                    if (($element[$prop] ?? null) === $value) {
+                        unset($op['props'][$prop]);
+                    }
+                }
+                if ($op['props'] === []) {
+                    $dropped++;
+
+                    continue;
+                }
+            }
+            $out[] = $op;
+        }
+
+        return $out;
     }
 
     // ------------------------------------------------------------- contrast

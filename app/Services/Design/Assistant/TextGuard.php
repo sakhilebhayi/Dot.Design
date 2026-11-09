@@ -164,13 +164,14 @@ final class TextGuard
         return (string) preg_replace('/\D/', '', $number);
     }
 
+    /** The domain of an address: the person's own site, whatever page of it is meant. */
     private static function host(string $url): string
     {
         $url = mb_strtolower(trim($url, " \t\n\r\0\x0B.,;:!?)\"'"));
         $url = (string) preg_replace('~^https?://~', '', $url);
         $url = (string) preg_replace('~^www\.~', '', $url);
 
-        return rtrim($url, '/');
+        return explode('/', $url, 2)[0];
     }
 
     /** @return list<string> */

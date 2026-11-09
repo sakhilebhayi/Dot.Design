@@ -119,7 +119,9 @@ class ImproveService
     {
         $key = $resize['format_key'];
 
-        if ($this->formats->matchingKey((int) $page['width'], (int) $page['height']) === $key) {
+        $px = $this->formats->pixels($key);
+
+        if ($px['width'] === (int) $page['width'] && $px['height'] === (int) $page['height']) {
             return ['status' => 'nothing', 'message' => 'This page is already the right size for that. Nothing to change.'];
         }
 
