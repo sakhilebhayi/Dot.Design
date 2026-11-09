@@ -21,5 +21,6 @@ class DatabaseSeeder extends Seeder
         ]);
 
         $this->call(DesignSystemSeeder::class);
+        $this->call(DesignTemplateSeeder::class);
     }
 }
