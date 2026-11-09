@@ -108,7 +108,7 @@ test('404 pages: one primary action, calm words, no platform directory, and the 
     for (const [who, c, primary] of [['signed in', ctx, 'Back to Home'], ['guest', gctx, 'Go to the start page']]) {
         const page = await c.newPage(); const log = watch(page);
         // a URL that matches a route (a design that is not there) knows who is asking; a URL matching nothing is answered before the session starts
-        for (const url of who === 'guest' ? ['/no-such-page', '/design/projects/999999'] : ['/design/projects/999999', '/design/projects/999999/document']) {
+        for (const url of who === 'guest' ? ['/no-such-page', '/design/nope/at/all'] : ['/design/projects/999999', '/design/projects/999999/document']) {
             const r = await page.goto(url);
             assert.equal(r.status(), 404);
             const m = await page.evaluate(() => ({ h1: document.querySelectorAll('h1').length, primary: [...document.querySelectorAll('a.lt-btn:not(.lt-btn--secondary):not(.lt-btn--ghost)')].map((a) => a.innerText.trim()), links: [...document.querySelectorAll('main a, .lt-error a')].length, text: document.body.innerText }));
