@@ -35,6 +35,8 @@ export function mountText(el, ctx) {
     ctx.on('brand', () => { paintNote(); paintFonts(); });
 
     async function addPair(hk, bk) {
+        // measure with the real glyphs, so the body text lands under the heading's final height
+        try { await st.fonts.ensureLoaded([{ font: hk, weight: 700, italic: false }, { font: bk, weight: 400, italic: false }]); } catch (e) { /* the fallback stack still measures */ }
         const page = activePage(st.getState());
         const hp = textPreset(ctx, 'heading'); const bp = textPreset(ctx, 'body');
         const hr = ctx.run('element.add', { type: 'text', ...hp, font: hk, tokens: undefined, fontWeight: 700, width: Math.round(page.width * 0.8), x: Math.round(page.width * 0.1), y: Math.round(page.height * 0.28), autoFit: 'grow', text: 'A heading with presence' });
