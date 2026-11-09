@@ -11,6 +11,7 @@ use App\Http\Controllers\DesignProjectController;
 use App\Http\Controllers\DesignTokenController;
 use App\Http\Controllers\TokenConsumptionRecordController;
 use App\Http\Controllers\TokenSetController;
+use App\Http\Middleware\RefuseBearerTokens;
 use App\Models\DesignAsset;
 use App\Models\DesignCanvas;
 use App\Models\DesignProject;
@@ -58,7 +59,7 @@ Route::get('/cookies', function () {
 })->name('cookies');
 
 Route::middleware([
-    \App\Http\Middleware\RefuseBearerTokens::class,
+    RefuseBearerTokens::class,
     'auth:sanctum',
     config('jetstream.auth_session'),
     'verified',
@@ -173,3 +174,7 @@ require __DIR__.'/studio/public.php';
 if (! Features::enabled(Features::registration())) {
     Route::redirect('/register', '/login')->name('register');
 }
+
+// A URL that matches no route: answered inside the web group so the session is started and a signed-in person sees the signed-in
+// 404 ("Back to Home"), not the guest one. (Without a route the framework skips the session middleware entirely.)
+Route::fallback(fn () => abort(404));

@@ -2,11 +2,15 @@
 
 namespace Tests\Feature;
 
+use App\Models\User;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
 
 class EcosystemErrorPagesTest extends TestCase
 {
+    use RefreshDatabase;
+
     #[DataProvider('errorCodes')]
     public function test_error_page_renders_branded_content(int $code, string $expectedHeading): void
     {
@@ -29,6 +33,16 @@ class EcosystemErrorPagesTest extends TestCase
             '500 server error' => [500, 'Something went wrong on our end'],
             '503 unavailable' => [503, "We'll be right back"],
         ];
+    }
+
+    public function test_a_url_that_matches_no_route_knows_who_is_signed_in(): void
+    {
+        $guest = $this->get('/no-such-page');
+        $guest->assertNotFound()->assertSee('Go to the start page')->assertDontSee('Back to Home');
+
+        $user = User::factory()->withPersonalTeam()->create();
+        $this->actingAs($user)->get('/no-such-page')->assertNotFound()->assertSee('Back to Home')->assertDontSee('Go to the start page');
+        $this->actingAs($user)->getJson('/design/nope')->assertNotFound();
     }
 
     protected function setUp(): void
