@@ -115,4 +115,12 @@ class A11yPagesTest extends TestCase
             $this->assertDoesNotMatchRegularExpression('/[\x{2013}\x{2014}]/u', file_get_contents($file), basename($file));
         }
     }
+    public function test_a_failed_sign_in_ties_the_error_to_the_field(): void
+    {
+        $html = $this->from('/login')->followingRedirects()->post('/login', ['email' => 'nobody@example.test', 'password' => 'wrong-password'])->getContent();
+
+        $this->assertMatchesRegularExpression('#<input[^>]*id="f-email"[^>]*aria-describedby="f-email-error"[^>]*aria-invalid="true"|<input[^>]*id="f-email"[^>]*aria-invalid="true"[^>]*aria-describedby="f-email-error"#', $html);
+        $this->assertStringContainsString('id="f-email-error"', $html);
+        $this->assertMatchesRegularExpression('#<label for="f-email"#', $html, 'the field has a real label, not a placeholder');
+    }
 }

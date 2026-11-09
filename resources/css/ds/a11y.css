@@ -133,7 +133,8 @@
 /* ---- 4. touch and narrow screens: targets of 44 px, content that wraps instead of overflowing ------------------------------ */
 .lt-prose table { table-layout: fixed; width: 100%; }
 .lt-prose th, .lt-prose td { overflow-wrap: anywhere; }
-.lt-seg.br-seg-wrap { flex-wrap: wrap; max-width: 100%; }
+:root .br-pref { flex-wrap: wrap; }
+:root .br-seg-wrap { flex: 0 1 auto; flex-wrap: wrap; max-width: 100%; }
 
 /* Always: nothing a person has to hit is smaller than 24 px (WCAG 2.2, 2.5.8). `:root` lifts these above the component and page
    rules that load after this file. */
@@ -144,9 +145,16 @@
     :root .st-name, :root .st-save, :root .sv-tool, :root .lt-input, :root .lt-select { min-height: 2.75rem; }
     :root .lt-icon-btn, :root .st-save, :root .lt-chip, :root .sv-tool { min-width: 2.75rem; }
     :root .br-color__hex { min-width: 6rem; }
+    :root input[type="color"] { min-width: 2.75rem; min-height: 2.75rem; }
+    :root .sv-skip, :root .lt-skip { min-height: 2.75rem; display: inline-flex; align-items: center; }
     :root .br-word button, :root .br-word .lt-icon-btn { min-width: 2.75rem; min-height: 2.75rem; }
     /* plain text links that stand alone on a line are controls too */
     :root .lt-section__head a, :root .lt-contact__name, :root .ac-row__link, :root .lt-small > a, :root .lt-field > a, :root .lt-form a:not(.lt-btn), :root .lt-form__actions a, :root .lp-nav__link, :root .lp-foot a, :root footer a { display: inline-flex; align-items: center; min-height: 2.75rem; }
     :root .lt-contact__name, :root .ac-row__link { display: flex; }
     :root .lp-foot a, :root .lp-nav__link { min-width: 2.75rem; justify-content: center; }
+}
+
+/* ---- 5. focus is never hidden behind the fixed phone bars (WCAG 2.2, 2.4.11) ------------------------------------------------ */
+@media (max-width: 56rem) {
+    html, .lt-main, .lt-shell { scroll-padding-top: calc(var(--lt-bar-h, 3.25rem) + 0.75rem); scroll-padding-bottom: calc(var(--lt-tabbar-h, 3.5rem) + env(safe-area-inset-bottom) + 0.75rem); }
 }

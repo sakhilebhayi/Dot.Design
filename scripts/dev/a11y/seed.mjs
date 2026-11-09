@@ -10,7 +10,7 @@ export async function seed(c) {
     if (existsSync(out)) {
         const f = JSON.parse(readFileSync(out, 'utf8'));
         const ok = await apiCall(c, 'GET', `/design/projects/${f.rich}/document`);
-        if (ok.status === 200) return f;
+        if (ok.status === 200) { await addLong(c, f); return f; }
     }
     const f = {};
     const kit = await apiCall(c, 'POST', '/design/brand/kits', {
@@ -46,9 +46,25 @@ export async function seed(c) {
         return { status: res.status, body: (await res.text()).slice(0, 300) };
     })()`);
     f.asset = asset;
+    await addLong(c, f);
+    return f;
+}
+
+/** Long-content stress data: a 70-character kit name, a 300-character guideline, an unbroken 80-character business name. */
+async function addLong(c, f) {
+    if (f.long) return;
+    const kit = await apiCall(c, 'POST', '/design/brand/kits', {
+        name: 'Bhekizizwe Mnguni Construction and Civil Engineering Holdings (Pty) Ltd',
+        colors: [{ name: 'A very long colour name for testing', hex: '#2a4d69', role: 'primary' }, { name: 'Sand', hex: '#e8d8b8', role: 'secondary' }, { name: 'Rust', hex: '#b5532a', role: 'accent' }, { name: 'Charcoal', hex: '#222222', role: 'neutral' }],
+        fonts: { heading: 'oswald', body: 'inter', accent: 'caveat' }, tagline: 'Building the Western Cape since 1987, one careful foundation at a time, for families and for firms',
+        website: 'www.bhekizizwe-mnguni-construction-and-civil-engineering.co.za', contacts: { phone: '021 555 0123', email: 'enquiries@bhekizizwe-mnguni-construction.co.za' },
+        voice: { tone: 'Plain, steady and proud of the work', keywords: ['solid', 'on time', 'honest'], avoid: ['cheap'] },
+        guidelines: 'Always leave clear space equal to the height of the letter B around the logo. '.repeat(4).trim(),
+    });
+    const proj = await apiCall(c, 'POST', '/design/projects/from-brief', { brief: { goal: 'advertise_business', business_name: 'Supercalifragilistic-Plumbing-and-Electrical-Johannesburg1', format_key: 'a4-portrait' } });
+    f.long = { kit: kit.data?.id, project: proj.data?.project?.id };
     mkdirSync(new URL('../../../storage/a11y/', import.meta.url).pathname, { recursive: true });
     writeFileSync(out, JSON.stringify(f, null, 2));
-    return f;
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {
