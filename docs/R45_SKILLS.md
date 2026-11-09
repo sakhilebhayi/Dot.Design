@@ -84,3 +84,13 @@ Verification tools actually run for editor-ui: `impeccable detect` (source tier,
 | `hallmark`, `design-md`, `awesome-design-md`, `open-design`, `gsap-*`, `scroll-world`, `react-bits`, `canvas-ui`, `terminal-dark` | not used | No new page, token file, brand spec or motion work was in scope. |
 
 Verification actually run: every template page, icon, element, pattern, gradient and palette drawn by the real engine in headless Chrome and looked at (with placeholders, without, and with the vivid and dull brand kits); automated checks and counts are in `docs/R45_LIBQA.md`.
+## a11y agent (R-45 wave 3: accessibility, responsiveness, reduced motion)
+
+| Skill | Status | How it was used |
+|---|---|---|
+| `impeccable` | available, invoked (Skill tool) | Used for its `audit` lens: accessibility, theming, responsive design and implementation integrity are scored against what is measurable. `impeccable context --target resources/css` ran (no PRODUCT.md; the incumbent Light Table is the authority, so nothing was redesigned: every change is a fix or an addition inside it). The audit checklist (contrast, keyboard, ARIA, semantics, reduced motion, touch targets, overflow, text scaling, touch gestures) became the sweep, keyboard, motion, responsive and focus scripts in `scripts/dev/a11y/`. Its detector (`impeccable detect`) was not re-run: the Light Table passes were recorded by the ds and editor agents and nothing visual was added. |
+| `design-taste-frontend` | available, invoked (Skill tool) | Read for the app-screen rules (states are honest, one primary action, no decoration that does nothing); applied to the states audit (empty, loading, error with a retry, success, long content) and to the choices that changed visible UI: the "Describe this picture" box is one plain field with one hint, the canvas list is hidden rather than decorative, nothing was added to the chrome. Its page run (`draw.mjs`, `inspect.mjs`) was not used: this is an audit of an existing product, not a page build. |
+| `ui-ux-pro-max`, `emil-design-eng` | UNAVAILABLE | Dangling symlinks, as recorded above. Not used and not claimed. |
+| every other design skill | not used | No new page, token file, brand spec or motion work. |
+
+Verification actually run: axe-core 4.10.2 in a real Chrome over 64 page states x 3 widths x 2 themes (384 runs); a real-keyboard walkthrough (46 checks); a responsive and zoom sweep (300 page and size checks); motion, focus-obscured, states and contrast scripts; the accessibility tree (outline.mjs). All in `scripts/dev/a11y/`, summarised in `docs/R45_A11Y.md`.

@@ -50,7 +50,7 @@ class A11yPagesTest extends TestCase
         $this->assertNotSame('Dot.Design', $title, "$route must say which page it is in the <title>");
         $this->assertStringEndsWith(' | Dot.Design', $title);
         $this->assertDoesNotMatchRegularExpression('/[\x{2013}\x{2014}]/u', $this->visibleText($html), "$route shows an em or en dash");
-        $this->assertDoesNotMatchRegularExpression('#role="(list|listitem)"[^>]*\bhref=|<form[^>]*role="(list|group)"#', $html, 'no list roles on links or forms');
+        $this->assertDoesNotMatchRegularExpression('#<a\b[^>]*\brole="(list|listitem)"|<form[^>]*role="(list|group)"#', $html, 'no list roles on links or forms');
         $h3 = strpos($html, '<h3');
         $this->assertTrue($h3 === false || (strpos($html, '<h2') !== false && strpos($html, '<h2') < $h3), "$route has an h3 before any h2");
     }

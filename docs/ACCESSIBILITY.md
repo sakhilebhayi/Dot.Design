@@ -1,4 +1,4 @@
-> **Status (R-45, 2026-11-09): checklist, not an audit.** The editor draws SVG, not a `<canvas>` (section 8 is corrected). What the interface actually does for keyboard, focus, contrast and reduced motion is in `docs/R45_DS.md` and `docs/R45_UI_EDITOR.md`; any claim of WCAG conformance needs a dated audit that this repository does not yet contain.
+> **Status (R-45, 2026-11-09): superseded by the dated audit in `docs/R45_A11Y.md`** (method, 384-state axe sweep, real-keyboard walkthrough, responsive, motion and focus checks, what was fixed, what is not done, what needs a person with a screen reader). This file stays as the original WCAG 2.2 checklist. Its section 8 (a `<canvas>` editor) is wrong: the editor draws SVG, and the canvas has a readable list of its elements instead (`D-1802`). Repeat the checks with `sh scripts/dev/a11y/run-all.sh`.
 
 # Accessibility Improvements
 

@@ -60,9 +60,9 @@
                 <x-ds.button :href="route('design.templates.index')" variant="ghost">Start from a template</x-ds.button>
             </x-slot>
         </x-ds.empty>
-        <div class="lt-start" role="list" style="margin-top: var(--lt-space-5);">
+        <div class="lt-start" role="group" aria-label="Sizes" style="margin-top: var(--lt-space-5);">
             @foreach (\App\Support\Ui\StartFormats::all() as $format)
-                <x-ds.format-chip role="listitem" :href="$createRoute.'?format='.$format['key']" :name="$format['name']" :width="$format['width']" :height="$format['height']" :size="$format['width'].' × '.$format['height'].' '.$format['unit']" />
+                <x-ds.format-chip :href="$createRoute.'?format='.$format['key']" :name="$format['name']" :width="$format['width']" :height="$format['height']" :size="$format['width'].' × '.$format['height'].' '.$format['unit']" />
             @endforeach
         </div>
     @elseif ($items->isEmpty())
