@@ -34,7 +34,7 @@ switch ($cmd) {
 
     case 'company':
         $owner = User::where('email', $in['owner'])->firstOrFail();
-        $team = Team::forceCreate(['user_id' => $owner->id, 'name' => $in['name'] ?? 'Acme Ltd', 'personal_team' => false]);
+        $team = Team::forceCreate(['user_id' => $owner->id, 'name' => $in['name'] ?? 'Acme Ltd', 'personal_team' => false] + (isset($in['infodot_team_uuid']) ? ['infodot_team_uuid' => $in['infodot_team_uuid']] : []));
         $owner->forceFill(['current_team_id' => $team->id])->save();
         foreach ($in['members'] ?? [] as $m) {
             $u = User::where('email', $m['email'])->firstOrFail();

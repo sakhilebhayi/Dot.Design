@@ -7,6 +7,7 @@ import { join, resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import net from 'node:net';
 import { startAnthropicStub } from './lib/anthropic-stub.mjs';
+import { startDotFilesStub, FILES_SECRET } from './lib/dotfiles-stub.mjs';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
 const args = process.argv.slice(2);
@@ -18,6 +19,7 @@ const filter = args.find((a) => !a.startsWith('--')) || '';
 const children = [];
 let work = null;
 let stub = null;
+let filesStub = null;
 let cleaned = false;
 
 function cleanup() {
@@ -27,6 +29,7 @@ function cleanup() {
         try { process.kill(-c.pid, 'SIGTERM'); } catch { /* already gone */ }
     }
     try { stub?.close(); } catch { /* ignore */ }
+    try { filesStub?.close(); } catch { /* ignore */ }
     if (work && !keep) {
         try { rmSync(work, { recursive: true, force: true }); } catch { /* ignore */ }
     }
@@ -88,6 +91,7 @@ async function main() {
     const port = await freePort(Number(process.env.E2E_PORT || 8485));
     const aiPort = await freePort(port + 1);
     stub = await startAnthropicStub();
+    filesStub = await startDotFilesStub();
 
     const base = {
         ...process.env,
@@ -109,13 +113,14 @@ async function main() {
     // The same app and database with the assistant switched on, pointed at a local stub of the Messages API.
     startServer(aiPort, {
         ...base, APP_URL: `http://127.0.0.1:${aiPort}`, ANTHROPIC_API_KEY: 'e2e-stub-key-not-real',
-        DESIGN_AI_BASE_URL: `http://127.0.0.1:${stub.port}`, DESIGN_AI_RETRIES: '0', DESIGN_AI_THINKING: 'omit', DESIGN_AI_EFFORT: '',
+        DESIGN_AI_BASE_URL: `http://127.0.0.1:${stub.port}`,
+        DESIGN_INTEGRATION_FILES: 'true', FILES_API_URL: `http://127.0.0.1:${filesStub.port}`, FILES_PLATFORM_SECRET: FILES_SECRET, DESIGN_AI_RETRIES: '0', DESIGN_AI_THINKING: 'omit', DESIGN_AI_EFFORT: '',
     }, 'ai');
     await waitFor(`http://127.0.0.1:${port}/up`);
     await waitFor(`http://127.0.0.1:${aiPort}/up`);
 
     if (args.includes('--serve')) {
-        console.log(`SERVING main=http://127.0.0.1:${port} ai=http://127.0.0.1:${aiPort} stub=${stub.port} db=${db}`);
+        console.log(`SERVING main=http://127.0.0.1:${port} ai=http://127.0.0.1:${aiPort} stub=${stub.port} files=${filesStub.port} db=${db}`);
         await new Promise(() => {});
     }
     const specDir = join(root, 'tests/e2e/specs');
@@ -125,7 +130,7 @@ async function main() {
     const env = {
         ...base,
         E2E_BASE_URL: `http://127.0.0.1:${port}`, E2E_AI_URL: `http://127.0.0.1:${aiPort}`, E2E_STUB_URL: `http://127.0.0.1:${stub.port}`,
-        E2E_STUB_CONTROL: `http://127.0.0.1:${stub.port}/__control`,
+        E2E_STUB_CONTROL: `http://127.0.0.1:${stub.port}/__control`, E2E_FILES_STUB: `http://127.0.0.1:${filesStub.port}/__control`,
         E2E_DB: db, E2E_OUT: out, E2E_ROOT: root, E2E_HEADED: headed ? '1' : '',
     };
     let failed = 0;

@@ -101,6 +101,18 @@ export function createViewer(options = {}) {
         zoomOut: () => viewport.zoomStep(-1),
         get zoom() { return viewport.zoom; },
         on(e, fn) { if (!listeners.has(e)) listeners.set(e, new Set()); listeners.get(e).add(fn); return () => listeners.get(e).delete(fn); },
+        /** The normalised pages (the same objects the viewer draws), for an export built outside the viewer. */
+        get pages() { return pages; },
+        /** Waits for the page's fonts and (optionally) embeds them, then renders, like the editor's own renderPageToSvgAsync. */
+        async renderPageToSvgAsync(i, opts = {}) {
+            const page = pages[i];
+            if (!page) return '';
+            const specs = fonts.usedSpecs([page]);
+            await fonts.ensureLoaded(specs);
+            if (measure.clear) measure.clear();
+            const fontCss = opts.embedFonts ? await fonts.embedCss(specs) : undefined;
+            return renderPageToSvgString(page, { forExport: true, ...opts, fontCss, measure, icons, assetUrl, assetSize, fonts });
+        },
         renderPageToSvg(i, opts = {}) { return pages[i] ? renderPageToSvgString(pages[i], { forExport: true, ...opts, measure, icons, assetUrl, assetSize, fonts }) : ''; },
         destroy() {
             root.removeEventListener('pointerdown', down);

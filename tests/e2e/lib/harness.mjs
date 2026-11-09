@@ -7,7 +7,7 @@ import { DatabaseSync } from 'node:sqlite';
 import { chromium } from 'playwright-core';
 
 export const env = {
-    base: process.env.E2E_BASE_URL, ai: process.env.E2E_AI_URL, stub: process.env.E2E_STUB_CONTROL,
+    base: process.env.E2E_BASE_URL, ai: process.env.E2E_AI_URL, stub: process.env.E2E_STUB_CONTROL, filesStub: process.env.E2E_FILES_STUB,
     db: process.env.E2E_DB, out: process.env.E2E_OUT || resolve(dirname(fileURLToPath(import.meta.url)), '../out'), root: resolve(dirname(fileURLToPath(import.meta.url)), '../../..'),
     headed: !!process.env.E2E_HEADED,
 };
