@@ -59,6 +59,7 @@ Route::get('/cookies', function () {
 })->name('cookies');
 
 Route::middleware([
+    \App\Http\Middleware\RefuseBearerTokens::class,
     'auth:sanctum',
     config('jetstream.auth_session'),
     'verified',
