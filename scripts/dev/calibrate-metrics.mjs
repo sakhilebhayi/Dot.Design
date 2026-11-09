@@ -28,6 +28,20 @@ try {
         if (!same) { lineDiff += 1; if (lineDiff <= 12) console.log('DIFF', it.slug, it.sc, JSON.stringify(b.lines), 'vs node', JSON.stringify(L.lines.map((l) => l.text)), b.fs, L.fontSize); }
         L.lines.forEach((l, k) => { if (b.w[k] > 20) { const rel = Math.abs(l.width - b.w[k]) / b.w[k]; if (rel > maxRel) { maxRel = rel; worst = `${it.slug} ${it.sc} "${l.text}" node ${l.width.toFixed(2)} chrome ${b.w[k].toFixed(2)}`; } } });
     });
+    if (process.argv.includes('--write-fixture')) {
+        // a small set of strings with the width Chrome measured, so CI can prove the cached metrics without Chrome
+        const picks = []; const seen = new Set();
+        items.forEach((it, i) => {
+            const L = browser[i];
+            L.lines.forEach((text, k) => {
+                const key = it.el.font + it.el.fontWeight + text;
+                if (text.length > 6 && !seen.has(key) && picks.length < 120) { seen.add(key); picks.push({ el: { font: it.el.font, fontWeight: it.el.fontWeight, italic: !!it.el.italic, fontSize: browser[i].fs, letterSpacing: it.el.letterSpacing, textCase: it.el.textCase }, text, width: L.w[k] }); }
+            });
+        });
+        const { writeFileSync } = await import('node:fs');
+        writeFileSync(new URL('../../tests/js/library/fixtures/chrome-widths.json', import.meta.url), JSON.stringify(picks));
+        console.log(`wrote ${picks.length} fixture lines`);
+    }
     console.log(`${n} text layouts compared, ${lineDiff} differ in line breaks or fitted size, worst width error ${(maxRel * 100).toFixed(3)}% (${worst})`);
     console.log(h.chrome.logs.join('\n'));
 } finally { h.close(); }
