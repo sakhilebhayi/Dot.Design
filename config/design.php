@@ -79,6 +79,10 @@ return [
         // Public share-link comments per minute per link and visitor address (the address is hashed by the limiter, never stored by us).
         'public_comments_per_minute' => (int) env('DESIGN_PUBLIC_COMMENTS_PER_MINUTE', 6),
         'public_views_per_minute' => (int) env('DESIGN_PUBLIC_VIEWS_PER_MINUTE', 120),
+        // Link probing: this many unusable-link answers per visitor address per ten minutes, then a 429 (R-45 security S-6).
+        'public_misses_per_ten_minutes' => (int) env('DESIGN_PUBLIC_MISSES_PER_TEN_MINUTES', 30),
+        // Guest comments one link accepts per day in total, whoever sends them.
+        'public_comments_per_link_per_day' => (int) env('DESIGN_PUBLIC_COMMENTS_PER_LINK_PER_DAY', 200),
 
         'versions' => [
             // An automatic snapshot is taken at most this often while a project is being edited.

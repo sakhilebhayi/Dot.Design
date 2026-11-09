@@ -34,6 +34,7 @@ class ProjectAssetController extends StudioController
             'Content-Disposition' => 'inline',
             'X-Content-Type-Options' => 'nosniff',
             'Content-Security-Policy' => "default-src 'none'; sandbox",
+            'Cross-Origin-Resource-Policy' => 'same-origin',
             'Vary' => 'Cookie',
         ]);
 
