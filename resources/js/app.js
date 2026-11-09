@@ -6,5 +6,4 @@ import './ds/tabs.js';
 import './ds/toast.js';
 import './ds/view.js';
 import './ds/progress.js';
-import './ds/legacy-icons.js';
 import './ds/landing.js';

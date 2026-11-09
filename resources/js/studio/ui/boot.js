@@ -1,3 +1,4 @@
+import { labelFor } from '../engine/core.js';
 import { createStudio } from '../engine/studio.js';
 import { createSaveAdapter } from './adapter.js';
 import { installCoach } from './coach.js';
@@ -96,6 +97,18 @@ function start(root, config) {
         lastErr = e.message; lastErrAt = now;
         if (e.code === 'recovery') return;
         toasts.toast(e.message, { kind: 'warn' });
+    });
+
+    // Screen readers hear what changed (once per burst), not only what is selected.
+    let said = ''; let saidTimer = null;
+    studio.on('change', ({ metas, system }) => {
+        if (system) return;
+        const m = (metas || []).filter((x) => x.kind === 'command' || x.kind === 'undo' || x.kind === 'redo').pop();
+        if (!m) return;
+        const what = String(m.label || labelFor(m.name || '') || 'Edit').toLowerCase();
+        said = m.kind === 'undo' ? `Undid ${what}` : m.kind === 'redo' ? `Redid ${what}` : `${what.charAt(0).toUpperCase()}${what.slice(1)}`;
+        clearTimeout(saidTimer);
+        saidTimer = setTimeout(() => announce(said), 350);
     });
 
     const shell = createShell(ctx);

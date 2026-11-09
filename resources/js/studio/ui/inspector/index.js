@@ -272,7 +272,7 @@ function mountFill(el, ctx) {
         const shapes = sel.elements.filter((e) => e.type === 'shape');
         const kinds = new Set(shapes.map((e) => e.kind));
         const lineOnly = shapes.length > 0 && shapes.every((e) => e.kind === 'line' || e.kind === 'arrow');
-        kind.el.hidden = lineOnly; solidWrap.hidden = lineOnly || shapes.some((e) => typeOf(e) !== 'solid') && false;
+        kind.el.hidden = lineOnly; solidWrap.hidden = lineOnly || shapes.every((e) => typeOf(e) !== 'solid');
         radiusBox.hidden = !kinds.has('rect'); sidesBox.hidden = !kinds.has('polygon'); pointsBox.hidden = !kinds.has('star');
         for (const r of rows) r.update(sel);
     } };
