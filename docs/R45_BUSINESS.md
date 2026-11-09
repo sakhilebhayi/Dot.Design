@@ -117,3 +117,8 @@ Editing a kit never reads or writes a canvas. It bumps `version` and writes/refr
 - No stock imagery, no thumbnails stored server-side.
 - Template content is the library agent's: `database/templates` is empty on this branch and `design:seed-templates` is a clean no-op until it lands.
 - Brand colours only reach a template through its `tokens`; a template without `tokens` is never recoloured (no guessing).
+
+## Library QA additions (wave 3, D-1604 and D-1605)
+- Instantiation result gains `readable[]` (text colours changed so text stays readable on the brand colours: `element_id, from, to, ratio_before, ratio_after`), produced by `ReadableText` only when `apply_brand` and a kit are in use; a plain warning says how many. `brand_applied` still lists token applications only.
+- New text slot `initials` ("Monogram letters"): filled from the business name (`TemplateInstantiator::initials`), reported as left when the brief has no business name.
+- `php artisan design:export-templates --json [--out=file] [--slug=...] [--status=published|all]` prints the stored templates (pages, slots, format) as JSON for offline tools.

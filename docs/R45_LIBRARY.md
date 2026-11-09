@@ -6,7 +6,7 @@ Owner: the library agent. Branch `feat/r45-library`. Content only: no app code, 
 |---|---|---|
 | Templates | `database/templates/<slug>.php` | 58 (`_index.php` lists them) |
 | Template builder DSL and craft checker | `database/templates/Support/` | 11 classes |
-| Icons | `resources/design/icons.json` | 172 |
+| Icons | `resources/design/icons.json` | 178 |
 | Design elements (50), 12 patterns, 12 gradient presets, 20 palettes | `resources/design/elements.json` | 94 entries |
 | Strict schema validator (tests) | `tests/Support/TemplateSchemaValidator.php` | |
 | Tests | `tests/Unit/Library{Templates,Icons,Elements}Test.php` | 478 cases |
@@ -99,7 +99,7 @@ return $t->done();           // slots are derived from the bind keys
 ```
 
 - **Proportional sizing.** `$p->u` is 1% of the short side, `$p->m` the default margin (7%), `$p->col(i, n, gutter)` a column, `right()`, `bottom()`, `cw()` the content box. One design logic therefore scales across formats; sizes come from `Support/Formats.php`, which mirrors the 42 keys of the business catalogue (px at 72 dpi) with their safe margins.
-- **Text boxes size themselves** with measured per-character advance widths of the real fonts (`Support/font-advances.json`, measured once with canvas `measureText` for the 18 allowed fonts at weights 400, 700 and 900), wrapped at 85% of the box width so every text keeps 15% spare width.
+- **Text boxes size themselves** with the real advance widths and kerning of the shipped fonts (`Support/font-metrics.json`, measured in headless Chrome from `public/fonts/design/*.woff2` for every weight and italic the editor can load; weights resolve the way the engine resolves them, so a 600 Oswald is measured as the 700 it is drawn in). The estimator agrees with the engine's own layout to better than 0.4% and breaks lines in the same places in all 1,890 text layouts checked (`scripts/dev/calibrate-metrics.mjs`). Authoring wraps at 85% of the box width, so every text keeps 15% spare width. **Every text element is emitted with `autoFit: shrink`**, so a longer value, or a wider brand font, makes the text smaller inside its own box instead of overflowing it or breaking a word (the engine's shrink also refuses mid-word breaks, see `docs/R45_LIBQA.md`).
 - **Brand tokens.** `Palette` maps palette colours to brand-kit roles (light pages: accent to primary, ink to neutral; dark pages: page colour to primary, accent to accent; six corporate templates map the navy ink to primary). `Page` then puts `tokens` on every colour and font that follows the brand (`fill`, `color`, `stroke_color`, `font` = heading or body). A brand-driven page colour also gets a full-page "Background colour" shape, because only elements can carry tokens.
 - **Vocabulary is enforced at load time.** `Template::start` throws for any kind, category, purpose, objective, industry or style outside the business catalogue vocabulary (`Support/Vocab.php`).
 - **Sample copy** is real and specific per purpose; contact slots use obvious neutral samples (`Your Business`, `012 345 6789`, `www.yourbusiness.co.za`). No lorem ipsum, no invented customers, metrics, testimonials or brand names, no em or en dashes.
@@ -113,14 +113,14 @@ Each template must return an empty list from `Craft::problems()`; `LibraryTempla
 3. Text contrast of at least 4.5:1 against what is directly behind it, computed from the page colour, gradients (every stop) and every shape under each line of text, with opacity.
 4. Text, icons and logo slots stay inside the format's own safe zone (stories 250/340 px top/bottom, TikTok 480 px bottom, roll-up 150 mm bottom, 3 to 6 mm print margins) and never less than 4% of the short side; nothing sits off the page except shapes marked `role: background`.
 5. Consistent alignment grid: at most 6 distinct left edges per page.
-6. Text fits its box by the metrics estimator with 15% headroom; no two lines of text collide; no text overlaps a picture slot or an icon.
+6. Text fits its box by the real-metrics estimator with 15% headroom; no word is wider than 97% of its box (it would break mid-word); no two lines of text collide; no text overlaps a picture slot or an icon. The same rules are re-checked against the engine's own layout for the sample copy and for much longer and shorter copy by `tests/js/library/templates-real.test.mjs`.
 7. Every picture slot is empty and has a vector backing behind it; every element is named in plain language; every text element has a role; replaceable copy has a `bind` from the owner vocabulary and a matching slot.
 8. Modest layers: at most 30 top-level and 48 flattened elements per page, with repeated parts grouped.
 9. No external URLs of any kind, no forbidden characters, no filler text (tested on every visible string).
 
 ## 4. Icons and elements
 
-- **Icons**: 172 own-drawn icons on a 24 by 24 grid in a stroke style (round caps and joins), stored as path data using only `M L H V C S Q T Z` (circles and rounded corners are cubic Beziers; no arcs). Keys are kebab-case with a `category` (business, contact, commerce, food, social, services, arrows, shapes, symbols, checks) and search `tags`. The licence line in `$comment` states MIT, drawn for this repo. `scripts/dev/build-icons.php` regenerates the file; the test parses every path with the grammar and checks every point against the 24 box.
+- **Icons**: 178 own-drawn icons (six added in the QA pass for words owners search for: tree, bed, wifi, crown, printer, paperclip; search tags added so microphone, doctor, graduate, family, wedding, birthday find an icon)
 - **Elements** (`elements.json`): dividers (8), corners and marks (6), badges and ribbons (8), speech bubbles (6), frames with picture slots (6), price tags (4), star bursts (4), arrows and callouts (8), 12 geometric patterns (dots, stripes, checks, waves, grid, confetti, contours, halftone, triangles, zigzag, rings, plus) as 16 to 130 element groups on a 600 by 600 tile, 12 gradient presets and 20 brand-neutral palettes whose colours use the Brand Studio roles (primary, secondary, accent, neutral, extra) with a use note and the best text colour on the main colour with its contrast ratio. Each element is a schema-valid group that the editor inserts as is; colours carry brand tokens. `scripts/dev/build-elements.php` regenerates the file.
 
 ## 5. Skills
@@ -134,9 +134,15 @@ Invoked and applied (the skills are web-oriented, so what was applied is their p
 
 ## 6. Dev tools (not product code)
 
-- `php scripts/dev/check-templates.php [slug]`: schema validation, craft rules and icon lookup for every template.
-- `node scripts/dev/template-contact-sheet.mjs [--out public/__sheet] [--h 380] [--w 400]`: renders every template page to SVG in one HTML sheet with a small standalone renderer (tspans, shapes, groups, gradients, shadows, icons). It loads the fonts from Google Fonts **for the sheet only** so wrapping is measured with the real faces; the product never does. Open `/__sheet/index.html?q=<filter>`, `#icons` or `#elements` on a dev server and delete `public/__sheet` before committing. The screenshots in `docs/R45_screens/library/` come from it.
-- `php scripts/dev/build-icons.php`, `php scripts/dev/build-elements.php`: regenerate the JSON files. `php scripts/dev/contrast.php 'fg:bg'`: contrast of colour pairs. `php scripts/dev/dump-templates.php`: all templates as JSON.
+Everything below runs headless Chrome with its own throw-away profile (never the shared browser) and kills it again. Details, method and results: `docs/R45_LIBQA.md`.
+
+- `php scripts/dev/check-templates.php [slug]`: schema validation, craft rules and icon lookup for every template (the authoring gate).
+- `node scripts/dev/check-templates.mjs [slug]`: the engine's own text layout with the real font metrics, for the sample copy and for long and short copy (`tests/js/library/templates-real.test.mjs` asserts the same).
+- `node scripts/dev/check-recolour.mjs [slug] [--kits vivid,dull,navy,pastel] [--briefs full,long]`: instantiates through the real PHP `TemplateInstantiator` with brand kits and checks the result.
+- `node scripts/dev/check-instantiation.mjs --out <dir>`: full and empty briefs, exported to PNG with the product's output module.
+- `node scripts/dev/sheet.mjs --out <dir> [--only a,b] [--kit vivid] [--kind icons|elements] [--no-placeholders]`: PNG contact sheets drawn by the real renderer (`--serve` prints a URL to open in any browser). This replaces the old standalone approximation sheet.
+- `node scripts/dev/measure-fonts.mjs` regenerates `Support/font-metrics.json`; `node scripts/dev/calibrate-metrics.mjs` proves it against Chrome; `node scripts/dev/qa-report.mjs --base <old database/templates>` prints the before and after table.
+- `php scripts/dev/build-icons.php`, `php scripts/dev/build-elements.php`: regenerate the JSON files. `php scripts/dev/contrast.php 'fg:bg'`: contrast of colour pairs. `php scripts/dev/dump-templates.php`: all templates as JSON. `php artisan design:export-templates --json`: the stored rows as JSON.
 
 ## 7. Contract notes for other owners (read before merging)
 
@@ -144,15 +150,18 @@ Invoked and applied (the skills are web-oriented, so what was applied is their p
 2. **Seeder.** The index is `database/templates/_index.php` (underscore prefix) because `design:seed-templates` loads every other top-level `*.php`; the DSL lives in `database/templates/Support/`, outside the glob.
 3. **Vocabulary additions the catalogue does not have yet.** Seven library kinds have no entry in `config/design_copy.php`: `logo`, `brand-guidelines`, `company-profile`, `product-catalogue`, `service-catalogue`, `quotation`, `packaging`. Add them to `template_kinds` (and `kind_categories`: logo, brand-guidelines, company-profile to identity; product-catalogue, service-catalogue, quotation, packaging to commercial) or the UI will show the raw key. All other kinds, purposes, objectives, industries and styles are taken from the catalogue.
 4. **Format keys.** All 42 keys used are in `config/design_formats.php`; `Support/Formats.php` mirrors their px sizes and safe margins, so re-sync it if that file changes. Logos are drawn on the square Instagram format (there is no logo format).
-5. **Slots.** Authored `slots` (key, label from the copy bank, type, help, default text) are emitted for every template; business cards and the email signature relabel `headline` as "Your name" and `subheadline` as "Job title" because the vocabulary has no person-name slot.
+5. **Slots.** Authored `slots` (key, label from the copy bank, type, help, default text) are emitted for every template; business cards and the email signature relabel `headline` as "Your name" and `subheadline` as "Job title" because the vocabulary has no person-name slot. The QA pass added the slot `initials` ("Monogram letters", text): the instantiator derives it from the business name (`TemplateInstantiator::initials`: "Thandi's Bakery" is TB), so a monogram never keeps the sample letters.
 6. **Tokens.** Colour tokens use the Brand Studio role keys (`brand.colors.primary|secondary|accent|neutral`); font tokens use `brand.fonts.heading|body`.
 
-## 8. Known weaknesses (candid)
+## 8. Known weaknesses (candid, after the QA pass)
 
-- Text widths use per-character advances without kerning; the contact sheet confirmed wrapping on the real faces for every template, but the engine's own layout is the final judge. If a brand font replaces a template font, widths change and the instantiator only warns.
-- Logos are honest starting points: type and simple shapes, not designed marks. The monogram badge ships with "YB" initials that must be edited by hand, because the vocabulary cannot derive initials.
-- Weaker templates: `company-profile-earthy` (the cover has a large empty lower half and the picture band is plain), `quotation-clean` and `newsletter-clean` (leave a quiet empty lower area by design for more content, but look sparse in the preview), `packaging-box-front` (a concept panel, not a dieline) and `product-catalogue-clean` (the second page is functional rather than exciting). The carousel cover leaves its lower third empty on purpose for the swipe cue.
-- Sample dishes, services and prices (menus, price list, quotation, catalogues) are plausible examples, flagged as such in each description; replace them. The quotation figures add up (VAT at 15%) but any real use needs the user's own rate and terms.
-- No template uses a gradient (flat fields only); gradients appear in the `elements.json` presets. The dev sheet assumes the CSS angle convention (0 = up, 90 = right) for them; confirm it against the engine renderer.
-- Brand tokens can make a recoloured template fail contrast (a pale kit primary under white text). The library cannot prevent that; the apply step should show a before and after.
+- The estimator and the engine agree, but the product's final judge is still the browser: a font that fails to load falls back to its stack and the text is measured with the fallback.
+- Logos are honest starting points: type and simple shapes, not designed marks. The monogram badge now takes its letters from the business name; the wordmarks and the mark in `logo-wordmark-clean` are generic shapes.
+- `packaging-box-front` is a concept panel, not a dieline. `product-catalogue-clean` page 2 is functional rather than exciting. `proposal-document-clean`, `report-corporate` and `brochure-trifold` leave generous space on some pages on purpose: they are documents the person fills with their own text, and filling them with invented content would be worse than white space. The carousel cover leaves its lower third empty for the swipe cue.
+- Fixed layouts do not reflow. A longer value shrinks inside its own box (to as little as 45% of the authored size in the tests, which is what a 30 character business name or a 56 character address needs in a one line slot), and a value far beyond that stays small rather than moving other elements. A tall headline placed beside a badge keeps to its column and gets smaller, it does not wrap around the badge.
+- Sample dishes, services and prices (menus, price list, quotation, catalogues) are plausible examples, flagged as such in each description; replace them. The quotation figures add up (VAT at 15%: 4 500.00 plus 675.00 is 5 175.00) but any real use needs the user's own rate and terms.
+- No template uses a gradient (flat fields only); gradients appear in the `elements.json` presets, and the engine's angle convention (0 = towards the top, 90 = towards the right, 180 = towards the bottom, the CSS convention) matches the presets, checked by a test and by eye.
+- Brand colours can no longer make text illegible: after a kit is applied, `ReadableText` swaps any text that falls under 4.5:1 against its backdrop to white or near-black and lists the change (`readable` in the result, a plain-language warning). It only trusts a shape that fully holds the text box, so it is conservative: text that sits across the edge of a decorative shape is left alone. It runs at template instantiation; the later "apply brand update" flow (`BrandService`) does not run it yet.
+- An exported design with an empty picture slot shows the slot's backing colour (a pale tint in most templates, a dark panel in `ig-story-bold`, `animated-story-flash-sale`, `banner-mpu` and the dark templates). The editor shows the dashed "Add a picture" placeholder in the same place.
 - Print templates are layouts at 72 dpi page units, not press-ready files: no bleed is built into the canvas (the exporter adds bleed from the format), so full-bleed backgrounds run exactly to the page edge.
+- Brand logos (Instagram, Facebook and similar) are deliberately not in the icon set: they are trademarks. WhatsApp and generic chat, mail, phone and share icons are.

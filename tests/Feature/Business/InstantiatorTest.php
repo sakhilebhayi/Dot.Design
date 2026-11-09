@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Business;
 
+use App\Models\DesignTemplate;
 use App\Services\Design\BrandKitService;
 use App\Services\Design\TemplateInstantiator;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -185,7 +186,14 @@ class InstantiatorTest extends TestCase
         $this->assertSame('#00a651', $offer['stroke']['color']);
         $this->assertSame(2, $offer['stroke']['width'], 'Only the token-referenced prop changed');
         $this->assertCount(4, $on->brandApplied);
-        $this->assertSame('#aaaaaa', collect($elements)->firstWhere('name', 'Fine print')['color'], 'Elements without tokens are untouched');
+        // A text without tokens keeps its colour while it stays readable; here the kit's blue backdrop made the grey fine print
+        // unreadable, so the readable-text guard (ReadableText) changed it and said so. Nothing else is touched.
+        $fine = collect($elements)->firstWhere('name', 'Fine print');
+        $this->assertSame('#ffffff', $fine['color']);
+        $this->assertSame([$fine['id']], array_column($on->readable, 'element_id'));
+        $this->assertNotEmpty(array_filter($on->warnings, fn ($w) => str_contains($w, 'stay readable') || str_contains($w, 'stays readable')));
+        $this->assertSame('#aaaaaa', collect($this->fixtureTemplate()->pages[0]['elements'])->firstWhere('name', 'Fine print')['color'], 'the stored template is never modified');
+        $this->assertSame([], $off->readable, 'without brand colours nothing is changed');
     }
 
     public function test_a_kit_with_no_value_for_a_token_leaves_the_element_alone_and_warns(): void
@@ -209,5 +217,23 @@ class InstantiatorTest extends TestCase
         $result = app(TemplateInstantiator::class)->instantiate($this->fixtureTemplate(), ['business_name' => 'X', 'details' => ['offer' => str_repeat('Everything must go. ', 5)]]);
 
         $this->assertNotEmpty($result->warnings);
+    }
+
+    public function test_a_monogram_slot_is_filled_with_the_initials_of_the_business_name(): void
+    {
+        $template = (new DesignTemplate)->forceFill([
+            'slug' => 'monogram', 'styles' => ['elegant'], 'width' => 400, 'height' => 400,
+            'pages' => [['width' => 400, 'height' => 400, 'elements' => [
+                ['id' => 'm', 'type' => 'text', 'bind' => 'initials', 'text' => 'YB', 'x' => 0, 'y' => 0, 'width' => 100, 'height' => 50, 'color' => '#000000'],
+            ]]],
+        ]);
+
+        $made = app(TemplateInstantiator::class)->instantiate($template, ['business_name' => "Thandi's Bakery"]);
+        $this->assertSame('TB', $made->pages[0]['elements'][0]['text']);
+        $this->assertSame('brief', $made->filled[0]['source']);
+
+        $none = app(TemplateInstantiator::class)->instantiate($template, []);
+        $this->assertSame('YB', $none->pages[0]['elements'][0]['text'], 'without a business name the sample stays and is reported as left');
+        $this->assertSame('initials', $none->left[0]['slot']);
     }
 }

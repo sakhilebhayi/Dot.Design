@@ -60,12 +60,10 @@ class TemplateInstantiator
             $pages[] = $page;
         }
 
+        $readable = [];
+
         if ($applyBrand && $kit !== null && $brandApplied !== []) {
             [$pages, $readable] = ReadableText::ensure($pages);
-
-            foreach ($readable as $change) {
-                $brandApplied[] = ['element_id' => $change['element_id'], 'prop' => 'color', 'token' => 'readable', 'from' => $change['from'], 'to' => $change['to']];
-            }
 
             if ($readable !== []) {
                 $warnings[] = count($readable) === 1
@@ -76,7 +74,7 @@ class TemplateInstantiator
 
         $warnings = array_values(array_unique($warnings));
 
-        return new InstantiationResult($pages, (int) $template->width, (int) $template->height, $filled, $left, $brandApplied, $warnings);
+        return new InstantiationResult($pages, (int) $template->width, (int) $template->height, $filled, $left, $brandApplied, $warnings, $readable);
     }
 
     /**
