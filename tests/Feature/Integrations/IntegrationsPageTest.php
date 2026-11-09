@@ -41,8 +41,8 @@ class IntegrationsPageTest extends IntegrationTestCase
         $page->assertSee('Dot.Tasks');
         $page->assertDontSee('NOTIFY_INGEST_SECRET');
         $content = $page->getContent();
-        $body = substr($content, (int) strpos($content, 'class="page"'));
-        $body = substr($body, 0, (int) strpos($body, 'Livewire Scripts'));
+        $body = substr($content, (int) strpos($content, 'id="main"'));
+        $body = substr($body, 0, (int) strpos($body, '</main>'));
         $this->assertStringNotContainsString('<button', $body, 'a page of statuses has no controls that could do nothing');
         $this->assertStringNotContainsString('<form', $body);
     }
