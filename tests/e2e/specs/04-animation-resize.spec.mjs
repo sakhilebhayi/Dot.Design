@@ -57,7 +57,7 @@ test('animation: animate, preview, GIF, WebM, smart resize', async (t) => {
         if (await page.getByRole('button', { name: 'Back to editing' }).count()) await page.getByRole('button', { name: 'Back to editing' }).click();
         await page.getByRole('button', { name: 'Play the animation' }).click();
         const time = page.locator('text=/\\d\\.\\d \\/ \\d\\.\\d s/').first();
-        const frame = () => page.evaluate(() => [...document.querySelectorAll('[data-layer=elements] > g')].map((g) => `${g.dataset.id}:${g.style.opacity}:${g.getAttribute('transform')}`).join(' | '));
+        const frame = () => page.evaluate(() => [...document.querySelectorAll('[data-layer=elements] > g')].map((g) => `${g.dataset.id}:${g.style.opacity}:${g.getAttribute('opacity')}:${g.getAttribute('transform')}`).join(' | '));
         const seen = new Set(); const times = new Set();
         for (let i = 0; i < 12; i++) { seen.add(await frame()); times.add(await time.innerText()); await page.waitForTimeout(120); }
         assert.ok(seen.size > 2, `the canvas changed while playing (${seen.size} distinct frames)`);

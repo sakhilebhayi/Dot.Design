@@ -32,7 +32,8 @@ test('Save to Dot.Files files exactly the exported picture (ctx.exports)', async
         await page.addInitScript(() => localStorage.setItem('dot-design-debug', '1'));
         await page.goto(`${env.ai}/design/projects/${p.id}`);
         await page.waitForFunction(() => !!window.__studio?.studio);
-        assert.equal(await page.evaluate(() => typeof window.__studio.ctx.exports?.render), 'function');
+        // the Download module is a lazy chunk that loads in idle time: wait for it instead of reading the handle at once
+        await page.waitForFunction(() => typeof window.__studio.ctx.exports?.render === 'function', null, { timeout: 15000 });
         // no top bar button (the top bar keeps its layout): the entry is in the Download dialog
         assert.equal(await page.locator('.st-top').getByRole('button', { name: /Dot.Files/ }).count(), 0);
         await page.getByRole('button', { name: 'Download', exact: true }).click();

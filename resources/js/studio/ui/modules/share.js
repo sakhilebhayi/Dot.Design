@@ -14,6 +14,7 @@ import { peopleStore } from '../../collab/people.js';
 import { EXPIRY_CHOICES, allowsSentence, createLinkVault, describeShare, expiryDays } from '../../collab/share-state.js';
 import { expiresIn, timeAgo } from '../../collab/format.js';
 import { avatar, radioCards, switchControl } from './_controls.js';
+import { filesEntryAvailable, openFilesDialog } from './_files-entry.js';
 
 export function register(ctx) {
     if (!can(ctx.config, 'share')) return;
@@ -49,11 +50,10 @@ export function mountShare(el, ctx) {
     const peopleBox = h('section', { class: 'cb-section', 'aria-labelledby': 'cb-share-people' });
     const linkBox = h('section', { class: 'cb-section', 'aria-labelledby': 'cb-share-links' });
     root.append(accessBox, peopleBox, linkBox);
-    const flags = (ctx.config && ctx.config.flags) || {};
-    if (flags.filesVault && ctx.exports && typeof ctx.exports.render === 'function') {
+    if (filesEntryAvailable(ctx)) {
         root.append(h('section', { class: 'cb-section cb-filesentry' },
             h('p', { class: 'cb-hint', text: 'Want a copy in your business files?' }),
-            button({ label: 'Save a copy to Dot.Files', variant: 'secondary', size: 'sm', onClick: () => ctx.openDialog('files.save') })));
+            button({ label: 'Save a copy to Dot.Files', variant: 'secondary', size: 'sm', onClick: () => openFilesDialog(ctx) })));
     }
 
     // ------------------------------------------------------------------ 1 and 2: access and people

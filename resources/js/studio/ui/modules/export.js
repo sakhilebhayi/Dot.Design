@@ -5,6 +5,7 @@ import '../../../../css/studio-output.css';
 import { select as mcSelect, switchControl, checkbox, segmented, numberField, slider, radioCards } from './_controls.js';
 import { applyPrintBoxes, hasPrintBoxes, COLOUR_NOTE, BLEED_CHOICES } from '../../output/print-boxes.js';
 import { fmtSeconds } from '../../output/number-format.js';
+import { filesEntryAvailable, openFilesDialog } from './_files-entry.js';
 import { h, clear, icon, saveFile, debounce, chip } from '../../output/ui-kit.js';
 import { quickActions, tabsFor, SCALE_CHOICES, DPI_CHOICES, FPS_GIF, FPS_VIDEO, EDGE_CHOICES, kindOf, targetsFromState, describeTarget, sizeLabel, sizeWarning, DEFAULT_SETTINGS } from '../../output/presets.js';
 import { runExport, planAnimation, estimateJpegBytes, estimateGifSize } from '../../output/export-jobs.js';
@@ -83,7 +84,7 @@ export function mountExport(root, props, ctx) {
     const animated = getPages().some((p) => animatedElements(p).length > 0);
     const video = webmSupport();
     const quick = quickActions({ project, format, animated, webmSupported: video.supported });
-    const filesAvailable = !!((config.flags || {}).filesVault && ctx.exports && typeof ctx.exports.render === 'function');
+    const filesAvailable = filesEntryAvailable(ctx);
     let destroyed = false;
     let abort = null;
     let previewUrl = null;
@@ -443,7 +444,7 @@ export function mountExport(root, props, ctx) {
                 h('div', { class: 'out-options' }, tabs(), state.format === 'webm' && !video.supported ? null : pagesSection(), state.format === 'webm' && !video.supported ? null : sizeSection(), state.format === 'webm' && !video.supported ? null : optionsSection(), printSection(), ...resultNotes(), h('div', { class: 'out-actions', dataset: { actions: '1' } })),
                 (() => { clear(previewBox); paintPreview(); paintFacts(); previewBox.appendChild(h('div', { class: 'out-preview__stage' }, frameEl)); previewBox.appendChild(factsEl); previewBox.appendChild(warnEl); return previewBox; })()));
         body.appendChild(adv);
-        if (filesAvailable) body.appendChild(h('div', { class: 'out-files' }, h('button', { type: 'button', class: 'lt-btn lt-btn--ghost lt-btn--sm', onclick: () => ctx.openDialog('files.save') }, 'Save a copy to Dot.Files'), h('span', { class: 'out-muted' }, 'Filed for everyone in your business.')));
+        if (filesAvailable) body.appendChild(h('div', { class: 'out-files' }, h('button', { type: 'button', class: 'lt-btn lt-btn--ghost lt-btn--sm', onclick: () => openFilesDialog(ctx) }, 'Save a copy to Dot.Files'), h('span', { class: 'out-muted' }, 'Filed for everyone in your business.')));
         renderActions();
         if (focusKey) { const t = body.querySelector(`[data-fk="${focusKey}"]`); if (t) t.focus(); }
     }
