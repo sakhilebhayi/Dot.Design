@@ -1,3 +1,5 @@
+> **Status (R-45, 2026-11-09): proposal, superseded.** The interface was redesigned as "The Light Table": the tokens, type, components and rules are in `DESIGN.md` and `docs/R45_DS.md`. Where this document disagrees with those, they win.
+
 # UI Design Improvements
 
 > Actionable visual design upgrades for Dot.Design. Each section is independent — pick and implement in any order.

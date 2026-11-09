@@ -1,6 +1,6 @@
 # Canvas Editor
 
-> **Status note.** This document is the original design proposal (Fabric.js + Livewire). The editor that exists is plain Alpine.js with pure, unit-tested helpers in `public/js/design-editor/`, and `elements` is a small JSON array of `text`, `rectangle` and `image` objects, not Fabric JSON. See README "The canvas editor" and "Image elements and export" for what is real. Sections below describe the proposal, not the code.
+> **Status (R-45, 2026-11-09): SUPERSEDED. This is the original proposal (Fabric.js + Livewire) and it was never built that way.** The editor that ships is a vanilla ES-module studio that draws every page as SVG from a shared JSON document model (`resources/design/document-schema.json`), with an undoable command engine, Simple and Pro modes, and a single renderer for screen and export. The old Alpine editor this note used to describe has been removed. Read `docs/R45_ENGINE.md` (engine API), `docs/R45_UI_EDITOR.md` (workspace), `docs/R45_UI_CONTRACT.md` (module registry) and `docs/R45_ARCHITECTURE.md` section 4. Nothing below describes the code.
 
 > Technical and feature specification for the Dot.Design canvas editor. Implement each section as a standalone Livewire component or Alpine.js module.
 

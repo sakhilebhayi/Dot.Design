@@ -1,3 +1,5 @@
+> **Status (R-45, 2026-11-09): checklist, not an audit.** The items are generic OWASP guidance; the shipped controls (workspace scope with 404-not-403, the document sanitiser, GD re-encoding of uploads, hashed share tokens, security headers with a report-only CSP, HMAC-signed integrations) are described in `docs/R45_BACKEND.md`, `docs/R45_ARCHITECTURE.md` and, when present, `docs/R45_SECURITY.md`. Ticking an item here does not mean it was verified.
+
 # Security Improvements
 
 > Security hardening checklist for Dot.Design. Mapped to OWASP Top 10 (2021). Each item is independently applicable.
@@ -273,9 +275,9 @@ Two-factor columns are migrated and Fortify feature is enabled. Ensure the 2FA s
 
 ## 8. Integrity Failures (OWASP A08)
 
-### 8a. Validate Fabric.js JSON before saving
+### 8a. Validate the document JSON before saving
 
-The `elements` JSON column stores arbitrary data sent from the browser. Validate its shape before persisting:
+**Built, differently from the sketch below:** `DocumentSanitiser` validates, clamps and normalises every page against `resources/design/document-schema.json` on every save (unknown keys stripped, limits enforced, picture ownership checked; `docs/R45_BACKEND.md` section 4). There is no `SaveCanvasRequest` of this shape. The `elements` JSON column stores data sent from the browser, which is why it is never trusted:
 
 ```php
 // app/Http/Requests/Design/SaveCanvasRequest.php

@@ -1,3 +1,5 @@
+> **Status (R-45, 2026-11-09): NOT BUILT, and not buildable on the current host.** This guide assumes a Laravel Reverb WebSocket server; shared cPanel hosting cannot run a long-lived process, and the deploy pipeline never starts one. Collaboration that exists is asynchronous: compare-and-swap saves with a conflict screen, version history, comments with @mentions, share links, review and approval (`docs/R45_BACKEND.md`, `docs/R45_UI_COLLAB.md`). Live cursors and co-editing need a host that can run Reverb, a decision recorded in `docs/R45_ARCHITECTURE.md` section 8.
+
 # Real-Time Collaboration
 
 > Implementation guide for real-time features in Dot.Design using Laravel Reverb. Each section is independently deployable.

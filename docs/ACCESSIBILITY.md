@@ -1,3 +1,5 @@
+> **Status (R-45, 2026-11-09): checklist, not an audit.** The editor draws SVG, not a `<canvas>` (section 8 is corrected). What the interface actually does for keyboard, focus, contrast and reduced motion is in `docs/R45_DS.md` and `docs/R45_UI_EDITOR.md`; any claim of WCAG conformance needs a dated audit that this repository does not yet contain.
+
 # Accessibility Improvements
 
 > WCAG 2.2 AA compliance guide for Dot.Design. Each section is independently actionable.
@@ -212,7 +214,7 @@ Never use colour as the only visual differentiator.
 
 ## 8. Canvas Editor Accessibility
 
-The Fabric.js canvas (`<canvas>`) element is not accessible to screen readers by default. Implement a parallel accessible tree:
+**Corrected:** the editor does not use Fabric.js or a `<canvas>`; it renders each page as SVG with its own keyboard layer (`docs/R45_ENGINE.md`). The sketch below was written for the proposal and is kept as a statement of intent: a parallel accessible tree for the elements.
 
 ```html
 <div role="application" aria-label="Design canvas" aria-describedby="canvas-instructions">

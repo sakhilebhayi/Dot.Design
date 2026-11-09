@@ -6,15 +6,17 @@
 
 ## 1. Current State
 
-The existing test suite inherits Jetstream/Fortify scaffold tests covering:
-- Authentication (login, register, password reset, 2FA)
-- API tokens (create, delete, permissions)
-- Browser sessions
-- Team management (create, delete, members)
-- Account deletion
-- Email verification
+**Status (R-45, 2026-11-09):** the suite below is real; the rest of this document (sections 2 onward) is the original strategy proposal and sections 5 and 7 assume Livewire components that the studio does not use.
 
-**What is missing:** Any tests for the design domain — projects, canvases, assets, AI generation, and the canvas editor.
+| Layer | What | How to run | Size |
+|---|---|---|---|
+| PHP feature and unit | The Jetstream scaffold tests plus the whole design domain: document API and sanitiser, tenancy (404 not 403), versions, shares, comments, reviews, brand kits, templates and the 58-template library, uploads, exports, assistant (HTTP faked, never a real model), integrations (HTTP faked, signatures), `design:preflight`, the ops commands, docs sync | `php artisan test --compact` (SQLite in memory, Vite faked) | about 1,450 tests, 7 skipped, under 25 s |
+| JS | The editor engine, output (export, animation, resize), assistant logic, collaboration state, create flow, brand pages, the ops manifest check | `npm run test:js` (`node:test`, no browser) | about 620 tests, about 1 s |
+| Build and manifest | Every `@vite` entry in every Blade view is built, every manifest file exists, no view names an unbuilt `resources/` path | `npm run build && node scripts/ops/check-vite-manifest.mjs` | seconds |
+| Signed-in smoke | Boots the app like production (`APP_ENV=production`, cached routes, config, views and events, the built assets, a throw-away SQLite file), signs a seeded user in over HTTP with CSRF, creates a design from a template, shares and comments on it, then requests every key page (landmark asserted), the JSON endpoints, a public share link (no cookie), the built assets and the fonts, and fails on any `ERROR` in the application log | `tests/Support/signed-in-smoke.sh` | about 90 checks, about 5 s |
+| Docs sync | `docs/API.md` and `docs/DATABASE.md` match the code | `php scripts/ops/generate-docs.php --check` (also a PHPUnit test) | |
+
+**CI** (`.github/workflows/ci.yml`) runs all of it on every pull request: `tests`, `js` (tests, build, manifest) and `signed-in-smoke`. `deploy.yml` calls the same workflow as its gate. **Not covered by automation:** a real browser (the editor was exercised by hand in headless Chrome, with the screens under `docs/R45_screens/`), a real PostgreSQL run of the whole suite (the migrations were run on PostgreSQL by hand, see `docs/DATABASE.md`; a PostgreSQL CI job may be added beside these), real third-party services, and the live host.
 
 ---
 

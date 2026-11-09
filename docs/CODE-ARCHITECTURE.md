@@ -1,3 +1,5 @@
+> **Status (R-45, 2026-11-09): proposal, partly overtaken.** Written before the rebuild. The service layer, events and policies it proposes now exist in a different shape (`app/Services/Design/**`, `app/Events`, `HasWorkspaceScope`, `docs/R45_BACKEND.md`); the Livewire component sections were not built, because the editor is vanilla JavaScript. The running system is documented in `README.md`, `docs/R45_ARCHITECTURE.md` and the other `docs/R45_*.md` files.
+
 # Code Architecture Improvements
 
 > Structural and patterns-level upgrades for the Dot.Design codebase. Each section is independently applicable.

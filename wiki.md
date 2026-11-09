@@ -1,10 +1,10 @@
 ---
 title: Dot.Design — Platform Wiki
-version: 0.4.0
+version: 0.6.0
 status: active
 owners: [Design Platform Lead]
 platform-id: dot-design
-last-review: 2026-08-06
+last-review: 2026-11-09
 ---
 
 # Dot.Design
@@ -21,7 +21,7 @@ Dot.Design is the ecosystem's **visual creation platform** — a canvas-first de
 
 **As of 0.3.0, this repository holds two coexisting domains, not one.** Alongside the canvas/AI creation tool described above, an MVP scaffold for the second domain Dot.Brain's `platforms/dot-design.md` describes — the design-token/component-library system — now also lives here (see §3.1). The two domains are intentionally separate: different tables, different models, no shared foreign keys, no shared tenancy rule. This does not yet resolve the framing question in §1.1 (is this one product or two, and should the token/component responsibility live here at all) — it just means both framings now have real code, which should make that conversation easier to have.
 
-**Status:** early but real. The repository is a working Laravel 12 application — auth, teams, ecosystem SSO, and the core data model are scaffolded and migrated. The canvas editor UI itself (the Livewire components that actually render drag-and-drop editing) has not been built yet; the backend and domain schema exist ahead of the interactive front end. The token/component-library domain is an even earlier MVP scaffold: data model, basic CRUD, and seed data exist; no event emission, no cross-platform distribution API, no comprehension telemetry. Treat the architecture sections below as implemented; treat anything under §6 (Roadmap) as not yet built.
+**Status (2026-11-09, R-45):** a working studio. A person picks a goal, answers a short skippable brief, gets a ranked choice of 58 curated templates (or a blank page at any catalogued size), and edits in a browser editor with Simple and Pro modes. The editor is vanilla JavaScript drawing SVG from a shared JSON document model, not Livewire. Brand kits, version history, share links, comments, review and approval, export to PNG, JPG, SVG, PDF, GIF and WebM, an optional AI assistant and optional integrations (Dot.Notify, Dot.Files, the InfoDot membership webhook, Dot.Analytics) are built; real-time co-editing, background removal, social publishing and AI image generation are deliberately not. `README.md` is the front door; `docs/R45_ARCHITECTURE.md` is the contract. The token/component-library domain is unchanged and still global.
 
 ### 1.1 A note on framing vs. Dot.Brain's ingested view
 
@@ -33,20 +33,22 @@ This wiki describes the platform as it is coded today. The design-token/componen
 
 | Layer | Technology |
 |---|---|
-| Framework | Laravel 12 |
-| Language | PHP 8.4 |
-| Frontend | Livewire 3 · Alpine.js 3 · Tailwind CSS |
-| Database | PostgreSQL 16 (shared across ecosystem) |
-| Realtime | Laravel Reverb |
-| Auth | Laravel Sanctum + Jetstream (teams, 2FA) |
-| AI | Multi-provider: Anthropic, OpenAI, Stability, Replicate (`AiGenerationLog.provider`) |
-| Storage | AWS S3 / local (Flysystem) |
-| Search | Laravel Scout · Meilisearch (planned) |
-| Queue | Redis · Laravel Horizon (planned) |
+| Framework | Laravel 13, PHP 8.3+ |
+| Editor and pages | Vanilla ES modules built by Vite 8 (no framework); the document is rendered as SVG |
+| Account pages | Jetstream with Livewire 3 and Alpine (the studio layout loads neither) |
+| Styling | Plain CSS design tokens, "The Light Table" (`DESIGN.md`); self-hosted woff2 fonts; no CDN at runtime |
+| Database | PostgreSQL in production, SQLite in tests |
+| Auth | InfoDot sign-in (redeem) over Sanctum and Jetstream (teams = workspaces, 2FA) |
+| AI | Anthropic Messages API for the assistant only, off without a key; proposals, never silent changes |
+| Storage | Private local disk `storage/app/private/design-assets` (uploads and thumbnails) |
+| Queue and schedule | Database queue drained by cron (`queue:work --stop-when-empty`); `schedule:run` by cron |
+| Realtime | None. Concurrent saves are compare-and-swap with a conflict screen |
 
 ## 3. Domain Entities
 
-The schema (`database/migrations/2026_06_27_000001_create_design_tables.php`) is the source of truth. Four tables, all live:
+**R-45 note:** the original four tables below are still there, with many added columns, and 17 tables were added (versions, shares, comments, reviews, activity, brand kits, templates, assistant proposals, exports, grants, file links, folders, user settings). `docs/DATABASE.md` lists every table and column and is generated from the migrations; use it, not this section. Tenancy is no longer per user: a workspace (Jetstream team) owns projects and assets, and `HasWorkspaceScope` replaced `HasUserScope` on them. The original description follows.
+
+The original schema (`database/migrations/2026_06_27_000001_create_design_tables.php`), four tables:
 
 | Entity | Table | Natural key | Notes |
 |---|---|---|---|
@@ -55,7 +57,7 @@ The schema (`database/migrations/2026_06_27_000001_create_design_tables.php`) is
 | Design asset | `design_assets` | id | Uploaded images and AI placeholders — `type`, `file_path`, `disk` (null = external URL, e.g. the mock AI placeholder), `mime_type`, `content_hash` (sha256 of the stored bytes; unique per user), `file_size`, `width`/`height`, optional `design_project_id` (null = the user's library), freeform `meta` JSON. Uploads live on the private `design_assets` disk and are served only by `GET /design/assets/{asset}/file` (policy-checked). Limits and upgrade notes: README "Uploads". |
 | AI generation log | `ai_generation_logs` | id | One row per AI request — `prompt`, `result_url`, `provider`, `tokens_used`, optionally tied to a `design_project_id` |
 
-Relationships: `DesignProject hasMany DesignCanvas` (ordered by `page_number`), `DesignProject hasMany AiGenerationLog`, `DesignAsset` and `AiGenerationLog` both `belongsTo User`. Teams come from Jetstream (`Team`, `TeamInvitation`, `Membership`) — multi-tenant by team, not yet enforced at the design-entity level (design projects are keyed to `user_id`, not `team_id`, today).
+Relationships: `DesignProject hasMany DesignCanvas` (ordered by `page_number`), `DesignProject hasMany AiGenerationLog`, `DesignAsset` and `AiGenerationLog` both `belongsTo User`. Teams come from Jetstream (`Team`, `TeamInvitation`, `Membership`). Since R-45 the team is the tenancy boundary (see the note above).
 
 ### 3.1 Design-token / component-library domain (MVP scaffold, added 0.3.0)
 
@@ -78,30 +80,19 @@ Dot.Design authenticates via a shared-token handoff rather than its own login fl
 
 ## 5. Events We Emit
 
-No domain events are wired up yet — `AppServiceProvider` is empty and there is no `EventServiceProvider`. The docs in `docs/CODE-ARCHITECTURE.md` and `docs/AI-INTEGRATION.md` specify the intended event set, which is the nearest thing to a contract today:
-
-| Planned event | Trigger |
-|---|---|
-| `DesignProjectCreated` | New project created |
-| `DesignProjectDeleted` | Project deleted |
-| `DesignCanvasSaved` | Canvas elements persisted |
-| `DesignExported` | Export to PNG/JPEG/SVG/PDF completed |
-| `AiGenerationRequested` / `AiGenerationCompleted` / `AiGenerationFailed` | AI image generation lifecycle |
-| `AssetUploaded` / `AssetDeleted` | Asset library changes |
-
-None of these are implemented as Laravel event classes yet — they exist only as the architecture doc's proposed shape. Until they're wired, "events we emit" for Dot.Design is effectively empty; treat the table above as the plan, not the present.
+Laravel events exist now (`app/Events/`): `DesignProjectCreated`, `DesignProjectDeleted`, `DesignCanvasSaved`, `AssetUploaded`, `AssetDeleted`, `DesignCommentAdded`, `DesignReviewRequested`, `DesignReviewDecided`, `DesignShared` and `EcosystemMemberRemoved`. The comment, review and share events feed the queued Dot.Notify listener when that integration is on. They are in-process events, not a published ecosystem contract: no other platform subscribes to them. The token events the Dot.Brain platform doc imagines (`design.token.breaking_change` and friends) remain unimplemented. Export events are recorded as audit rows (`design_exports`), not broadcast.
 
 ## 6. Roadmap
 
 Ordered roughly by what blocks what:
 
-- [x] Canvas editor: built as an Alpine component rather than Livewire components (see README "The canvas editor"); multi-select, grouping and collaboration remain open
-- [ ] Wire up the AI generation pipeline end-to-end: driver abstraction over the four providers, queued generation jobs, Reverb broadcast back to the editor (`docs/AI-INTEGRATION.md` has the full design)
-- [ ] Introduce the domain event classes listed in §5 and an `EventServiceProvider`
-- [ ] Add `FormRequest` validation classes for project/canvas/asset/AI endpoints (currently no validation layer)
-- [ ] Decide team-scoping: design entities are keyed to `user_id` today; Jetstream teams exist but aren't yet the tenancy boundary for projects/assets
-- [ ] Export pipeline: SVG and (limited) PNG exist; JPEG and PDF do not (README "Image elements and export")
-- [ ] Brand kit and template library models — mentioned in README's domain-model list but have no migrations or models yet
+- [x] Canvas editor: rebuilt in R-45 as a vanilla-JS studio over a shared document model, with multi-select, grouping, Simple and Pro modes; real-time collaboration remains deliberately unbuilt
+- [x] AI: the assistant (compose, improve, copy, automatic fixes) shipped in R-45 (`docs/R45_AI.md`); image generation across the four providers was dropped, not built
+- [x] Domain events (§5)
+- [x] Validation: form requests plus the document sanitiser on every save
+- [x] Team scoping: workspace = Jetstream team, `HasWorkspaceScope`
+- [x] Export: PNG, JPG, SVG, PDF (pictures of pages), GIF, WebM, made in the browser (`docs/R45_OUTPUT.md`)
+- [x] Brand kits and the template library (`docs/R45_BUSINESS.md`, `docs/R45_LIBRARY.md`)
 - [ ] Resolve the framing question in §1.1 with Dot.Brain before building anything resembling a token/component-certification system
 - [ ] Token/component domain (§3.1): comprehension-observation telemetry — needs real instrumentation (aggregate reads with n ≥ 50 floors per Dot.Brain's contract) before any table or model is worth scaffolding; deliberately skipped in the 0.3.0 MVP pass
 - [ ] Token/component domain (§3.1): domain events (`design.token.breaking_change`, `design.component.certified`, `design.consumption.drift_detected`), the comprehension gate/certification pipeline, and any actual cross-platform token-distribution API — none exist yet, only the local data model and CRUD
@@ -116,6 +107,7 @@ In the meantime, the concrete, low-risk starting point is publishing operational
 
 | Version | Date | Author | Change |
 |---|---|---|---|
+| 0.6.0 | 2026-11-09 | Claude Code | R-45 transformation: workspaces as tenancy, the studio editor, create flow with brief and 58 templates, brand kits, version history, sharing, comments and review, exports, the optional assistant and integrations, The Light Table design system, `design:preflight`, the production-like CI smoke, backups and the owner runbook. Sections 1, 2, 3, 5 and 6 above were corrected; see `README.md` and `docs/R45_*.md`. |
 | 0.5.2 | 2026-10-18 | Claude Code | Editor basics. Resize handles (shift keeps ratio; correct on rotated elements), rotation handle, z-order, duplicate, delete, arrow-key nudge, undo/redo (in-memory, 100 steps, per page), zoom 25-400% (buttons, ctrl+wheel, fit), snapping to page edges/centre with guides, pointer-event (mouse/pen/touch) gestures. Editor logic moved out of the Blade view into `public/js/design-editor/` (pure `geometry.js`/`history.js` with `npm run test:js`, plus `editor.js`). Saves now carry `design_canvases.revision`; the server does a compare-and-swap and answers 409 on a stale save, and the editor shows save failures and conflicts persistently instead of a 1.5 s flash (there is no silent overwrite; "Overwrite with mine" is an explicit choice). Fixed: a pending autosave could write the wrong page after switching pages; the "Double-click to edit" label on new text had no double-click handler. Tailwind CDN deliberately not migrated (README "Tooling notes"). |
 | 0.5.1 | 2026-10-18 | Claude Code | Image elements and export. Canvas elements gain type `image` (`asset_id`, validated to be the saving user's own) and `rotation`/`opacity` on every type; saves are bounded (300 elements, 512 KB), colours must be hex, unknown keys are dropped (`UpdateDesignCanvasRequest`). A placed asset cannot be deleted (409). `CanvasSvgExporter` embeds images as data URIs from the private disk (size-capped), applies rotation/opacity, wraps text by an estimated glyph width, and draws a labelled box for placeholders/missing/oversize pictures. New `GET .../export.png` (`CanvasPngExporter`, GD): rectangles, images, rotation, opacity; text only with `DESIGN_EXPORT_FONT` configured, otherwise refused; JPEG/PDF still do not exist. |
 | 0.5.0 | 2026-10-18 | Claude Code | Real asset uploads. `POST /design/assets` (JPG/PNG/WebP only, content-sniffed; SVG refused as an XSS vector), 8 MB / 16-8000 px / 40 MP caps checked from the header before decoding, GD re-encode to strip EXIF/GPS (orientation applied first), private disk with random names, sha256 dedupe per user, 200 MB per-user quota enforced in a locking transaction, 20/min rate limit, policy-checked serving route with `nosniff` and private caching. Asset panel now lists the current project's assets plus the user's library (it used to list every asset the user owned), with upload and delete. AI placeholder assets are filed under their project and stay labelled. Uploading is documented in README "Uploads". |
@@ -134,6 +126,6 @@ In the meantime, the concrete, low-risk starting point is publishing operational
 ## Open Questions
 
 - Framing reconciliation with Dot.Brain (§1.1, §7): is Dot.Design one product or two? The 0.3.0 scaffold makes this more concrete but does not settle it — should the token/component domain stay in this repo long-term, or does it belong in a separate platform? Owner: Design Platform Lead → Dot.Brain steward.
-- Tenancy: should design projects/canvases/assets move from `user_id` to `team_id` scoping now that Jetstream teams exist, before more code is built on top of the current shape? (Note: this question does not apply to the new §3.1 tables, which are deliberately global/shared by design.)
-- AI provider cost/abuse controls: `AiGenerationLog` records four possible providers but there's no rate limiting or moderation implemented yet (both are speced in `docs/AI-INTEGRATION.md` §5/§8) — needed before any public AI generation endpoint ships.
+- Tenancy: RESOLVED in R-45. Workspace = Jetstream team; projects, assets and brand kits carry `team_id`, visibility is `private` or `team`, roles are read on every request (`docs/R45_BACKEND.md`).
+- AI provider cost/abuse controls: the assistant has per-minute limits and per-person and per-workspace daily caps (`config/design_ai.php`); there is still no content moderation. Image generation is not offered.
 - Token/component domain (§3.1): who actually owns writes to `token_sets`/`components` once other platforms are meant to consume them — is this an internal admin-only surface, or does it need its own auth/permission model before any platform relies on it?
