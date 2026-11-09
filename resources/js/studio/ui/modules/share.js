@@ -13,6 +13,7 @@ import { explain } from '../../collab/errors.js';
 import { peopleStore } from '../../collab/people.js';
 import { EXPIRY_CHOICES, allowsSentence, createLinkVault, describeShare, expiryDays } from '../../collab/share-state.js';
 import { expiresIn, timeAgo } from '../../collab/format.js';
+import { avatar, radioCards, switchControl } from './_controls.js';
 
 export function register(ctx) {
     if (!can(ctx.config, 'share')) return;
@@ -48,6 +49,12 @@ export function mountShare(el, ctx) {
     const peopleBox = h('section', { class: 'cb-section', 'aria-labelledby': 'cb-share-people' });
     const linkBox = h('section', { class: 'cb-section', 'aria-labelledby': 'cb-share-links' });
     root.append(accessBox, peopleBox, linkBox);
+    const flags = (ctx.config && ctx.config.flags) || {};
+    if (flags.filesVault && ctx.exports && typeof ctx.exports.render === 'function') {
+        root.append(h('section', { class: 'cb-section cb-filesentry' },
+            h('p', { class: 'cb-hint', text: 'Want a copy in your business files?' }),
+            button({ label: 'Save a copy to Dot.Files', variant: 'secondary', size: 'sm', onClick: () => ctx.openDialog('files.save') })));
+    }
 
     // ------------------------------------------------------------------ 1 and 2: access and people
     function renderAccess(data) {
@@ -56,17 +63,14 @@ export function mountShare(el, ctx) {
         const canChange = !!data.can_change_visibility;
         const current = data.visibility === 'team' ? 'team' : 'private';
 
-        const group = h('div', { class: 'cb-choices', role: 'radiogroup', 'aria-labelledby': 'cb-share-access' });
         const options = [
-            ['private', 'Only me', 'Only you can open this design. Anyone you send it to for review can open it too.'],
-            ['team', team ? `Everyone in ${team.name}` : 'My workspace', 'Everyone in the workspace can open and comment on it. Owners, admins and editors can also change it.'],
+            { value: 'private', label: 'Only me', description: 'Only you can open this design. Anyone you send it to for review can open it too.', disabled: !canChange },
+            { value: 'team', label: team ? `Everyone in ${team.name}` : 'My workspace', description: 'Everyone in the workspace can open and comment on it. Owners, admins and editors can also change it.', disabled: !canChange || !team },
         ];
         const status = h('p', { class: 'cb-hint', role: 'status', 'aria-live': 'polite' });
-        for (const [value, label, text] of options) {
-            const id = `cb-vis-${value}`;
-            const radio = h('input', { type: 'radio', name: 'cb-visibility', id, value, checked: current === value, disabled: !canChange || (value === 'team' && !team) });
-            radio.addEventListener('change', async () => {
-                if (!radio.checked) return;
+        const group = radioCards({
+            name: 'cb-visibility', labelledBy: 'cb-share-access', value: current, options,
+            onChange: async (value) => {
                 status.textContent = 'Saving...';
                 const res = await ctx.api.put(urls.project, { visibility: value });
                 if (destroyed) return;
@@ -79,13 +83,10 @@ export function mountShare(el, ctx) {
                 } else {
                     const e = explain(res, { what: 'change who can open this design' });
                     status.textContent = e.text;
-                    radio.checked = false;
-                    const back = group.querySelector(`input[value="${current}"]`);
-                    if (back) back.checked = true;
+                    group.value = current;
                 }
-            });
-            group.append(h('label', { class: 'cb-choice', for: id }, radio, h('span', { class: 'cb-choice__body' }, h('span', { class: 'cb-choice__label', text: label }), h('span', { class: 'cb-choice__text', text }))));
-        }
+            },
+        });
         accessBox.append(...[h('h3', { class: 'cb-h', id: 'cb-share-access', text: 'Who can open it in Dot.Design' }), group,
             canChange ? null : h('p', { class: 'cb-hint', text: 'Only the person who made this design, or a workspace owner or admin, can change this.' }), status].filter(Boolean));
 
@@ -94,6 +95,7 @@ export function mountShare(el, ctx) {
         const list = h('ul', { class: 'cb-people' });
         for (const p of withAccess) {
             list.append(h('li', { class: 'cb-person' },
+                avatar(p.name),
                 h('span', { class: 'cb-person__name', text: p.is_you ? `${p.name} (you)` : p.name }),
                 h('span', { class: 'cb-person__role', text: p.is_creator ? 'Made this design' : p.role_label })));
         }
@@ -121,13 +123,13 @@ export function mountShare(el, ctx) {
     linkBox.append(h('h3', { class: 'cb-h', id: 'cb-share-links', text: 'Share link' }), resultBox, form.el, listBox);
 
     function buildForm() {
-        const permission = select([{ value: 'view', label: 'View only' }, { value: 'comment', label: 'View and comment' }], { value: 'view' });
-        const expiry = select(EXPIRY_CHOICES.map((c) => ({ value: c.key, label: c.label })), { value: '30' });
-        const downloads = h('input', { type: 'checkbox', id: 'cb-dl' });
+        const permission = select([{ value: 'view', label: 'View only' }, { value: 'comment', label: 'View and comment' }], { value: 'view', label: 'Anyone with the link can' });
+        const expiry = select(EXPIRY_CHOICES.map((c) => ({ value: c.key, label: c.label })), { value: '30', label: 'Link stops working' });
+        const downloads = switchControl({ label: 'Allow downloads', description: 'Visitors can save the design as a picture or PDF.', id: 'cb-dl' });
         const says = h('p', { class: 'cb-says', 'aria-live': 'polite' });
         const sync = () => { says.textContent = allowsSentence(permission.value, downloads.checked); };
         permission.addEventListener('change', sync);
-        downloads.addEventListener('change', sync);
+        downloads.input.addEventListener('change', sync);
         sync();
         const submit = button({ label: 'Create link', variant: 'primary', type: 'submit' });
         const err = h('div', { class: 'cb-formerr' });
@@ -135,7 +137,7 @@ export function mountShare(el, ctx) {
             h('div', { class: 'cb-row' },
                 field('Anyone with the link can', permission),
                 field('Link stops working', expiry)),
-            h('label', { class: 'cb-check', for: 'cb-dl' }, downloads, h('span', { text: 'Allow downloads' })),
+            downloads,
             says, err,
             h('div', { class: 'cb-actions' }, submit));
         el.addEventListener('submit', async (event) => {

@@ -87,3 +87,62 @@ test('the popover stays inside the stage on every side', () => {
     assert.ok(edge.left + box.width <= size.width - 8 && edge.top + box.height <= size.height - 8 && edge.left >= 8 && edge.top >= 8);
     assert.ok(edge.left < 790, 'flips to the left of the pin near the right edge');
 });
+
+// ---- marker placement ----------------------------------------------------------------------------------------------------
+import { elementScreenQuad, layoutMarkers, leader, markerHome, quadBounds } from '../../resources/js/studio/collab/pins.js';
+
+test('an element pin gets a marker just outside the nearest edge, not on the words', () => {
+    const view = { zoom: 1, x: 0, y: 0 };
+    const quad = elementScreenQuad(view, page([rect()]), 'r');
+    assert.deepEqual(quadBounds(quad), { left: 100, right: 300, top: 50, bottom: 150 });
+    const inBox = (p) => p.x >= 100 && p.x <= 300 && p.y >= 50 && p.y <= 150;
+    // near the top edge: the marker is above it, straight out from the anchor
+    const top = markerHome({ x: 150, y: 60 }, quad);
+    assert.ok(top.y < 50 && top.x === 150 && !inBox(top));
+    // near the right edge: to the right
+    const right = markerHome({ x: 295, y: 100 }, quad);
+    assert.ok(right.x > 300 && right.y === 100);
+    // near the bottom edge, and the left edge
+    assert.ok(markerHome({ x: 200, y: 148 }, quad).y > 150);
+    assert.ok(markerHome({ x: 103, y: 100 }, quad).x < 100);
+    // a tie between top and bottom prefers the top
+    assert.ok(markerHome({ x: 200, y: 100 }, quad).y < 50);
+    // a point pin: up and to the right of the anchor
+    const p = markerHome({ x: 500, y: 400 }, null);
+    assert.ok(p.x > 500 && p.y < 400);
+    assert.equal(elementScreenQuad(view, page([rect()]), 'gone'), null);
+});
+
+test('rotation moves the corner: the quad follows the element', () => {
+    const view = { zoom: 2, x: 10, y: 10 };
+    const quad = elementScreenQuad(view, page([rect({ rotation: 90 })]), 'r');
+    const b = quadBounds(quad);
+    // 200x100 rotated a quarter turn about (200,100) becomes 100 wide and 200 tall, at zoom 2 and offset 10
+    assert.ok(Math.abs((b.right - b.left) - 200) < 1e-6 && Math.abs((b.bottom - b.top) - 400) < 1e-6);
+});
+
+test('markers that want the same spot are pushed apart and stay inside the area', () => {
+    const items = Array.from({ length: 6 }, (_, i) => ({ id: i + 1, anchor: { x: 100, y: 100 }, home: { x: 100, y: 100 } }));
+    const out = layoutMarkers(items, { diameter: 22, bounds: { width: 400, height: 300 } });
+    const pts = [...out.values()];
+    for (let i = 0; i < pts.length; i += 1) {
+        assert.ok(pts[i].x >= 11 && pts[i].x <= 389 && pts[i].y >= 11 && pts[i].y <= 289);
+        for (let j = i + 1; j < pts.length; j += 1) assert.ok(Math.hypot(pts[i].x - pts[j].x, pts[i].y - pts[j].y) >= 26 - 1e-9, `markers ${i + 1} and ${j + 1} overlap`);
+    }
+    assert.equal(out.get(1).moved, false, 'the first marker keeps its home');
+    assert.equal(out.get(2).moved, true);
+    // deterministic: the same input gives the same output
+    assert.deepEqual([...layoutMarkers(items, { diameter: 22, bounds: { width: 400, height: 300 } }).values()], pts);
+});
+
+test('a marker near the edge is pulled inside; far-apart markers do not move', () => {
+    const out = layoutMarkers([{ id: 'a', anchor: { x: 0, y: 0 }, home: { x: -50, y: -50 } }, { id: 'b', anchor: { x: 300, y: 200 }, home: { x: 300, y: 200 } }], { bounds: { width: 400, height: 300 } });
+    assert.ok(out.get('a').x > 0 && out.get('a').y > 0);
+    assert.equal(out.get('b').moved, false);
+});
+
+test('leader line joins the anchor to the marker edge, and disappears when they touch', () => {
+    const l = leader({ x: 0, y: 0 }, { x: 40, y: 0 }, 20);
+    assert.deepEqual(l, { x1: 0, y1: 0, x2: 30, y2: 0 });
+    assert.equal(leader({ x: 0, y: 0 }, { x: 8, y: 0 }, 20), null);
+});

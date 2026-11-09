@@ -1,5 +1,6 @@
 /* Small shared widgets for the collaboration modules (buttons, fields, notices). Styled by studio-collab.css. */
 import { h, uid } from './dom.js';
+import { select as mcSelect, combobox as mcCombobox } from '../ui/modules/_controls.js';
 
 export function button({ label, variant = 'secondary', size, onClick, type = 'button', title, disabled = false, ariaLabel, className = '' }) {
     const el = h('button', {
@@ -17,29 +18,39 @@ export function button({ label, variant = 'secondary', size, onClick, type = 'bu
     return el;
 }
 
-/** Labelled control wrapper. `control` is an element (input, select, textarea); the label is wired with for/id. */
+/** The element that takes focus and the accessible name inside a custom control (or the control itself for a native one). */
+const focusTarget = (control) => control.button || control.input || control;
+
+/** Labelled control wrapper. `control` is an element (input, textarea) or a custom select / combobox; the label is wired with for/id. */
 export function field(label, control, { hint, error } = {}) {
-    const id = control.id || uid('f');
-    control.id = id;
+    const target = focusTarget(control);
+    const id = target.id || uid('f');
+    target.id = id;
     const hintEl = hint ? h('p', { class: 'cb-hint', id: `${id}-hint`, text: hint }) : null;
     const errEl = h('p', { class: 'cb-error', id: `${id}-error`, hidden: !error, role: 'alert', text: error || '' });
     const describe = [hintEl ? `${id}-hint` : null, `${id}-error`].filter(Boolean).join(' ');
-    control.setAttribute('aria-describedby', describe);
-    const wrap = h('div', { class: 'cb-field' }, h('label', { class: 'cb-label', for: id, text: label }), control, hintEl, errEl);
+    target.setAttribute('aria-describedby', describe);
+    const labelEl = h('label', { class: 'cb-label', for: id, text: label });
+    if (target !== control) { labelEl.id = `${id}-label`; target.removeAttribute('aria-label'); target.setAttribute('aria-labelledby', labelEl.id); }
+    const wrap = h('div', { class: 'cb-field' }, labelEl, control, hintEl, errEl);
     wrap.setError = (message) => {
         errEl.textContent = message || '';
         errEl.hidden = !message;
-        if (message) control.setAttribute('aria-invalid', 'true'); else control.removeAttribute('aria-invalid');
+        if (message) target.setAttribute('aria-invalid', 'true'); else target.removeAttribute('aria-invalid');
     };
     return wrap;
 }
 
 export function input(attrs = {}) { return h('input', { class: 'cb-input', ...attrs }); }
 export function textarea(attrs = {}) { return h('textarea', { class: 'cb-input cb-textarea', ...attrs }); }
-export function select(options, { value, ...attrs } = {}) {
-    const el = h('select', { class: 'cb-input cb-select', ...attrs }, options.map((o) => h('option', { value: o.value, text: o.label, selected: o.value === value })));
-    if (value !== undefined) el.value = value;
-    return el;
+/** A custom select (the browser's own drop-down is never drawn). `.value` and a bubbling 'change' event work as on a native one. */
+export function select(options, { value, label, ...attrs } = {}) {
+    return mcSelect({ options, value, label: label || attrs['aria-label'] || 'Choose', id: attrs.id });
+}
+
+/** A searchable people picker with avatars. items: [{value, label, sub?}]. */
+export function peopleCombobox(items, { value, label, placeholder, emptyText } = {}) {
+    return mcCombobox({ items, value, label: label || 'Person', placeholder, emptyText });
 }
 
 export function tag(text, tone = 'neutral') { return h('span', { class: `cb-tag cb-tag--${tone}`, text }); }

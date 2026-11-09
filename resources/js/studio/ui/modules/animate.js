@@ -1,12 +1,17 @@
-// Animation (R-45 output): an Animate tab (play, scrub, page length, element tracks, stagger, "Animate this design") and an
-// Animation section in the inspector for the selected element. The evaluator is a pure function of time (output/animate.js);
-// playback drives the live canvas and always hands it back exactly as it was.
+// Animation (R-45 output): the Animate tab opens straight into the timeline (one track per element, bars you can drag, a playhead,
+// scrub, play and repeat), with the presets of the selected element right under it. "Animate this design" is one button above the
+// timeline. An Animation section in the inspector offers the same presets for the selected element. The evaluator is a pure
+// function of time (output/animate.js); playback drives the live canvas and always hands it back exactly as it was.
+// All figures are written with a dot (fmtSeconds): the browser's own number input would print "5,0" in many locales.
 import '../../../../css/studio-output.css';
-import { h, clear, icon, chip } from '../../output/ui-kit.js';
+import { h, clear, icon } from '../../output/ui-kit.js';
 import { IN_PRESETS, OUT_PRESETS, LOOP_PRESETS, EASINGS, elementTimeline, pageDuration, proposeDefaults, staggerPatches, readingOrder, contentEnd, DEFAULT_IN_MS } from '../../output/animate.js';
 import { IN_LABELS, OUT_LABELS, LOOP_LABELS, EASING_LABELS, TRANSITION_LABELS, elementLabel, describeProposal } from '../../output/anim-labels.js';
 import { createPlayback } from '../../output/playback.js';
 import { moveSegment, secs, clampN, snap } from '../../output/anim-edit.js';
+import { fmtSeconds } from '../../output/number-format.js';
+import { select as mcSelect, numberField, switchControl, slider } from './_controls.js';
+
 const idsOf = (selection) => (Array.isArray(selection) ? selection : selection && selection.ids) || [];
 
 function topLevel(studio, id) {
@@ -24,6 +29,18 @@ function pruned(anim) {
     const out = {};
     for (const k of ['in', 'out', 'loop']) if (anim[k] && anim[k].preset && anim[k].preset !== 'none') out[k] = anim[k];
     return out;
+}
+
+/** Ruler labels: whole seconds, thinned so two labels never come closer than `minGap` pixels. Pure: tested. */
+export function rulerTicks(durationMs, widthPx, minGap = 34) {
+    const total = Math.max(0.5, durationMs / 1000);
+    const whole = Math.floor(total);
+    const fit = Math.max(1, Math.floor(widthPx / minGap));
+    const step = Math.max(1, Math.ceil(whole / fit));
+    const ticks = [];
+    for (let s = 0; s <= whole; s += step) ticks.push({ at: (s * 1000) / durationMs, label: `${s}s`, major: true });
+    // a half-second page ends between labels: no label for it, the lane end is the end
+    return ticks;
 }
 
 export function register(ctx) {
@@ -45,6 +62,40 @@ export function register(ctx) {
         mount: (el, c) => mountInspector(el, c || ctx, playback),
     });
     return { playback };
+}
+
+// ---- the presets of one element (used by the tab and by the inspector) --------------------------------------------------
+
+function presetFields(studio, el, playback, { compact = false } = {}) {
+    const id = el.id;
+    const a = el.animation || {};
+    const D = pageDuration(studio.activePage());
+    const upd = (patch) => { const next = { ...(el.animation || {}), ...patch }; setAnimation(studio, id, next); };
+    const inA = a.in && a.in.preset !== 'none' ? a.in : null;
+    const outA = a.out && a.out.preset !== 'none' ? a.out : null;
+    const loopA = a.loop && a.loop.preset !== 'none' ? a.loop : null;
+    const opts = (list, labels) => list.map((k) => ({ value: k, label: labels[k] }));
+    const sel = (label, list, labels, value, onChange, fk) => mcSelect({ label, options: opts(list, labels), value, onChange, dataFk: fk, size: 'sm' });
+    const num = (label, ms, min, max, onChange, fk) => numberField({ value: ms / 1000, min: min / 1000, max: max / 1000, step: 0.1, decimals: 1, unit: 's', label, dataFk: fk, onChange: (v) => onChange(Math.round(v * 1000)) });
+    const field = (label, control) => h('div', { class: 'out-field' }, h('span', { class: 'lt-label' }, label), control);
+
+    const wrap = h('div', { class: `out-presets${compact ? ' out-presets--compact' : ''}` });
+    wrap.append(h('fieldset', {}, h('legend', {}, 'Comes in'),
+        sel('Entrance', IN_PRESETS, IN_LABELS, inA ? inA.preset : 'none', (v) => upd({ in: v === 'none' ? { preset: 'none' } : { delay_ms: 0, duration_ms: DEFAULT_IN_MS, easing: 'ease-out', ...(a.in || {}), preset: v } }), 'a-in'),
+        inA ? h('div', { class: 'out-inspector__pair' },
+            field('Starts after', num('Entrance delay in seconds', inA.delay_ms || 0, 0, 60000, (ms) => upd({ in: { ...inA, delay_ms: ms } }), 'a-in-delay')),
+            field('Takes', num('Entrance length in seconds', inA.duration_ms || DEFAULT_IN_MS, 100, 10000, (ms) => upd({ in: { ...inA, duration_ms: ms } }), 'a-in-len'))) : null,
+        inA ? sel('Entrance feel', EASINGS, EASING_LABELS, inA.easing || 'ease-out', (v) => upd({ in: { ...inA, easing: v } }), 'a-in-ease') : null));
+    wrap.append(h('fieldset', {}, h('legend', {}, 'Goes out'),
+        sel('Exit', OUT_PRESETS, OUT_LABELS, outA ? outA.preset : 'none', (v) => upd({ out: v === 'none' ? { preset: 'none' } : { delay_ms: 0, duration_ms: DEFAULT_IN_MS, easing: 'ease-in-out', ...(a.out || {}), preset: v } }), 'a-out'),
+        outA ? h('div', { class: 'out-inspector__pair' },
+            field('Gone before the end', num('Seconds before the end of the page when the exit has finished', outA.delay_ms || 0, 0, 60000, (ms) => upd({ out: { ...outA, delay_ms: ms } }), 'a-out-delay')),
+            field('Takes', num('Exit length in seconds', outA.duration_ms || DEFAULT_IN_MS, 100, 10000, (ms) => upd({ out: { ...outA, duration_ms: ms } }), 'a-out-len'))) : null));
+    wrap.append(h('fieldset', {}, h('legend', {}, 'Keeps moving'),
+        sel('Movement while it is on the page', LOOP_PRESETS, LOOP_LABELS, loopA ? loopA.preset : 'none', (v) => upd({ loop: v === 'none' ? { preset: 'none' } : { duration_ms: 2000, ...(a.loop || {}), preset: v } }), 'a-loop'),
+        loopA ? field('One round takes', num('Seconds for one round of the movement', loopA.duration_ms || 2000, 300, 10000, (ms) => upd({ loop: { ...loopA, duration_ms: ms } }), 'a-loop-len')) : null));
+    void D;
+    return wrap;
 }
 
 // ---- the Animate tab ----------------------------------------------------------------------------------------------
@@ -93,15 +144,16 @@ export function mountPanel(root, ctx, playback) {
 
     // ---- transport (updated in place while playing so the DOM is not rebuilt 60 times a second)
     const timeEl = h('span', { class: 'out-transport__time', 'aria-live': 'off' });
-    const scrub = h('input', { class: 'out-scrub', type: 'range', min: '0', max: '5000', step: '50', value: '0', 'aria-label': 'Position in the animation', oninput: (e) => playback.seek(Number(e.target.value)) });
-    const playBtn = h('button', { type: 'button', class: 'lt-btn lt-btn--sm', onclick: () => { playback.toggle(); } });
+    const statusEl = h('span', { class: 'out-status-chip', role: 'status' });
+    const scrub = slider({ value: 0, min: 0, max: 5000, step: 50, label: 'Position in the animation', format: (v) => `${fmtSeconds(v)} s`, onInput: (v) => playback.seek(v) });
+    const playBtn = h('button', { type: 'button', class: 'lt-btn lt-btn--sm', dataset: { fk: 'play' }, onclick: () => { playback.toggle(); } });
     const stopBtn = h('button', { type: 'button', class: 'lt-btn lt-btn--secondary lt-btn--sm', onclick: () => playback.stop() }, 'Back to editing');
     const playhead = h('div', { class: 'out-playhead', hidden: true });
     function updateTransport(s) {
         const d = s.duration;
-        timeEl.textContent = `${secs(s.t)} / ${secs(d)} s`;
-        scrub.max = String(d);
-        if (document.activeElement !== scrub) scrub.value = String(Math.round(s.t));
+        timeEl.textContent = `${fmtSeconds(s.t)} / ${fmtSeconds(d)} s`;
+        scrub.input.max = String(d);
+        if (document.activeElement !== scrub.input) scrub.value = Math.round(s.t);
         clear(playBtn);
         playBtn.appendChild(icon(s.playing ? 'pause' : 'play'));
         playBtn.appendChild(document.createTextNode(s.playing ? 'Pause' : 'Play'));
@@ -109,18 +161,22 @@ export function mountPanel(root, ctx, playback) {
         stopBtn.hidden = !s.active;
         playhead.hidden = !s.active;
         playhead.style.left = `${(s.t / d) * 100}%`;
+        const label = s.playing ? 'Playing on the design' : s.active ? `Paused at ${fmtSeconds(s.t)} s` : 'Not playing';
+        if (statusEl.textContent !== label) statusEl.textContent = label;
+        statusEl.dataset.state = s.playing ? 'playing' : s.active ? 'paused' : 'idle';
     }
 
     // ---- tracks
-    function trackRow(el, pg, D, selected) {
+    function trackRow(el, D, selected) {
         const tl = elementTimeline(el, D);
-        const lane = h('div', { class: 'out-track__lane', dataset: { id: el.id }, onpointerdown: (e) => { if (e.target === lane) { const r = lane.getBoundingClientRect(); playback.seek(snap(((e.clientX - r.left) / r.width) * D, 50)); studio.select([el.id]); } } });
+        const lane = h('div', { class: 'out-lane', dataset: { id: el.id, selected: selected ? '1' : '0' }, onpointerdown: (e) => { if (e.target === lane) { const r = lane.getBoundingClientRect(); playback.seek(snap(((e.clientX - r.left) / r.width) * D, 50)); studio.select([el.id]); } } });
         const mkSeg = (kind, startMs, endMs, label) => {
             const seg = h('button', { type: 'button', class: 'out-seg', 'data-kind': kind, 'aria-label': label, title: label, style: { left: `${(startMs / D) * 100}%`, width: `${Math.max(0.5, ((endMs - startMs) / D) * 100)}%` } });
             if (kind !== 'loop') {
                 seg.addEventListener('pointermove', (e) => { if (e.buttons) return; seg.style.cursor = e.clientX > seg.getBoundingClientRect().right - 9 ? 'ew-resize' : 'grab'; });
                 seg.addEventListener('pointerdown', (e) => beginDrag(e, el, kind, seg, lane, D));
                 seg.addEventListener('keydown', (e) => keyNudge(e, el, kind, D));
+                seg.addEventListener('focus', () => { if (!studio.getState().selection.includes(el.id)) studio.select([el.id]); });
             } else seg.tabIndex = -1;
             return seg;
         };
@@ -128,11 +184,11 @@ export function mountPanel(root, ctx, playback) {
         if (tl.loop && tl.loop.end > tl.loop.start) lane.appendChild(mkSeg('loop', tl.loop.start, tl.loop.end, `${elementLabel(el)}, ${LOOP_LABELS[tl.loop.preset]}`));
         if (tl.out) lane.appendChild(mkSeg('out', tl.out.start, tl.out.end, `${elementLabel(el)}, ${OUT_LABELS[tl.out.preset] || 'exit'}, starts at ${secs(tl.out.start)} seconds and lasts ${secs(tl.out.duration)}. Use the arrow keys to move it.`));
         if (!tl.in && !tl.out && !tl.loop) {
-            lane.appendChild(h('button', { type: 'button', class: 'lt-btn lt-btn--ghost lt-btn--sm', style: { position: 'absolute', inset: '0 auto 0 0', minHeight: '0' }, 'aria-label': `Add an entrance to ${elementLabel(el)}`, onclick: () => setAnimation(studio, el.id, { in: { preset: 'fade', delay_ms: 0, duration_ms: DEFAULT_IN_MS, easing: 'ease-out' } }, `anim-add:${el.id}`) }, icon('plus'), 'Add'));
+            lane.dataset.empty = '1';
+            lane.appendChild(h('button', { type: 'button', class: 'out-lane__add', 'aria-label': `Add an entrance to ${elementLabel(el)}`, title: 'Add an entrance', onclick: () => { studio.select([el.id]); setAnimation(studio, el.id, { in: { preset: 'fade', delay_ms: 0, duration_ms: DEFAULT_IN_MS, easing: 'ease-out' } }, `anim-add:${el.id}`); } }, icon('plus')));
         }
-        return h('div', { class: 'out-track', dataset: { selected: selected ? '1' : '0' } },
-            h('button', { type: 'button', class: 'out-track__name', title: elementLabel(el), onclick: () => studio.select([el.id]) }, h('span', {}, elementLabel(el))),
-            lane);
+        const name = h('button', { type: 'button', class: 'out-lane__name', dataset: { id: el.id, selected: selected ? '1' : '0' }, title: elementLabel(el), 'aria-pressed': selected ? 'true' : 'false', onclick: () => studio.select([el.id]) }, h('span', {}, elementLabel(el)));
+        return { name, lane };
     }
 
     function keyNudge(e, el, kind, D) {
@@ -180,10 +236,14 @@ export function mountPanel(root, ctx, playback) {
         const pg = page();
         const D = pageDuration(pg);
         const els = readingOrder(pg);
-        wrap.appendChild(h('h2', {}, 'Animate'));
-        wrap.appendChild(h('div', { class: 'out-stack' },
+        const sel = new Set(studio.getState().selection);
+        const selected = els.find((e) => sel.has(e.id)) || null;
+        const animatedCount = els.filter((e) => { const t = elementTimeline(e, D); return t.in || t.out || t.loop; }).length;
+
+        // title, the one button, and what the page does now
+        wrap.appendChild(h('div', { class: 'out-anim__head' },
             h('button', { type: 'button', class: 'lt-btn', dataset: { fk: 'animate-design' }, onclick: animateDesign }, icon('wand'), 'Animate this design'),
-            h('p', { class: 'out-muted' }, 'Adds a gentle entrance to each element. You see it first, then decide.')));
+            h('p', { class: 'out-muted' }, 'Adds a gentle entrance to each element. You see it first, then decide. Or drag the bars below to time things yourself.')));
         if (state.proposal) {
             wrap.appendChild(h('div', { class: 'out-propose', role: 'group', 'aria-label': 'Suggested animation' },
                 h('strong', {}, `Add animation to ${state.proposal.patches.length} elements?`),
@@ -192,35 +252,50 @@ export function mountPanel(root, ctx, playback) {
                     h('button', { type: 'button', class: 'lt-btn lt-btn--sm', onclick: () => applyPatches(state.proposal.patches, `Animation added to ${state.proposal.patches.length} elements.`) }, 'Add these'),
                     h('button', { type: 'button', class: 'lt-btn lt-btn--ghost lt-btn--sm', onclick: () => { state.proposal = null; render(); } }, 'Not now'))));
         }
+
         // transport
+        const repeat = switchControl({ label: 'Repeat', checked: playback.state.loop, onChange: (on) => playback.setLoop(on), className: 'out-repeat' });
         wrap.appendChild(h('div', { class: 'out-transport' },
-            h('div', { class: 'out-transport__buttons' }, playBtn, stopBtn, chip({ label: 'Repeat', pressed: playback.state.loop, onClick: (e) => { playback.setLoop(!playback.state.loop); e.currentTarget.setAttribute('aria-pressed', playback.state.loop ? 'true' : 'false'); }, title: 'Play again when it reaches the end' }), timeEl),
-            scrub));
+            h('div', { class: 'out-transport__buttons' }, playBtn, stopBtn, timeEl),
+            scrub,
+            h('div', { class: 'out-transport__meta' }, statusEl, repeat)));
         updateTransport(playback.state);
+
+        // timeline: names on the left, lanes on the right, one ruler on top, one playhead over the lanes
+        const rows = els.map((el) => trackRow(el, D, sel.has(el.id)));
+        const ruler = h('div', { class: 'out-ruler' });
+        const lanes = h('div', { class: 'out-tl__lanes' }, ruler, ...rows.map((r) => r.lane), playhead);
+        const names = h('div', { class: 'out-tl__names' }, h('div', { class: 'out-tl__corner' }), ...rows.map((r) => r.name));
+        const timeline = h('div', { class: 'out-tl', role: 'group', 'aria-label': 'Timeline: one row per element' }, names, lanes);
+        wrap.appendChild(h('div', { class: 'out-section' },
+            h('div', { class: 'out-section__row' }, h('h3', {}, 'Timeline'), h('span', { class: 'out-muted' }, animatedCount ? `${animatedCount} of ${els.length} elements move` : 'Nothing moves yet')),
+            els.length ? timeline : h('p', { class: 'out-muted' }, 'There is nothing on this page to animate yet.'),
+            els.length ? h('div', { class: 'out-row' }, h('button', { type: 'button', class: 'lt-btn lt-btn--ghost lt-btn--sm', onclick: stagger }, 'One after another'), h('span', { class: 'out-muted' }, 'in reading order')) : null));
+        // ruler labels need the real lane width, so they are placed once the timeline is in the document
+        requestAnimationFrame(() => {
+            if (destroyed || !ruler.isConnected) return;
+            const w = ruler.getBoundingClientRect().width || 200;
+            for (const t of rulerTicks(D, w)) ruler.appendChild(h('span', { style: { left: `${t.at * 100}%` } }, t.label));
+        });
+
+        // presets of the selected element, right under the timeline
+        if (selected) {
+            wrap.appendChild(h('div', { class: 'out-section out-selected' },
+                h('div', { class: 'out-section__row' }, h('h3', {}, `How ${elementLabel(selected)} moves`),
+                    h('button', { type: 'button', class: 'lt-btn lt-btn--secondary lt-btn--sm', onclick: () => { playback.stop(); playback.play(); } }, icon('play'), 'Preview')),
+                presetFields(studio, selected, playback, { compact: true })));
+        } else if (els.length) {
+            wrap.appendChild(h('p', { class: 'out-muted out-hint' }, 'Pick a row, or click an element on the design, to choose how it comes in, goes out or keeps moving.'));
+        }
+
         // page settings
-        const lenInput = h('input', { class: 'out-input', type: 'number', min: '0.5', max: '60', step: '0.5', value: secs(D), 'aria-label': 'Page length in seconds', onchange: (e) => { const v = clampN(Number(e.target.value), 0.5, 60); setPage({ duration_ms: Math.round(v * 1000) }); } });
-        const trans = h('select', { class: 'out-select', 'aria-label': 'When the next page comes in', onchange: (e) => setPage({ transition: e.target.value }) }, ['none', 'fade', 'slide', 'zoom'].map((k) => h('option', { value: k, selected: (pg.transition || 'none') === k }, TRANSITION_LABELS[k])));
-        wrap.appendChild(h('div', { class: 'out-stack' },
-            h('div', { class: 'out-row' }, h('label', { class: 'lt-label', for: 'out-len' }, 'This page lasts'), (lenInput.id = 'out-len', lenInput), h('span', { class: 'out-muted' }, 'seconds')),
-            h('div', { class: 'out-row' }, h('label', { class: 'lt-label', for: 'out-trans' }, 'Then the next page'), (trans.id = 'out-trans', trans)),
+        const lenInput = numberField({ value: D / 1000, min: 0.5, max: 60, step: 0.5, decimals: 1, unit: 's', label: 'Page length in seconds', dataFk: 'page-len', onChange: (v) => setPage({ duration_ms: Math.round(clampN(v, 0.5, 60) * 1000) }) });
+        const trans = mcSelect({ label: 'When the next page comes in', value: pg.transition || 'none', options: ['none', 'fade', 'slide', 'zoom'].map((k) => ({ value: k, label: TRANSITION_LABELS[k] })), size: 'sm', onChange: (v) => setPage({ transition: v }), dataFk: 'page-trans' });
+        wrap.appendChild(h('div', { class: 'out-section' }, h('h3', {}, 'This page'),
+            h('div', { class: 'out-field out-field--row' }, h('span', { class: 'lt-label' }, 'Lasts'), lenInput),
+            h('div', { class: 'out-field out-field--row' }, h('span', { class: 'lt-label' }, 'Then the next page'), trans),
             h('p', { class: 'out-muted' }, 'Page changes show up when you download a GIF or video of several pages.'),
             contentEnd(pg) > D ? h('p', { class: 'out-note out-note--warn', role: 'status' }, 'Some animations finish after the page ends. Make the page longer or shorten them.') : null));
-        // tracks
-        const secsN = Math.max(1, Math.round(D / 1000));
-        const ruler = h('div', { class: 'out-ruler', style: { '--secs': String(Math.max(1, D / 1000)) } }, Array.from({ length: Math.min(secsN, 12) + 1 }, (_, i) => { const step = Math.max(1, Math.ceil(secsN / 10)); return i % step === 0 || i === secsN ? h('span', { style: { left: `${((i * 1000) / D) * 100}%` } }, `${i}s`) : null; }));
-        const sel = new Set(studio.getState().selection);
-        const tracks = h('div', { class: 'out-tracks' },
-            h('div', { class: 'out-tracks__head' }, h('span', {}), ruler),
-            els.map((el) => trackRow(el, pg, D, sel.has(el.id))));
-        // the playhead sits over the lanes column
-        const laneHost = h('div', { style: { position: 'relative' } }, tracks);
-        const body = h('div', { class: 'out-stack' }, laneHost, h('div', { class: 'out-row' }, h('button', { type: 'button', class: 'lt-btn lt-btn--secondary lt-btn--sm', onclick: stagger }, 'Stagger all'), h('span', { class: 'out-muted' }, 'One after another, in reading order')));
-        if (ctx.mode === 'simple') wrap.appendChild(h('details', { class: 'out-adv' }, h('summary', {}, 'Fine tune timing', icon('chevron')), body));
-        else wrap.appendChild(h('div', { class: 'out-stack' }, h('h3', { style: { margin: 0, fontSize: 'var(--lt-text-md)' } }, 'Timing'), body));
-        // playhead overlay aligned to the lane column (7rem + gap)
-        const head = h('div', { style: { position: 'absolute', top: '1.25rem', bottom: '0', left: 'calc(7rem + var(--lt-space-2))', right: '0', pointerEvents: 'none' } }, playhead);
-        laneHost.appendChild(head);
-        updateTransport(playback.state);
         if (focusId) { const t = wrap.querySelector(`[data-fk="${focusId}"]`); if (t) t.focus(); }
     }
 
@@ -239,13 +314,6 @@ export function mountInspector(root, ctx, playback) {
 
     const sel = () => studio.getState().selection[0];
 
-    function select(label, options, labels, value, onChange, fk) {
-        return h('select', { class: 'out-select', 'aria-label': label, dataset: { fk }, onchange: (e) => onChange(e.target.value) }, options.map((k) => h('option', { value: k, selected: value === k }, labels[k])));
-    }
-    function num(label, ms, min, max, onChange) {
-        return h('input', { class: 'out-input', type: 'number', step: '0.1', min: String(min / 1000), max: String(max / 1000), value: secs(ms), 'aria-label': label, onchange: (e) => onChange(Math.round(clampN(Number(e.target.value), min / 1000, max / 1000) * 1000)) });
-    }
-
     function render() {
         const active = document.activeElement;
         const fk = active && active.dataset ? active.dataset.fk : null;
@@ -256,31 +324,10 @@ export function mountInspector(root, ctx, playback) {
             wrap.appendChild(h('p', { class: 'out-muted' }, 'This element sits inside a group. Select the group to animate it as one piece.'));
             return;
         }
-        const a = el.animation || {};
-        const D = pageDuration(studio.activePage());
-        const upd = (patch) => { const next = { ...(el.animation || {}), ...patch }; setAnimation(studio, id, next); };
-        const inA = a.in && a.in.preset !== 'none' ? a.in : null;
-        const outA = a.out && a.out.preset !== 'none' ? a.out : null;
-        const loopA = a.loop && a.loop.preset !== 'none' ? a.loop : null;
-
-        wrap.appendChild(h('fieldset', {}, h('legend', {}, 'Comes in'),
-            select('Entrance', IN_PRESETS, IN_LABELS, inA ? inA.preset : 'none', (v) => upd({ in: v === 'none' ? { preset: 'none' } : { delay_ms: 0, duration_ms: DEFAULT_IN_MS, easing: 'ease-out', ...(a.in || {}), preset: v } }), 'a-in'),
-            inA ? h('div', { class: 'out-inspector__pair' },
-                h('div', { class: 'lt-field' }, h('span', { class: 'lt-label' }, 'Starts after (s)'), num('Entrance delay in seconds', inA.delay_ms || 0, 0, 60000, (ms) => upd({ in: { ...inA, delay_ms: ms } }))),
-                h('div', { class: 'lt-field' }, h('span', { class: 'lt-label' }, 'Takes (s)'), num('Entrance length in seconds', inA.duration_ms || DEFAULT_IN_MS, 100, 10000, (ms) => upd({ in: { ...inA, duration_ms: ms } })))) : null,
-            inA ? select('Entrance feel', EASINGS, EASING_LABELS, inA.easing || 'ease-out', (v) => upd({ in: { ...inA, easing: v } }), 'a-in-ease') : null));
-        wrap.appendChild(h('fieldset', {}, h('legend', {}, 'Goes out'),
-            select('Exit', OUT_PRESETS, OUT_LABELS, outA ? outA.preset : 'none', (v) => upd({ out: v === 'none' ? { preset: 'none' } : { delay_ms: 0, duration_ms: DEFAULT_IN_MS, easing: 'ease-in-out', ...(a.out || {}), preset: v } }), 'a-out'),
-            outA ? h('div', { class: 'out-inspector__pair' },
-                h('div', { class: 'lt-field' }, h('span', { class: 'lt-label' }, 'Gone before the end (s)'), num('Seconds before the end of the page when the exit has finished', outA.delay_ms || 0, 0, 60000, (ms) => upd({ out: { ...outA, delay_ms: ms } }))),
-                h('div', { class: 'lt-field' }, h('span', { class: 'lt-label' }, 'Takes (s)'), num('Exit length in seconds', outA.duration_ms || DEFAULT_IN_MS, 100, 10000, (ms) => upd({ out: { ...outA, duration_ms: ms } })))) : null));
-        wrap.appendChild(h('fieldset', {}, h('legend', {}, 'Keeps moving'),
-            select('Movement while it is on the page', LOOP_PRESETS, LOOP_LABELS, loopA ? loopA.preset : 'none', (v) => upd({ loop: v === 'none' ? { preset: 'none' } : { duration_ms: 2000, ...(a.loop || {}), preset: v } }), 'a-loop'),
-            loopA ? h('div', { class: 'lt-field' }, h('span', { class: 'lt-label' }, 'One round takes (s)'), num('Seconds for one round of the movement', loopA.duration_ms || 2000, 300, 10000, (ms) => upd({ loop: { ...loopA, duration_ms: ms } }))) : null));
+        wrap.appendChild(presetFields(studio, el, playback));
         wrap.appendChild(h('div', { class: 'out-row' },
             h('button', { type: 'button', class: 'lt-btn lt-btn--secondary lt-btn--sm', onclick: () => { playback.stop(); playback.play(); } }, icon('play'), 'Preview'),
             el.type === 'group' ? h('span', { class: 'out-muted' }, 'Moves as one piece.') : null));
-        void D;
         if (fk) { const t = wrap.querySelector(`[data-fk="${fk}"]`); if (t) t.focus(); }
     }
     render();
