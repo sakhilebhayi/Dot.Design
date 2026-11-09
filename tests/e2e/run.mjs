@@ -136,8 +136,13 @@ async function main() {
     let failed = 0;
     for (const spec of specs) {
         console.log(`\n=== ${spec}`);
-        const r = spawnSync(process.execPath, ['--test', '--test-concurrency=1', '--test-timeout=900000', join(specDir, spec)], { cwd: root, env, stdio: 'inherit' });
-        if (r.status !== 0) failed++;
+        // Asynchronous on purpose: the stubs (Messages API, Dot.Files) live in THIS process and must keep answering while a spec runs.
+        const code = await new Promise((res) => {
+            const child = spawn(process.execPath, ['--test', '--test-concurrency=1', '--test-timeout=900000', join(specDir, spec)], { cwd: root, env, stdio: 'inherit' });
+            child.on('exit', (c) => res(c));
+            child.on('error', () => res(1));
+        });
+        if (code !== 0) failed++;
     }
     console.log(failed ? `\n${failed} spec file(s) failed` : '\nAll specs passed');
     cleanup();

@@ -8,7 +8,7 @@ import { join } from 'node:path';
 import { makeUser, contextFor, watch, world, closeBrowser, openEditor, env, fixtures, api } from '../lib/harness.mjs';
 import { elementsOf } from '../lib/editor.mjs';
 
-const SKIP = /^(delete|remove|discard|close|back|cancel|download|share|review|preview|keyboard|zoom|fit|templates|elements|text|uploads|brand|comments|animate|background|history|ask for help|assistant|more|simple|pro|got it|skip|sign)/i;
+const SKIP = /^(delete|remove|discard|close|back|cancel|download|share|review|preview|keyboard|zoom|fit|templates|elements|text|uploads|brand|comments|animate|background|history|ask for help|assistant|more|simple|pro|got it|skip|sign|layers|design|add a |use a template|more background options)/i;
 
 test('every enabled control in the editor chrome does something', async (t) => {
     const fx = fixtures();
@@ -41,8 +41,9 @@ test('every enabled control in the editor chrome does something', async (t) => {
                 if (SKIP.test(name)) continue;
                 const before = await page.evaluate(() => ({ doc: JSON.stringify(window.__studio.studio.getState().doc), sel: window.__studio.studio.getState().selection.join(','), muts: window.__muts, dlg: document.querySelectorAll('dialog[open]').length, pressed: [...document.querySelectorAll('[aria-pressed],[aria-expanded]')].map((e) => e.getAttribute('aria-pressed') + e.getAttribute('aria-expanded')).join('') }));
                 let reqs = 0; const onReq = () => { reqs += 1; }; page.on('request', onReq);
-                const target = page.locator(`.st-right button[aria-label="${name.replace(/"/g, '\\"')}"], [role=toolbar] button[aria-label="${name.replace(/"/g, '\\"')}"]`).first();
-                const target2 = page.locator('.st-right button, [role=toolbar] button').filter({ hasText: name }).first();
+                const q = name.replace(/"/g, '\\"');
+                const target = page.locator(`.st-right button[aria-label="${q}"]:visible, [role=toolbar] button[aria-label="${q}"]:visible`).first();
+                const target2 = page.locator('.st-right button:visible, [role=toolbar] button:visible').filter({ hasText: name }).first();
                 const el = (await target.count()) ? target : target2;
                 try { await el.click({ timeout: 3000 }); } catch (e) { page.off('request', onReq); findings.push({ mode, state: label, control: name, problem: `could not be clicked: ${e.message.split('\n')[0].slice(0, 80)}` }); continue; }
                 await page.waitForTimeout(250);

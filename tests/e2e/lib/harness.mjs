@@ -19,8 +19,11 @@ export const uniq = (p = 'u') => `${p}${Date.now().toString(36)}${(counter++).to
 
 /** Direct setup against the throwaway database (see support/world.php). */
 export function world(cmd, data = {}) {
-    const out = execFileSync('php', [join(env.root, 'tests/e2e/support/world.php'), cmd, JSON.stringify(data)], { env: process.env, cwd: env.root, encoding: 'utf8' });
-    return JSON.parse(out.trim().split('\n').pop());
+    let out;
+    try { out = execFileSync('php', [join(env.root, 'tests/e2e/support/world.php'), cmd, JSON.stringify(data)], { env: process.env, cwd: env.root, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }); } catch (e) {
+        throw new Error(`world ${cmd} failed: ${String(e.stdout || '').slice(0, 600)} ${String(e.stderr || '').slice(0, 600)}`);
+    }
+    try { return JSON.parse(out.trim().split('\n').pop()); } catch { throw new Error(`world ${cmd} printed: ${out.slice(0, 600)}`); }
 }
 
 /** Read-only SQL (the app writes through its own connection; WAL is not used, so reads see committed data). */
