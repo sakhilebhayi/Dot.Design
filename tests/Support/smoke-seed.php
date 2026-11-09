@@ -7,6 +7,7 @@
  | smoke script points DB_DATABASE at a throw-away SQLite file.
  */
 
+use App\Models\DesignTemplate;
 use App\Models\Team;
 use App\Models\User;
 use Illuminate\Contracts\Console\Kernel;
@@ -41,7 +42,7 @@ $user = User::forceCreate([
 $team = Team::forceCreate(['user_id' => $user->id, 'name' => "Smoke Tester's Team", 'personal_team' => true]);
 $user->forceFill(['current_team_id' => $team->id])->save();
 
-$template = App\Models\DesignTemplate::withoutGlobalScopes()->where('status', 'published')->where('kind', 'poster')->orderBy('id')->value('slug')
-    ?? App\Models\DesignTemplate::withoutGlobalScopes()->where('status', 'published')->orderBy('id')->value('slug');
+$template = DesignTemplate::withoutGlobalScopes()->where('status', 'published')->where('kind', 'poster')->orderBy('id')->value('slug')
+    ?? DesignTemplate::withoutGlobalScopes()->where('status', 'published')->orderBy('id')->value('slug');
 
 echo json_encode(['user' => $user->id, 'team' => $team->id, 'template' => $template])."\n";
