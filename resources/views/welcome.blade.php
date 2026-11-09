@@ -66,7 +66,7 @@
                         @if ($heroMeta)<b data-lp-name>{{ $heroMeta['name'] }}</b>, a ready-made template, drawn by the same code the editor uses at {{ $first['width'] }} × {{ $first['height'] }} {{ $first['unit'] }}.@else<b data-lp-name>{{ $first['name'] }}</b>@endif
                     </p>
                     <ul class="lp-colors" data-lp-colors aria-label="Colours in this template">
-                        @foreach (($heroMeta['colors'] ?? []) as $hex)<li style="--c: {{ $hex }}" title="{{ $hex }}"><span class="lt-sr">{{ $hex }}</span></li>@endforeach
+                        @foreach (($heroMeta['colors'] ?? []) as $hex)<li role="img" aria-label="{{ $hex }}" style="--c: {{ $hex }}" title="{{ $hex }}"></li>@endforeach
                     </ul>
                 </div>
                 <div class="lp-table__ruler lt-ruler" aria-hidden="true" style="margin-top: 0;"></div>

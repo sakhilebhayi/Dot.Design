@@ -24,7 +24,7 @@ if (table) {
     };
 
     const setColors = (list) => {
-        colors.replaceChildren(...list.map((hex) => { const li = document.createElement('li'); li.style.setProperty('--c', hex); li.title = hex; const sr = document.createElement('span'); sr.className = 'lt-sr'; sr.textContent = hex; li.append(sr); return li; }));
+        colors.replaceChildren(...list.map((hex) => { const li = document.createElement('li'); li.setAttribute('role', 'img'); li.setAttribute('aria-label', hex); li.style.setProperty('--c', hex); li.title = hex; return li; }));
     };
 
     let token = 0;

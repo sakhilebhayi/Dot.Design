@@ -71,7 +71,7 @@
                         @endif
                     </div>
                     <div class="rv-row__end">
-                        <x-ds.tag :kind="$kind">{{ $label }}</x-ds.tag>
+                        <x-ds.tag :kind="$kind">@if ($label === 'Approved')<span class="lt-seal" aria-hidden="true"><x-ds.icon name="check" /></span>@endif{{ $label }}</x-ds.tag>
                         @if ($project)
                             <x-ds.button :href="route('design.projects.show', $project)" :variant="$mineToDecide ? 'primary' : 'secondary'" size="sm">{{ $mineToDecide ? 'Open and review' : 'Open' }}</x-ds.button>
                         @endif

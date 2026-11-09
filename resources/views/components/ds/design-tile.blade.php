@@ -10,7 +10,7 @@
         <span class="lt-contact__sub">Edited {{ $project->updated_at?->diffForHumans() ?? 'never' }}</span>
         @if (($chip && $chip['label'] !== 'Draft') || $brandUpdated)
             <span class="lt-contact__chips">
-                @if ($chip && $chip['label'] !== 'Draft')<x-ds.tag :kind="$chip['kind']">{{ $chip['label'] }}</x-ds.tag>@endif
+                @if ($chip && $chip['label'] !== 'Draft')<x-ds.tag :kind="$chip['kind']">@if ($chip['label'] === 'Approved')<span class="lt-seal" aria-hidden="true"><x-ds.icon name="check" /></span>@endif{{ $chip['label'] }}</x-ds.tag>@endif
                 @if ($brandUpdated)<x-ds.tag kind="warn">Brand updated</x-ds.tag>@endif
             </span>
         @endif

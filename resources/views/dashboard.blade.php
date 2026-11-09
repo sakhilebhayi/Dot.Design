@@ -8,6 +8,7 @@
     $brandRoute = collect(['design.brand.index', 'brand.index', 'design.brand-kits.index'])->first(fn ($name) => \Illuminate\Support\Facades\Route::has($name));
     $assetRoute = collect(['design.assets.index', 'assets.index'])->first(fn ($name) => \Illuminate\Support\Facades\Route::has($name));
     $brandUpdated = \App\Support\Ui\ProjectCard::brandUpdatedIds($recent);
+    $milestone = app(\App\Support\Ui\Milestones::class)->pending($user);
 @endphp
 <x-app-layout>
 <div class="lt-page">
@@ -15,6 +16,8 @@
     <x-ds.page-header title="Home" :sub="now()->format('l j F').($team ? ', '.$team->name : '')">
         <x-ds.button :href="$createRoute" icon="plus">New design</x-ds.button>
     </x-ds.page-header>
+
+    <x-ds.milestone :milestone="$milestone" />
 
     <section aria-labelledby="start-title">
         <div class="lt-section__head">

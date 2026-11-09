@@ -24,6 +24,8 @@
         <x-ds.button variant="secondary" icon="plus" data-lt-dialog-open="size-picker" data-cf-picker-open>Open a blank canvas</x-ds.button>
     </x-ds.page-header>
 
+    <x-ds.milestone :milestone="app(\App\Support\Ui\Milestones::class)->pending(auth()->user())" />
+
     @if ($errors->any())
         <div class="lt-alert lt-alert--bad" role="alert" style="margin-bottom: var(--lt-space-5);">
             <x-ds.icon name="circle-alert" />
