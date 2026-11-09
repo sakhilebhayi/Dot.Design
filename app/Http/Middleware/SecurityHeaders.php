@@ -121,6 +121,13 @@ class SecurityHeaders
     {
         $content = $response->getContent();
 
-        return is_string($content) && (str_contains($content, 'livewireScriptConfig') || str_contains($content, '/livewire/livewire'));
+        // The signed-in layout has no @livewireScripts: Livewire injects its bundle AFTER this middleware runs, so a page whose
+        // components are already rendered into the HTML (wire:snapshot / wire:id) is a Livewire page too.
+        return is_string($content) && (
+            str_contains($content, 'livewireScriptConfig')
+            || str_contains($content, '/livewire/livewire')
+            || str_contains($content, 'wire:snapshot')
+            || str_contains($content, 'wire:id=')
+        );
     }
 }

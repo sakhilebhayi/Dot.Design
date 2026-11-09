@@ -76,13 +76,25 @@ Seams listed in the wave-2 reports, checked:
 | Item | Severity | Why not |
 |---|---|---|
 | Choosing a size the library has no design for (for example "Announce a sale" with Instagram post, square: no sale design exists in that size) shows designs of other sizes; "Use this design" creates the design's own size. Each card states its size, and "Other sizes" in the editor resizes. | medium (UX) | A library gap, not a code defect. A real fix is either a square sale template or resizing the chosen template to the chosen size inside "from brief" (a product decision; the output agent's resize is client side). |
-| A viewer-role member can copy a design into their OWN workspace through "Other sizes" (`POST projects/{p}/copies`), although export is denied to that role | low | D-1011 as written (the copy is theirs, never the company's); they can already read every page. Owner decision needed. |
 | `ctx.reloadDocument()` is not provided; Restore reloads the page | low | Works and is covered. A true in-place reload needs an engine call that replaces pages without an undo step. |
 | Uploads of 2 to 8 MB fail on a server whose PHP limits are below 8 MB, with "The upload failed. The file may be larger than the server allows." | low | Honest message; the README states the 8 MB requirement; production must set it (the harness does). |
 | The wizard's style and size buttons have very long accessible names (they include the text of the preview picture) | low (accessibility) | Needs a design decision on what a screen reader should hear. |
 | Touch targets under 44 px on phones: template-card page arrows (32), "See all ready-made designs" (17 high), Assets folder chips (36) | low | Listed in `out/responsive-phone.json`. |
 | Template cards show the kind twice ("Instagram post, Instagram post (portrait)", "Business card, Business card (85 x 55 mm)") | low (copy) | Copy decision for the library owner. |
 | "Suggested for this design" in Other sizes offers the design's own size | low | The suggestion list is size-family based. |
+
+## After the wave-3 merge (security, perf, deploy, ptpl, ppages)
+
+The full suite was run on the merged tree. Four spec files failed; none was a product regression from security's work except one gap it exposed:
+
+| Failure | Cause | Resolution |
+|---|---|---|
+| 06 viewer copy returned 403, not 201 | Security made copies need the `export` capability (intended). | Spec now asserts 403 for a viewer and 201 for an editor (copy lands in the company workspace). The "found, not fixed" row about it is gone. |
+| 07 "Applying inline style violates ... style-src 'self'" on `/teams/create`, `/teams/*`, `/user/profile` | The signed-in layout has no `@livewireScripts`; Livewire injects its bundle after the security middleware ran, so those pages were judged "no Livewire" and got the strict policy (also no `'unsafe-eval'`, which Alpine needs). | `SecurityHeaders::shipsAlpine()` also recognises rendered components (`wire:snapshot`, `wire:id=`). Regression test in `ContentSecurityPolicyPagesTest`. The policy is not weakened for pages without Livewire (asserted). |
+| 08 Dot.Files save | Not security: the `ctx.exports` provider lived in the lazily loaded export chunk, so Save to Dot.Files depended on which idle chunk loaded first. | The export stub in `ui/modules/deferred.js` provides `ctx.exports` from the first paint and loads the renderer on demand; JS test added. |
+| 01 picture pixels | ptpl's new templates crop the picture slot with a diagonal. | Spec finds the picture by its yellow mark instead of assuming a rectangle. |
+
+Found, not fixed (low): a URL that matches no route at all (a typo) shows the signed-out 404 ("Go to the start page") to a signed-in person, because the framework skips the session for unmatched URLs. A `Route::fallback` fixes it but changes 405 to 404 for every wrong-method request and trips security's route classification tests, so it was not kept. A missing design (a matched route) correctly says "Back to Home". New spec `12-polish-flows` covers the milestone messages (first design, first file, first approval: real rows only, once, one at a time, 404 for a moment not reached), the landing page's real artwork at 1440 and 390, and the 404 pages (one primary action, right one for who is asking, no platform directory).
 
 ## What this suite does NOT prove
 
