@@ -58,7 +58,7 @@ class InstantiatorTest extends TestCase
         $this->assertSame('021 555 0123', $this->find($elements, 'phone')['text']);
 
         // Styling is untouched: the replaced element equals the original apart from id and text.
-        $this->assertEquals(array_diff_key($original, ['id' => 1, 'text' => 1]), array_diff_key($headline, ['id' => 1, 'text' => 1]));
+        $this->assertEquals(array_diff_key($original, ['id' => 1, 'text' => 1, 'autoFit' => 1]), array_diff_key($headline, ['id' => 1, 'text' => 1, 'autoFit' => 1]));
 
         // Elements without a bind are never touched.
         $this->assertSame('Terms apply', collect($elements)->firstWhere('name', 'Fine print')['text']);
@@ -200,6 +200,19 @@ class InstantiatorTest extends TestCase
 
         $this->assertSame('#ffffff', $headline['color']);
         $this->assertNotEmpty(array_filter($result->warnings, fn ($w) => str_contains($w, 'brand.colors.neutral')));
+    }
+
+    public function test_text_longer_than_the_sample_shrinks_to_fit_its_box_and_short_text_is_left_alone(): void
+    {
+        $this->seedFixtureTemplates();
+        $template = $this->fixtureTemplate();
+        $sample = (string) collect($template->pages[0]['elements'])->firstWhere('id', 'headline')['text'];
+
+        $long = app(TemplateInstantiator::class)->instantiate($template, ['business_name' => 'X', 'what' => $sample.' and a lot more words than the sample']);
+        $short = app(TemplateInstantiator::class)->instantiate($template, ['business_name' => 'X', 'what' => mb_substr($sample, 0, 3)]);
+
+        $this->assertSame('shrink', $this->find($long->pages[0]['elements'], 'headline')['autoFit'], 'long text shrinks to fit the box');
+        $this->assertSame('none', $this->find($short->pages[0]['elements'], 'headline')['autoFit'] ?? 'none', 'short text keeps the template styling');
     }
 
     public function test_very_long_text_raises_a_fit_warning_instead_of_silently_overflowing(): void
