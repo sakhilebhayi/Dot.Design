@@ -10,6 +10,7 @@ use App\Support\Ui\FontManifest;
 use App\Support\Ui\LandingArt;
 use App\Support\Ui\Milestones;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Blade;
 use Tests\Support\BusinessFixtures;
 use Tests\Support\StudioWorld;
 use Tests\TestCase;
@@ -83,15 +84,6 @@ class PagesPolishTest extends TestCase
             $this->assertStringStartsWith('<svg', $svg, $name);
             $this->assertDoesNotMatchRegularExpression('/<script|javascript:|on[a-z]+\s*=|https?:\/\//i', preg_replace('#xmlns="http://www.w3.org/2000/svg"#', '', $svg), $name);
         }
-    }
-
-    public function test_login_carries_both_logos_so_dark_never_shows_a_white_plate(): void
-    {
-        $html = $this->get('/login')->assertOk()->getContent();
-
-        $this->assertStringContainsString('lt-logo__light', $html);
-        $this->assertStringContainsString('images/logo-light.png', $html);
-        $this->assertStringContainsString('lt-logo__dark', $html);
     }
 
     public function test_error_pages_have_one_primary_action_and_no_platform_directory(): void
@@ -174,5 +166,41 @@ class PagesPolishTest extends TestCase
     public function test_the_milestone_route_needs_a_signed_in_person(): void
     {
         $this->postJson(route('design.milestones.seen', 'first_design'))->assertUnauthorized();
+    }
+
+    public function test_a_logo_pair_shows_exactly_one_variant_per_theme(): void
+    {
+        $html = Blade::render('<x-ds.logo alt="Dot.Design" />');
+        $this->assertSame(1, substr_count($html, 'lt-logo__light'));
+        $this->assertSame(1, substr_count($html, 'lt-logo__dark'));
+
+        $vocab = (string) file_get_contents(resource_path('css/ds/vocab.css'));
+        // light by default, dark variant hidden; the stored dark theme and the system dark setting swap them
+        $this->assertStringContainsString('.lt-logo .lt-logo__dark { display: none; }', $vocab);
+        $this->assertStringContainsString(':root[data-theme="dark"] .lt-logo .lt-logo__light { display: none; }', $vocab);
+        $this->assertStringContainsString(':root[data-theme="dark"] .lt-logo .lt-logo__dark { display: block; }', $vocab);
+        $this->assertStringContainsString(':root:not([data-theme="light"]):not([data-theme="dark"]) .lt-logo .lt-logo__light { display: none; }', $vocab);
+
+        // the bug: a later, more specific rule set display on the images and showed both at once. Only vocab.css may decide display.
+        foreach (glob(resource_path('css/{ds,pages}/*.css'), GLOB_BRACE) as $file) {
+            if (basename($file) === 'vocab.css') {
+                continue;
+            }
+            foreach (preg_split('/\}/', (string) file_get_contents($file)) as $rule) {
+                if (preg_match('/\.lt-logo[^{]*\{[^{]*\bdisplay\s*:/', $rule) && ! str_contains($rule, '.lt-logo {') && ! preg_match('/\.lt-auth__sheet \.lt-logo \{/', $rule)) {
+                    $this->fail(basename($file).' sets display on a logo variant: '.trim($rule));
+                }
+            }
+        }
+    }
+
+    public function test_every_auth_page_draws_real_template_artwork_on_its_table(): void
+    {
+        foreach (['/login', '/register', '/forgot-password'] as $url) {
+            $html = $this->get($url)->assertOk()->getContent();
+            $this->assertStringContainsString('lt-auth__trio', $html, $url);
+            $this->assertSame(3, preg_match_all('/<span class="lt-frame lt-crop lp-art"[^>]*><svg/', $html), "{$url}: three real drawings, each with crop marks");
+            $this->assertStringNotContainsString('lt-frame--blank', $html, $url);
+        }
     }
 }

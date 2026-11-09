@@ -1,6 +1,7 @@
 // Workflow 1: a beginner goes from the Start screen to a downloaded Instagram PNG without touching a Pro control.
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { join } from 'node:path';
 import { makeUser, contextFor, watch, externalHosts, step, one, sql, fixtures, createBrandKit, closeBrowser, env } from '../lib/harness.mjs';
 import { elementsOf, pagesOf, waitSaved, serverDocument, node, clickElement, serverDiff } from '../lib/editor.mjs';
 import { decodePng, dist, PHOTO } from '../lib/png.mjs';
@@ -128,16 +129,19 @@ test('beginner: start screen to downloaded PNG', async (t) => {
         await page.getByRole('button', { name: /Download for screens/ }).click();
         const d = await dl;
         assert.match(d.suggestedFilename(), /\.png$/i);
-        const png = decodePng(await readStream(d));
+        const raw = await readStream(d);
+        (await import('node:fs')).writeFileSync(join(env.out, 'beginner-export.png'), raw);
+        const png = decodePng(raw);
         const pageDoc = (await pagesOf(page))[0];
         assert.equal(png.width, pageDoc.width); assert.equal(png.height, pageDoc.height);
-        const slot = reopened.find((e) => e.type === 'image' && e.asset_id);
-        // The slot is a cover-fit of a 600x400 picture: the left half teal, the right half magenta.
-        const lx = Math.round(slot.x + slot.width * 0.12), rx = Math.round(slot.x + slot.width * 0.88), cy = Math.round(slot.y + slot.height * 0.5);
-        const py = Math.round(slot.y + slot.height * 0.1);
-        assert.ok(dist(png.get(lx, py), PHOTO.left) < 40, `left of the picture is teal, got ${png.get(lx, py)}`);
-        assert.ok(dist(png.get(rx, py), PHOTO.right) < 40, `right of the picture is magenta, got ${png.get(rx, py)}`);
-        assert.ok(dist(png.get(Math.round(slot.x + slot.width / 2), cy), PHOTO.mark) < 40, 'the yellow mark sits in the middle');
+        // The picture slot may be cropped by a shape (the templates have diagonal and rounded slots), so find the picture
+        // by its yellow mark and read the teal / magenta halves just above it, instead of assuming a rectangle.
+        let minX = 1e9, maxX = -1, minY = 1e9, maxY = -1;
+        for (let y = 0; y < png.height; y += 2) for (let x = 0; x < png.width; x += 2) { if (dist(png.get(x, y), PHOTO.mark) < 40) { minX = Math.min(minX, x); maxX = Math.max(maxX, x); minY = Math.min(minY, y); maxY = Math.max(maxY, y); } }
+        assert.ok(maxX > minX + 40, 'the uploaded picture (its yellow mark) is in the exported file');
+        const cx = Math.round((minX + maxX) / 2), above = minY - 25;
+        assert.ok(dist(png.get(cx - 40, above), PHOTO.left) < 40, `left half of the picture is teal, got ${png.get(cx - 40, above)}`);
+        assert.ok(dist(png.get(cx + 40, above), PHOTO.right) < 40, `right half of the picture is magenta, got ${png.get(cx + 40, above)}`);
     });
 
     assert.deepEqual(log.errors, [], 'no console errors');

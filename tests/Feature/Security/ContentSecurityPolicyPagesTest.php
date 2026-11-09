@@ -165,4 +165,25 @@ class ContentSecurityPolicyPagesTest extends TestCase
         $this->assertSame("default-src 'none'; sandbox", $image->headers->get('Content-Security-Policy'));
         $this->assertSame('nosniff', $image->headers->get('X-Content-Type-Options'));
     }
+
+    public function test_pages_with_livewire_components_get_the_livewire_allowances_even_when_the_layout_has_no_script_tag(): void
+    {
+        // The signed-in layout has no @livewireScripts: Livewire injects its bundle after the security middleware has run, so the
+        // header must be decided from the rendered components. A real Chrome reported "Applying inline style violates ..." on these.
+        $t = $this->tenant('Alpha');
+
+        foreach (['/user/profile', '/teams/create', '/teams/'.$t['team']->id] as $url) {
+            $policy = (string) $this->actingAs($t['owner'])->get($url)->assertOk()->headers->get('Content-Security-Policy');
+
+            $this->assertStringContainsString("style-src 'self' 'unsafe-inline'", $policy, "{$url}: Livewire's injected <style> elements need this");
+            $this->assertStringContainsString("'unsafe-eval'", $policy, "{$url}: Alpine inside Livewire evaluates expressions");
+        }
+
+        foreach ([route('dashboard'), route('design.start'), route('design.templates.index')] as $url) {
+            $policy = (string) $this->actingAs($t['owner'])->get($url)->assertOk()->headers->get('Content-Security-Policy');
+
+            $this->assertStringNotContainsString('unsafe-eval', $policy, "{$url}: no Livewire, no eval");
+            $this->assertStringContainsString("style-src 'self';", $policy, "{$url}: no inline <style> allowed");
+        }
+    }
 }

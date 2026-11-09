@@ -153,3 +153,14 @@ test('the entry bundle does not statically import any feature module', async () 
         assert.doesNotMatch(index + stubs, new RegExp(`^import .* from '\\./${n}\\.js'`, 'm'), `${n} must be loaded with import()`);
     }
 });
+
+test('the export stub provides ctx.exports from the first paint, so Save to Dot.Files never depends on which chunk loaded first', async () => {
+    const ctx = makeCtx({ flags: { filesVault: true } });
+    const stub = deferred.stubModules().find((m) => m.name === 'export');
+    stub.register(ctx);
+    assert.equal(typeof ctx.exports.render, 'function');
+    // a module registered later keeps the first provider (the real export module only adds one when none exists)
+    const first = ctx.exports;
+    real.export.register(ctx);
+    assert.equal(ctx.exports, first);
+});

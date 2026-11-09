@@ -231,10 +231,17 @@ test('reliability: a view-only member hitting the edit endpoints directly gets 4
     // nothing changed
     assert.equal(textOnServer(p.id, 'a'), 'Hello');
     assert.equal(one('select name from design_projects where id = ?', [p.id]).name, 'Shared');
-    // D-1011: a copy lands in the viewer's OWN workspace, never in the company's
+    // Security (R-45 wave 3): a copy needs the export capability, which a view-only role does not have.
     const copy = await api(vp, 'POST', `/design/projects/${p.id}/copies`, { format_key: 'instagram-post-square', name: 'viewer copy', pages: [{ elements: [] }] });
-    assert.equal(copy.status, 201);
-    assert.equal(one('select team_id from design_projects where id = ?', [copy.data.id]).team_id, viewer.team_id, 'the copy is in the personal workspace');
+    assert.equal(copy.status, 403, `a viewer cannot copy a design (${JSON.stringify(copy.data)?.slice(0, 100)})`);
+    assert.equal(one('select count(*) as n from design_projects where name = ?', ['viewer copy']).n, 0);
+    // an editor still can, and the copy lands in the company workspace
+    const ectx = await contextFor(editor); t.after(() => ectx.close());
+    const ep = await ectx.newPage();
+    await openEditor(ep, p.id);
+    const ok = await api(ep, 'POST', `/design/projects/${p.id}/copies`, { format_key: 'instagram-post-square', name: 'editor copy', pages: [{ elements: [] }] });
+    assert.equal(ok.status, 201, 'an editor may copy');
+    assert.equal(one('select team_id from design_projects where id = ?', [ok.data.id]).team_id, co.team_id);
     // while the viewer CAN comment
     const c = await api(vp, 'POST', `/design/projects/${p.id}/comments`, { body: 'Looks good' });
     assert.equal(c.status, 201, 'a viewer may comment');

@@ -102,6 +102,9 @@ export function stubModules(loaders = LOADERS) {
             name: 'export',
             register(ctx) {
                 const { ensure } = loaderOf(ctx);
+                // Other modules (Save to Dot.Files) feature-detect `ctx.exports`: it exists from the first paint, and loads the real
+                // renderer only when a file is asked for, so it never depends on which chunk the idle warm-up reached first.
+                if (!ctx.exports) ctx.exports = { render: async (opts) => (await ensure('export'), (await loaders.export()).buildExporter(ctx).render(opts)) };
                 const open = (c) => (c || ctx).openDialog('export', {});
                 ctx.registerDialog('export', { title: 'Download', size: 'lg', mount: lazyMount(ensure, 'export', () => ctx.registry.dialog('export')) });
                 ctx.registerTopbarAction({
