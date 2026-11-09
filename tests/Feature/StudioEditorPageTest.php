@@ -83,6 +83,16 @@ class StudioEditorPageTest extends TestCase
         $this->assertNull($boot['brand'], 'no kit exists yet');
     }
 
+    public function test_the_page_has_exactly_one_heading_naming_the_design_outside_the_editor_mount(): void
+    {
+        [$user, $project] = $this->ownerWithProject();
+
+        $html = $this->open($user, $project)->assertOk()->getContent();
+
+        $this->assertSame(1, substr_count($html, '<h1'));
+        $this->assertMatchesRegularExpression('/<h1 class="lt-sr">Spring flyer<\/h1>\s*<div id="studio-app"/', $html);
+    }
+
     public function test_the_assistant_flag_in_the_boot_json_is_exactly_what_the_assistant_status_says(): void
     {
         [$user, $project] = $this->ownerWithProject();

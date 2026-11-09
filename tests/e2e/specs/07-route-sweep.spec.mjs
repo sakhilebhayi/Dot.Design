@@ -70,7 +70,15 @@ async function sweep(t, role, { viewports }) {
             store.errors.length = 0;
             const start = store.requests.length;
             let resp;
-            try { resp = await page.goto(url, { waitUntil: 'load', timeout: 30000 }); } catch (e) { failures.push(`${role} ${url} @${vp}: navigation failed ${e.message.slice(0, 80)}`); continue; }
+            try { resp = await page.goto(url, { waitUntil: 'load', timeout: 30000 }); } catch (e) {
+                if (/Download is starting/.test(e.message)) { // an attachment (export file): check it through the same session without navigating
+                    const r = await page.request.get(url);
+                    if (r.status() >= 500) failures.push(`${role} ${url} @${vp}: HTTP ${r.status()}`);
+                    report.push({ role, url, vp, status: r.status(), type: r.headers()['content-type'] });
+                    continue;
+                }
+                failures.push(`${role} ${url} @${vp}: navigation failed ${e.message.slice(0, 80)}`); continue;
+            }
             const status = resp.status();
             const type = resp.headers()['content-type'] || '';
             const row = { role, url, vp, status, type: type.split(';')[0] };
