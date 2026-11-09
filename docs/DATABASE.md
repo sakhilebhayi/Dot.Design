@@ -1,5 +1,7 @@
 # Database Improvements
 
+> **R-45 note (2026-11-09):** this document is a forward-looking design and predates the studio rebuild. The tables and endpoints that actually exist (workspace columns, versions, shares, comments, reviews, activity, settings, the editor JSON API under `design/projects/...`) are documented in `docs/R45_BACKEND.md`; where the two disagree, that file is the truth.
+
 > Schema design, indexing, and data integrity improvements for Dot.Design. Each section is independently migratable.
 
 ---
