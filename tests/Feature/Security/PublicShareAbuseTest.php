@@ -194,4 +194,34 @@ class PublicShareAbuseTest extends TestCase
         $this->assertSame(1, RateLimiter::attempts($key));
         $this->assertSame(0, RateLimiter::attempts('share-probe:127.0.0.1'), 'the raw address must not be a key');
     }
+
+    public function test_a_signed_picture_url_expires_with_its_signature_and_dies_with_the_link_and_with_the_design(): void
+    {
+        config(['design.studio.public_misses_per_ten_minutes' => 1000]);
+        $t = $this->tenant('Alpha');
+        $page = $this->get(route('studio.share.show', $t['token']))->assertOk();
+        preg_match('#/s/[A-Za-z0-9]{40}/assets/\d+\?[^"\'\s]+#', html_entity_decode((string) $page->getContent()), $m);
+        $url = html_entity_decode($m[0]);
+
+        $this->get($url)->assertOk();
+
+        // After the signature's ten minutes the same URL is refused outright.
+        $this->travel(11)->minutes();
+        $this->get($url)->assertStatus(403);
+        $this->travelBack();
+
+        // Inside the window it still dies the moment the link is turned off or the design is deleted.
+        $fresh = $this->get(route('studio.share.show', $t['token']));
+        preg_match('#/s/[A-Za-z0-9]{40}/assets/\d+\?[^"\'\s]+#', html_entity_decode((string) $fresh->getContent()), $m2);
+        $live = html_entity_decode($m2[0]);
+        $this->get($live)->assertOk();
+
+        $t['share']->forceFill(['revoked_at' => now()])->save();
+        $this->get($live)->assertNotFound();
+
+        $t['share']->forceFill(['revoked_at' => null])->save();
+        $this->get($live)->assertOk();
+        \App\Models\DesignProject::withoutGlobalScopes()->whereKey($t['project']->id)->delete();
+        $this->get($live)->assertNotFound();
+    }
 }
