@@ -146,7 +146,7 @@ export function mountPanel(root, ctx, controller, options = {}) {
         const pct = Math.min(100, Math.round((u.used / u.limit) * 100));
         const low = pct >= 80;
         const bar = h('div', { class: `asst-meter-bar${low ? ' is-low' : ''}`, role: 'progressbar', 'aria-label': 'Assistant requests used today', 'aria-valuemin': 0, 'aria-valuemax': u.limit, 'aria-valuenow': u.used }, h('span', { class: 'asst-meter-fill' }));
-        bar.firstChild.style.width = `${pct}%`;
+        bar.firstChild.style.transform = `scaleX(${pct / 100})`;
         return h('div', { class: 'asst-meter' }, [bar, h('p', { class: 'asst-meter-label', text: `${u.used} of ${u.limit} requests used today${u.used >= u.limit ? '. Quick fixes still work.' : low ? '. Almost used up.' : ''}` })]);
     }
 

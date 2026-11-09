@@ -182,8 +182,8 @@ textarea.asst-input { resize: vertical; min-height: 76px; }
 
 /* usage meter */
 .asst-meter { display: flex; flex-direction: column; gap: var(--lt-space-1, 4px); }
-.asst-meter-bar { height: 4px; background: var(--lt-panel-sunk); border: 1px solid var(--lt-rule); border-radius: 2px; overflow: hidden; }
-.asst-meter-fill { display: block; height: 100%; background: var(--lt-accent); transition: width var(--lt-dur-2, 200ms) var(--lt-ease, ease-out); }
+.asst-meter-bar { height: 4px; background: var(--lt-panel-sunk); border: 1px solid var(--lt-rule); border-radius: var(--lt-radius-1, 3px); overflow: hidden; }
+.asst-meter-fill { display: block; width: 100%; height: 100%; background: var(--lt-accent); transform-origin: left center; transition: transform var(--lt-dur-2, 200ms) var(--lt-ease, ease-out); }
 .asst-meter-bar.is-low .asst-meter-fill { background: var(--lt-warn); }
 .asst-meter-label { color: var(--lt-ink-3); font-size: var(--lt-text-xs, 0.75rem); font-variant-numeric: tabular-nums; }
 
@@ -224,7 +224,7 @@ textarea.asst-input { resize: vertical; min-height: 76px; }
 
 /* the stage is a pure neutral and the page on it is always paper */
 .asst-stage { background: var(--lt-stage); padding: var(--lt-space-2, 8px); display: flex; justify-content: center; align-items: center; min-height: 80px; }
-.asst-page { width: 100%; background: var(--lt-paper); box-shadow: 0 0 0 1px rgb(0 0 0 / 0.12), 0 2px 6px -2px rgb(0 0 0 / 0.3); overflow: hidden; }
+.asst-page { width: 100%; background: var(--lt-paper); box-shadow: 0 0 0 1px var(--lt-rule-strong), 0 2px 6px -2px color-mix(in srgb, var(--lt-ink) 40%, transparent); overflow: hidden; }
 .asst-page svg { display: block; width: 100%; height: 100%; }
 .asst-noprev { display: block; padding: var(--lt-space-4, 16px); color: var(--lt-paper-ink-2, #4a5159); font-size: var(--lt-text-xs, 0.75rem); text-align: center; }
 
@@ -246,7 +246,7 @@ textarea.asst-input { resize: vertical; min-height: 76px; }
 /* loading: bars that breathe, not spin */
 .asst-working { color: var(--lt-ink-2); }
 .asst-skel { display: flex; flex-direction: column; gap: var(--lt-space-2, 8px); }
-.asst-skel span { display: block; height: 12px; border-radius: 2px; background: var(--lt-panel-sunk); border: 1px solid var(--lt-rule); animation: asst-breathe 1.4s var(--lt-ease, ease-in-out) infinite alternate; }
+.asst-skel span { display: block; height: 12px; border-radius: var(--lt-radius-1, 3px); background: var(--lt-panel-sunk); border: 1px solid var(--lt-rule); animation: asst-breathe 1.4s var(--lt-ease, ease-in-out) infinite alternate; }
 .asst-skel span:nth-child(2) { width: 82%; animation-delay: 120ms; }
 .asst-skel span:nth-child(3) { width: 58%; animation-delay: 240ms; }
 
