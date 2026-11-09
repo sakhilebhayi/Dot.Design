@@ -39,6 +39,8 @@ preview.js        the design as a viewer sees it (the export renderer, no placeh
 reposition.js     move a picture inside its frame (focal point) by dragging
 uploads.js        upload with progress (XHR), validation in plain words, master asset index, place or replace
 reliability.js    crash recovery, failed save banner, conflict, offline, expired session
+stage-model.js    the canvas as a readable list (screen readers): summary, every element with its place, select on activate
+keyboard-inset.js keeps the workspace above the on-screen keyboard and the edited text in view (visualViewport)
 thumbnail.js      debounced thumbnail after a confirmed save
 shortcuts*.js     key matching (pure), the router, the shortcut sheet
 fields.js, popover.js, overlays.js, dom.js, quick.js, actions.js, insert.js, describe.js, units.js, ruler.js
