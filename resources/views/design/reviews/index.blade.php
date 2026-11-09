@@ -51,7 +51,7 @@
                 <li class="rv-row">
                     <span class="rv-row__stage" aria-hidden="true">
                         @if ($project)
-                            <x-ds.frame :width="$project->width ?: 4" :height="$project->height ?: 3" :blank="! $thumb">@if ($thumb)<img src="{{ $thumb }}" alt="" loading="lazy" width="{{ $project->width }}" height="{{ $project->height }}">@endif</x-ds.frame>
+                            <x-ds.frame :width="$project->width ?: 4" :height="$project->height ?: 3" :src="$thumb" />
                         @endif
                     </span>
                     <div class="rv-row__main">

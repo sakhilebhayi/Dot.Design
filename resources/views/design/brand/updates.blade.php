@@ -2,7 +2,8 @@
     @vite(['resources/css/pages/brand.css'])
 @endpush
 @php
-    $fontName = fn ($key) => \Illuminate\Support\Str::headline((string) $key);
+    $fontName = fn ($key) => \App\Support\Ui\FontManifest::label((string) $key);
+    $propName = ['color' => 'Colour', 'fill' => 'Fill colour', 'stroke_color' => 'Outline colour', 'shadow_color' => 'Shadow colour', 'font' => 'Font'];
     $slotName = ['heading' => 'Heading font', 'body' => 'Body font', 'accent' => 'Accent font'];
 @endphp
 <x-app-layout>
@@ -30,22 +31,43 @@
                     <div class="br-notice__body">
                         <p class="br-notice__name">{{ $n['project_name'] }}</p>
                         <p class="lt-small">{{ $n['kit_name'] }} moved from version {{ $n['from_version'] }} to {{ $n['to_version'] }}.</p>
-                        <div class="br-sum">
-                            @foreach ((array) ($summary['colors'] ?? []) as $c)
-                                <span class="br-sum__item" title="{{ $c['name'] ?? 'Colour' }}">
-                                    @if (! empty($c['from']))<span class="br-chip__sw" style="--c: {{ $c['from'] }}"></span>@endif
-                                    @if (! empty($c['from']) && ! empty($c['to']))<x-ds.icon name="arrow-right" size="sm" class="br-arrow" />@endif
-                                    @if (! empty($c['to']))<span class="br-chip__sw" style="--c: {{ $c['to'] }}"></span>@endif
-                                    <span>{{ $c['name'] ?? 'Colour' }}@if (empty($c['from'])) added @elseif (empty($c['to'])) removed @endif</span>
-                                </span>
-                            @endforeach
-                            @foreach ((array) ($summary['fonts'] ?? []) as $f)
-                                <span class="br-sum__item">{{ $slotName[$f['slot']] ?? 'Font' }}: {{ $fontName($f['from'] ?? '') }} <x-ds.icon name="arrow-right" size="sm" class="br-arrow" /> {{ $fontName($f['to'] ?? '') }}</span>
-                            @endforeach
-                            @foreach ((array) ($summary['other'] ?? []) as $o)
-                                <span class="br-sum__item">{{ ucfirst($o) }} changed</span>
-                            @endforeach
-                        </div>
+                        @php $count = (int) ($n['counts']['changes'] ?? 0); $places = (int) ($n['counts']['elements'] ?? 0); @endphp
+                        <p class="br-notice__count">
+                            @if ($count > 0)
+                                {{ $count }} {{ \Illuminate\Support\Str::plural('change', $count) }} in this design, on {{ $places }} {{ \Illuminate\Support\Str::plural('element', $places) }}.
+                            @else
+                                Nothing in this design is linked to what changed in the kit.
+                            @endif
+                        </p>
+                        @if ($count > 0)
+                            @php $groups = collect($n['changes'])->groupBy(fn ($c) => $c['prop'].'|'.$c['current'].'|'.$c['proposed']); @endphp
+                            <ul class="br-sum" aria-label="Every change in {{ $n['project_name'] }}">
+                                @foreach ($groups as $group)
+                                    @php $c = $group->first(); $many = $group->count(); @endphp
+                                    <li class="br-sum__item">
+                                        <span class="br-sum__what">{{ $propName[$c['prop']] ?? $c['prop'] }}</span>
+                                        @if ($c['kind'] === 'font')
+                                            <span>{{ $fontName($c['current']) }}</span><x-ds.icon name="arrow-right" size="sm" class="br-arrow" /><span>{{ $fontName($c['proposed']) }}</span>
+                                        @else
+                                            <span class="br-chip__sw" style="--c: {{ $c['current'] ?: 'transparent' }}"></span><x-ds.icon name="arrow-right" size="sm" class="br-arrow" /><span class="br-chip__sw" style="--c: {{ $c['proposed'] }}"></span>
+                                        @endif
+                                        <span class="lt-meta">on {{ $many }} {{ \Illuminate\Support\Str::plural('element', $many) }}</span>
+                                        <details class="br-sum__more">
+                                            <summary>{{ $many === 1 ? 'Which one' : 'Which ones' }}</summary>
+                                            <ul>@foreach ($group as $item)<li>{{ $item['element_name'] }}, page {{ $item['page_number'] }}</li>@endforeach</ul>
+                                        </details>
+                                    </li>
+                                @endforeach
+                            </ul>
+                        @endif
+                        @php
+                            $other = collect((array) ($n['unused']['colors'] ?? []))->map(fn ($c) => ($c['name'] ?? 'Colour').(empty($c['from']) ? ' added' : (empty($c['to']) ? ' removed' : '')))
+                                ->merge(collect((array) ($n['unused']['fonts'] ?? []))->map(fn ($f) => ($slotName[$f['slot']] ?? 'Font').': '.$fontName($f['from'] ?? '').' to '.$fontName($f['to'] ?? '')))
+                                ->merge(collect((array) (($n['summary'] ?? [])['other'] ?? []))->map(fn ($o) => ucfirst($o).' changed'));
+                        @endphp
+                        @if ($other->isNotEmpty())
+                            <p class="lt-meta br-notice__also">Also changed in the kit, not used in this design: {{ $other->implode(', ') }}.</p>
+                        @endif
                     </div>
                     <div><x-ds.button :href="$n['review_url']" variant="secondary" size="sm">Review changes</x-ds.button></div>
                 </li>

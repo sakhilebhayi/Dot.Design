@@ -5,7 +5,7 @@
  */
 import { api, append, clear, confirmDialog, debounce, el, firstError, fontLabel, fontManager, fontStack, icon, loadFonts, readBoot, toast } from './brand-core.js';
 import { applyItemsToPages } from './brand-apply.js';
-import { evaluateLegibility, groupItems, modeOf, selectionFor, summarise, toggle, toggleMany } from './brand-review.js';
+import { changedBoxes, evaluateLegibility, groupItems, modeOf, selectionFor, summarise, toggle, toggleMany } from './brand-review.js';
 import { previewSurface } from './brand-preview.js';
 
 const boot = readBoot('brand-boot');
@@ -135,13 +135,16 @@ function render() {
         const after = el('div', { class: 'br-ba__page', style: { '--w': page.width, '--h': page.height } });
         const beforeS = previewSurface(before, { manifest: boot.fonts, assetUrl });
         const afterS = previewSurface(after, { manifest: boot.fonts, assetUrl });
-        surfaces.push({ page, beforeS, afterS });
+        const beforeMarks = markLayer(before, page);
+        const afterMarks = markLayer(after, page);
+        surfaces.push({ page, beforeS, afterS, beforeMarks, afterMarks });
 
         const changes = el('div', { class: 'br-changes' });
         for (const elGroup of g.elements) changes.appendChild(elementRow(elGroup, items));
 
         pagesWrap.appendChild(el('section', { 'aria-label': `Page ${g.page_number}` }, [
             el('div', { class: 'br-pagehead' }, [el('h2', { class: 'lt-h3', text: `Page ${g.page_number}${page.name && page.name !== `Page ${g.page_number}` ? `, ${page.name}` : ''}` }), el('span', { class: 'lt-meta', text: plural(g.elements.reduce((n, e) => n + e.items.length, 0), 'change', 'changes') })]),
+            el('p', { class: 'lt-meta br-ba__legend' }, [el('span', { class: 'br-ba__key', 'aria-hidden': 'true' }), 'The outlined parts are the ones that change.']),
             el('div', { class: 'br-ba' }, [
                 el('div', { class: 'br-ba__cell' }, [el('p', { class: 'br-ba__label', text: 'Now' }), el('div', { class: 'br-ba__stage' }, before)]),
                 el('div', { class: 'br-ba__cell' }, [el('p', { class: 'br-ba__label', 'data-after-label': '', text: 'With the changes you picked' }), el('div', { class: 'br-ba__stage' }, after)]),
@@ -156,6 +159,9 @@ function render() {
             const idx = doc.pages.findIndex((p) => p.id === s.page.id);
             s.beforeS.show(doc.pages[idx], `Page ${s.page.page_number} as it is now`);
             s.afterS.show(afterPages[idx], `Page ${s.page.page_number} with the selected changes`);
+            // outline what changes: every change on the left, the ticked ones on the right
+            paintMarks(s.beforeMarks, changedBoxes(doc.pages[idx], items, null));
+            paintMarks(s.afterMarks, changedBoxes(doc.pages[idx], items, selected));
         }
     }
 
@@ -174,6 +180,31 @@ function render() {
     drawSummary();
     drawWarnings();
     paintSurfaces();
+}
+
+const SVG_NS = 'http://www.w3.org/2000/svg';
+
+/** A transparent layer over a preview, in the page's own units, that holds the outlines of changed elements. */
+function markLayer(host, page) {
+    const svg = document.createElementNS(SVG_NS, 'svg');
+    svg.setAttribute('class', 'br-ba__marks');
+    svg.setAttribute('viewBox', `0 0 ${page.width} ${page.height}`);
+    svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+    svg.setAttribute('aria-hidden', 'true');
+    host.appendChild(svg);
+    return svg;
+}
+
+function paintMarks(svg, boxes) {
+    while (svg.firstChild) svg.removeChild(svg.firstChild);
+    for (const kind of ['halo', 'ring']) {
+        for (const b of boxes) {
+            const r = document.createElementNS(SVG_NS, 'rect');
+            r.setAttribute('x', String(b.x)); r.setAttribute('y', String(b.y)); r.setAttribute('width', String(b.w)); r.setAttribute('height', String(b.h));
+            r.setAttribute('class', `br-ba__mark br-ba__mark--${kind}`);
+            svg.appendChild(r);
+        }
+    }
 }
 
 function valueChip(item, which) {
