@@ -28,7 +28,8 @@ class IdentityClient
     public function redeem(string $token): ?array
     {
         try {
-            $response = Http::withToken((string) config('ecosystem.infodot.secret'))
+            $response = Http::withoutRedirecting()
+                ->withToken((string) config('ecosystem.infodot.secret'))
                 ->acceptJson()
                 ->timeout((int) config('ecosystem.infodot.timeout', 5))
                 ->post((string) config('ecosystem.infodot.redeem_url'), [

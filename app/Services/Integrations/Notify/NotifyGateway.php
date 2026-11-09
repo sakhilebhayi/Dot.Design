@@ -53,7 +53,8 @@ class NotifyGateway implements NotificationGateway
             $timestamp = (string) now()->timestamp;
             $timeout = max(1, (int) config('design_integrations.notify.timeout', 5));
 
-            $response = Http::timeout($timeout)
+            $response = Http::withoutRedirecting()
+                ->timeout($timeout)
                 ->connectTimeout($timeout)
                 ->acceptJson()
                 ->withHeaders([
