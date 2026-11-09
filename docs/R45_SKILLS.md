@@ -14,3 +14,14 @@ Global owner rule: UI work goes through the installed skills in `~/.claude/skill
 | `gsap-*`, `scroll-world`, `react-bits`, `canvas-ui`, `terminal-dark` | not used | No scroll-cinematic or WebGL work in this scope; motion is CSS only, short, behind `prefers-reduced-motion`. |
 
 Verification tools actually run: `@google/design.md lint`, `impeccable detect` (on rendered HTML), `hallmark sloplint` (source tier), a headless-Chrome screenshot pass at 1440, 768 and 390 in light and dark with a horizontal-overflow check, and 40+ PHP feature tests.
+
+## Brand agent (R-45 wave 2: Brand Studio, assets library, supporting pages)
+
+| Skill | Status | How it was used |
+|---|---|---|
+| `impeccable` | available, invoked | Loaded before any UI code (context loader reported no PRODUCT.md and an incumbent visual system: extend, do not replace). Mode: Operate for the kit editor, the review, the assets library and settings (scanability, honest states and consistency over expression). Craft floor applied: no eyebrows, no gradient text, no side-stripe borders, no hero metric tiles, no modal where a page works (the review and the editor are pages; dialogs only for confirm, new folder, font browser and picture picker), browser surfaces themed (focus rings, colour inputs, selection), tabular numerals on figures, every state drawn (empty, loading, error, success, long text). `impeccable detect` on the new views and CSS: 0 anti-patterns; 5 advisory notes (specimen font sizes are literal on purpose). The interview and the live iteration steps were replaced by the owner's standing order. |
+| `design-taste-frontend` | available, invoked (app-screen run) | `references/app-screens.md` applied: colour on data and state only (selected, in use, failed, the kit's own colours), KPIs as type (the storage line), flat surfaces, tables and lists by rules and alignment, one primary action per screen, words of the trade ("Brand updated", "Keep my design as it is", "Not used yet"), honest empty states that say what to upload. The page run (draw, inspect scripts) was NOT run: the direction is fixed by the owner brief and DESIGN.md. |
+| `ui-ux-pro-max`, `emil-design-eng` | UNAVAILABLE | Dangling symlinks, as the ds agent recorded. Not used and not claimed. |
+| `design-md`, `hallmark`, `open-design`, `gsap-*`, `scroll-world`, `react-bits`, `canvas-ui`, `terminal-dark` | not used | No new design system file was needed (the tokens in `DESIGN.md` were enough); no landing, scroll or WebGL work in scope. |
+
+Verification actually run: `impeccable detect` on source; a headless Chrome pass (own profile, own viewport, over the DevTools protocol) of every page in light and dark at 1440 and 390 with overflow, h1 count and console-error checks; the flows listed in `docs/R45_UI_BRAND.md`.

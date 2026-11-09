@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { addTag } from '../../resources/js/studio/pages/assets-detail.js';
-import { pickPreviewTemplates } from '../../resources/js/studio/pages/brand-ed-preview.js';
+import { pickPreviewTemplates, withLogo } from '../../resources/js/studio/pages/brand-ed-preview.js';
 import { messageFor, firstError, formatBytes } from '../../resources/js/studio/pages/brand-core.js';
 
 const tpl = (name, width, height, tokens) => ({ name, width, height, preview: { elements: [{ id: 'a', type: 'text', tokens: tokens ? { color: 'brand.colors.primary' } : null }] } });
@@ -37,4 +37,15 @@ test('byte sizes read as KB below a megabyte and MB above', () => {
     assert.equal(formatBytes(2048), '2 KB');
     assert.equal(formatBytes(5 * 1048576), '5.0 MB');
     assert.equal(formatBytes(null), '0 KB');
+});
+
+test('the preview puts the kit logo in logo slots only, in a copy, at any depth', () => {
+    const page = { elements: [{ id: 'l', type: 'image', bind: 'logo', asset_id: null }, { id: 'p', type: 'image', bind: 'photo_1', asset_id: null }, { id: 'g', type: 'group', children: [{ id: 'l2', type: 'image', bind: 'logo' }] }] };
+    const before = JSON.stringify(page);
+    const out = withLogo(page, { id: 77 });
+    assert.equal(JSON.stringify(page), before);
+    assert.equal(out.elements[0].asset_id, 77);
+    assert.equal(out.elements[1].asset_id, null, 'a photo slot is left alone');
+    assert.equal(out.elements[2].children[0].asset_id, 77);
+    assert.equal(withLogo(page, null), page);
 });

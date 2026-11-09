@@ -35,6 +35,8 @@ export function textField(ctx, opts) {
     const showCount = () => { if (counter) counter.textContent = `${input.value.length} of ${opts.maxlength}`; };
     input.addEventListener('input', () => { opts.set(input.value); showCount(); input.removeAttribute('aria-invalid'); ctx.change(); });
     showCount();
+    // after a save the server's cleaned-up value (a normalised website, a trimmed name) replaces what was typed
+    ctx.on('reset', () => { input.value = opts.get() || ''; showCount(); });
     return el('div', { class: 'lt-field' }, [
         opts.label ? el('label', { class: 'lt-label', for: id, text: opts.label }) : null,
         input,

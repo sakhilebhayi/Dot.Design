@@ -58,6 +58,7 @@
                 </div>
             </div>
             <div class="as-active" data-active-filters hidden></div>
+            <div class="as-bulk" data-bulk hidden role="region" aria-label="Selected pictures"></div>
 
             <div class="as-queue" data-queue hidden aria-label="Uploads"></div>
 
@@ -71,8 +72,6 @@
             <p class="lt-small as-licence"><x-ds.icon name="info" size="sm" /> Only upload pictures you have the right to use. Dot.Design has no stock library, so everything here is something you or your workspace added. Files are private: they open only for people who can see the design or workspace they belong to.</p>
         </div>
     </div>
-
-    <div class="as-bulk" data-bulk hidden role="region" aria-label="Selected pictures"></div>
 
     <input type="file" data-file-input accept="image/png,image/jpeg,image/webp" multiple hidden aria-label="Choose pictures to upload">
 

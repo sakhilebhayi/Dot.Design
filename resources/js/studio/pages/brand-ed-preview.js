@@ -18,6 +18,18 @@ export function pickPreviewTemplates(templates, count = 3) {
     return out;
 }
 
+/** The page with the kit's logo placed in every picture slot bound to `logo`. Preview only: a copy, never a saved change. Pure. */
+export function withLogo(page, asset) {
+    if (!asset) return page;
+    const walk = (list) => (list || []).map((el) => {
+        if (!el || typeof el !== 'object') return el;
+        if (el.type === 'image' && el.bind === 'logo') return { ...el, asset_id: asset.id };
+        if (el.type === 'group' && Array.isArray(el.children)) return { ...el, children: walk(el.children) };
+        return el;
+    });
+    return { ...page, elements: walk(page.elements) };
+}
+
 export function mountPreview(host, ctx) {
     const list = el('div', { class: 'br-preview__list' });
     const note = el('p', { class: 'lt-small', role: 'status' });
@@ -29,12 +41,16 @@ export function mountPreview(host, ctx) {
     host.appendChild(note);
 
     const kitNow = () => ({ colors: ctx.state.colors, fonts: ctx.state.fonts });
+    const logoNow = () => {
+        const a = ctx.assets.find((x) => x.role === 'logo') || ctx.assets.find((x) => x.role === 'logo-light') || ctx.assets.find((x) => x.role === 'mark');
+        return a ? a.asset : null;
+    };
     let templates = [];
 
     const paint = debounce(() => {
         const kit = kitNow();
         surfaces.forEach(({ surface, template }) => {
-            const [page] = applyKitToPages([template.preview], kit);
+            const [page] = applyKitToPages([withLogo(template.preview, logoNow())], kit);
             surface.show(page, `${template.name}, shown in your brand`);
         });
     }, 120);
@@ -59,12 +75,18 @@ export function mountPreview(host, ctx) {
         surfaces = templates.map((template) => {
             const frame = el('div', { class: 'br-prev__frame', style: { '--w': template.width, '--h': template.height } });
             list.appendChild(el('figure', { class: 'br-prev' }, [el('div', { class: 'br-prev__stage' }, frame), el('figcaption', { class: 'br-prev__name', text: template.name })]));
-            return { surface: previewSurface(frame, { manifest: ctx.boot.fonts }), template };
+            const surface = previewSurface(frame, {
+                manifest: ctx.boot.fonts,
+                assetUrl: (id) => { const l = logoNow(); return l && Number(l.id) === Number(id) ? l.url : null; },
+                assetSize: (id) => { const l = logoNow(); return l && Number(l.id) === Number(id) && l.width ? { width: l.width, height: l.height } : null; },
+            });
+            return { surface, template };
         });
         paint();
     }
 
     ctx.on('change', paint);
+    ctx.on('assets', paint);
     ctx.on('reset', paint);
     load();
 }

@@ -91,7 +91,8 @@ function render() {
     const modes = el('div', { class: 'br-modes', role: 'group', 'aria-label': 'What to apply' });
     const current = modeOf(items, selected);
     for (const m of ['all', 'colors', 'fonts', 'none']) {
-        if ((m === 'colors' || m === 'fonts') && selectionFor(items, m).size === 0) continue;
+        // "Colours only" and "Fonts only" are shown only when they differ from "Everything" and from nothing
+        if ((m === 'colors' || m === 'fonts') && (selectionFor(items, m).size === 0 || selectionFor(items, m).size === items.length)) continue;
         modes.appendChild(el('button', { type: 'button', class: 'lt-chip', 'aria-pressed': current === m ? 'true' : 'false', disabled: !boot.canEdit, onclick: () => { selected = selectionFor(items, m); redraw(); }, text: MODE_LABEL[m] }));
     }
     if (current === 'choose') modes.appendChild(el('span', { class: 'lt-chip is-on', 'aria-pressed': 'true', text: 'Your own choice' }));

@@ -67,7 +67,7 @@
             <section aria-labelledby="brand-title">
                 <h2 id="brand-title" class="lt-h3" style="margin-bottom: var(--lt-space-3);">Brand</h2>
                 @if ($brand)
-                    <x-ds.status-line kind="ok" icon="swatch">
+                    <x-ds.status-line :kind="$brand['outdated'] > 0 ? 'warn' : 'ok'" icon="swatch">
                         {{ $brand['name'] }}@if($brand['version']), version {{ $brand['version'] }}@endif
                         @if ($brand['outdated'] > 0)<br><a href="{{ route('design.brand.updates') }}" style="text-decoration: underline; text-underline-offset: 0.2em;">{{ $brand['outdated'] }} {{ \Illuminate\Support\Str::plural('design', $brand['outdated']) }} to review</a>@endif
                         @if ($brand['colors'])

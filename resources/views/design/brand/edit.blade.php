@@ -38,7 +38,7 @@
     @endif
 
     <div class="br-savebar" data-savebar data-state="clean" role="region" aria-label="Save">
-        <p class="br-savebar__status" role="status" aria-live="polite"><x-ds.icon name="circle-check" size="sm" /><span data-save-text>{{ $isNew ? 'Not saved yet' : 'All changes saved' }}</span></p>
+        <p class="br-savebar__status" role="status" aria-live="polite"><x-ds.icon name="circle-check" size="sm" data-i="ok" /><x-ds.icon name="triangle-alert" size="sm" data-i="alert" /><span data-save-text>{{ $isNew ? 'Not saved yet' : 'All changes saved' }}</span></p>
         <div class="br-savebar__actions">
             <x-ds.button variant="ghost" data-discard hidden>Discard changes</x-ds.button>
             @if ($canEdit)<x-ds.button data-save disabled>{{ $isNew ? 'Create kit' : 'Save changes' }}</x-ds.button>@endif

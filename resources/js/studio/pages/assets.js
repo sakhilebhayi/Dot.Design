@@ -114,7 +114,7 @@ function folderRow({ label, value, count, own, name }) {
         });
     }
     if (own) {
-        row.appendChild(el('button', { type: 'button', class: 'lt-icon-btn', 'aria-label': `Rename folder ${label}`, 'data-tip': 'Rename', onclick: () => renameFolder(label) }, icon('pipette', 'sm')));
+        row.appendChild(el('button', { type: 'button', class: 'lt-icon-btn', 'aria-label': `Rename folder ${label}`, 'data-tip': 'Rename', onclick: () => renameFolder(label) }, icon('pencil', 'sm')));
         row.appendChild(el('button', { type: 'button', class: 'lt-icon-btn', 'aria-label': `Delete folder ${label}`, 'data-tip': 'Delete', onclick: () => deleteFolder(label) }, icon('trash', 'sm')));
     }
     return row;
