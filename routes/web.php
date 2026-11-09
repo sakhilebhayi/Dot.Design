@@ -174,7 +174,3 @@ require __DIR__.'/studio/public.php';
 if (! Features::enabled(Features::registration())) {
     Route::redirect('/register', '/login')->name('register');
 }
-
-// A URL that matches no route: answered inside the web group so the session is started and a signed-in person sees the signed-in
-// 404 ("Back to Home"), not the guest one. (Without a route the framework skips the session middleware entirely.)
-Route::fallback(fn () => abort(404));

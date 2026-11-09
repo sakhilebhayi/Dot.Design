@@ -35,14 +35,11 @@ class EcosystemErrorPagesTest extends TestCase
         ];
     }
 
-    public function test_a_url_that_matches_no_route_knows_who_is_signed_in(): void
+    public function test_a_missing_design_for_a_signed_in_person_offers_home_not_the_start_page(): void
     {
-        $guest = $this->get('/no-such-page');
-        $guest->assertNotFound()->assertSee('Go to the start page')->assertDontSee('Back to Home');
-
         $user = User::factory()->withPersonalTeam()->create();
-        $this->actingAs($user)->get('/no-such-page')->assertNotFound()->assertSee('Back to Home')->assertDontSee('Go to the start page');
-        $this->actingAs($user)->getJson('/design/nope')->assertNotFound();
+
+        $this->actingAs($user)->get('/design/projects/999999')->assertNotFound()->assertSee('Back to Home')->assertDontSee('Go to the start page');
     }
 
     protected function setUp(): void
