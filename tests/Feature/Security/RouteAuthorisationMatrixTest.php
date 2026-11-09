@@ -324,6 +324,12 @@ class RouteAuthorisationMatrixTest extends TestCase
 
     public function test_a_reviewer_cannot_use_any_mutating_project_route_except_the_ones_a_reviewer_is_meant_to_have(): void
     {
+        // Switch the optional integration on so its authorisation, and not its "not enabled" 404, is what is being tested.
+        config(['design_integrations.files' => [
+            'enabled' => true, 'url' => 'https://files.test', 'secret' => 'files-secret-for-tests-0001', 'platform' => 'design', 'folder' => 'Dot.Design',
+            'timeout' => 5, 'formats' => ['png', 'jpg', 'pdf', 'svg', 'gif'], 'max_bytes' => 25 * 1024 * 1024,
+        ]]);
+
         $t = $this->tenant('Alpha');
         $viewer = $t['viewer'];
 
@@ -350,8 +356,10 @@ class RouteAuthorisationMatrixTest extends TestCase
                 continue;
             }
 
-            if (! in_array($response->getStatusCode(), [403, 404], true)) {
-                $failures[] = "{$name} let a reviewer through: ".$response->getStatusCode();
+            // Exactly 403: the project is visible to a Reviewer, so 404 here would mean a route failing for some other reason
+            // and hiding that nobody checked the role.
+            if ($response->getStatusCode() !== 403) {
+                $failures[] = "{$name} did not answer a reviewer with 403: ".$response->getStatusCode();
             }
         }
 

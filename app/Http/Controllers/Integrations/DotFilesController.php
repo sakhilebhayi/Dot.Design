@@ -22,7 +22,8 @@ class DotFilesController extends Controller
     public function store(Request $request, DesignProject $project, FileVault $vault, ExportFiler $filer): JsonResponse|RedirectResponse
     {
         abort_unless($vault->enabled(), 404);
-        $this->authorize('view', $project);
+        // Filing an export into the business's shared Dot.Files is taking a file out: the Export capability, not just sight of the design.
+        $this->authorize('export', $project);
 
         // Validated by hand: the app renders JSON errors only for /api/*, so the framework's own redirect would hide them from fetch().
         $validator = Validator::make($request->all(), [
