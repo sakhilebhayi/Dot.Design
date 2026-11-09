@@ -4,208 +4,121 @@
 
 <br /><br />
 
-**The Dot Ecosystem's canvas-first AI design tool — plus a shared design-token / component-library scaffold.**
+**A design studio for businesses: make a poster, a social post, a flyer, a business card or a short animation, on brand, in the browser.**
 
 <br />
 
-![Laravel](https://img.shields.io/badge/Laravel-12-FF2D20?style=flat-square&logo=laravel&logoColor=white) ![PHP](https://img.shields.io/badge/PHP-8.4-777BB4?style=flat-square&logo=php&logoColor=white) ![Livewire](https://img.shields.io/badge/Livewire-3-FB70A9?style=flat-square) ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-336791?style=flat-square&logo=postgresql&logoColor=white)
-
-<br /><br />
-
-**Part of the Dot Ecosystem** &nbsp;·&nbsp; see [Dot.Brain](https://github.com/sakhilebhayi/Dot.Brain) for the ecosystem knowledge map
+Part of the Dot Ecosystem &nbsp;·&nbsp; live at `https://design.infodot.co.za` &nbsp;·&nbsp; Laravel 13 &nbsp;·&nbsp; PHP 8.3+ &nbsp;·&nbsp; PostgreSQL
 
 </div>
 
 ---
 
-## What is Dot.Design?
+## What it is
 
-Dot.Design is the visual-creation platform in the Dot Ecosystem — a canvas-first editor paired with generative AI, aimed at producing on-brand graphics, social posts, and marketing collateral without requiring professional design skill. Users open a project, drop text/shapes/images/icons onto a canvas, optionally ask AI to generate imagery, and export the result.
+Dot.Design is the visual-creation platform of the Dot ecosystem. A person who is not a designer says what they want to make; the studio proposes a size and a starting point, fills it with their business details, and opens an editor where everything stays editable. A professional gets the full panels, layers, rulers and guides over the same document.
 
-**This repository currently holds two coexisting domains** (see `wiki.md` for the full detail and the open framing question this raises with Dot.Brain):
+**What you can do today**
 
-1. **Canvas / AI creation tool** — `DesignProject`, `DesignCanvas`, `DesignAsset`, `AiGenerationLog`. Per-user data. 
-2. **Design-token / component-library scaffold** (`/design-system/*`) — `TokenSet`, `DesignToken`, `Component`, `TokenConsumptionRecord`. Deliberately global/shared (no per-user or per-team scoping), since a design system is one catalog every platform consumes.
+- **Start from a goal.** "What would you like to make?" leads to a short, skippable brief (goal, business, offer, style), then a ranked list of the 58 curated templates with a plain reason for each, or a blank page at any of the catalogued sizes (social, print, document, video; ZA business card and A-series formats included).
+- **Edit.** Text, shapes (including paths), pictures, 172 icons, groups, patterns and gradients; 18 self-hosted fonts; snapping and smart guides, alignment, undo and redo, multi-page designs, autosave with conflict detection, a recovery journal for a closed tab or a lost connection.
+- **Two modes over one document.** **Simple** (default) shows one panel with only what applies to the selection, in plain words. **Pro** shows every property, layers, rulers, guides and a grid. The mode is a per-person preference; it never changes the data.
+- **Brand kits.** Colours, fonts, type styles, voice, logos and contacts per workspace. Applying a changed kit to old designs is always a reviewed list, never silent.
+- **Output.** PNG, JPG, SVG, PDF (pages as pictures at a chosen resolution; text is not selectable), animated GIF and WebM where the browser can record, all made in the browser from the same renderer you see on screen; smart resize to other sizes; copies.
+- **Work together.** Workspaces are InfoDot companies (Jetstream teams) with owner, admin, editor and reviewer roles; version history with restore; share links (view or comment, expiring, revocable); comments with @mentions; review requests and approvals with separation of duties; an audit trail.
+- **Assistant (optional).** With an Anthropic key: describe an idea and get an editable draft, ask for an improvement, get marketing copy. The model only proposes; a person applies, as one undoable step, after a version snapshot. Without a key the assistant says it is off and the deterministic parts (brief recommender, automatic quick fixes, resize suggestions) still work.
+- **Integrations, each off until configured.** Dot.Notify (email on shares, reviews, comments), Dot.Files (file an export), InfoDot membership webhook, Dot.Analytics (two daily counts). Platforms without a usable contract are listed honestly on the Integrations page, not faked.
+- **Design-system catalogue.** Versioned tokens and component definitions with the ecosystem platforms that consume them (`/design-system`), written only by platform operators.
 
-## Core Features
+**Deliberately not built** (and the interface does not pretend): real-time multi-cursor editing (shared hosting cannot run a WebSocket server; concurrent saves get a conflict screen), background removal, publishing to social networks, a stock-photo library, AI image generation, MP4 export, vector PDF. Reasons in `docs/R45_ARCHITECTURE.md` section 8.
 
-- Canvas editor — text, rectangles and uploaded images with move/resize/rotate, z-order, duplicate, undo/redo, zoom, snapping, autosave with conflict detection (icons are not implemented); see [The canvas editor](#the-canvas-editor)
-- AI image generation logging from text prompts, multi-provider (`AiGenerationLog.provider`: Anthropic, OpenAI, Stability, Replicate)
-- Asset library — real image uploads (JPG/PNG/WebP, private storage, per-user quota) plus labelled AI placeholders; see [Uploads](#uploads)
-- Design-token / component catalog — versioned color/type/spacing/motion tokens, reusable component definitions, and a tracking table of which ecosystem platform consumes which token-set version
-- Ecosystem SSO via Sanctum handoff token (`EcosystemAuthController`)
+## How it is built, on one page
 
-## Uploads
+```
+ browser                                                       server (Laravel 13, PHP 8.3+, PostgreSQL)
+ ──────────────────────────────────────────────                ──────────────────────────────────────────────
+ resources/js/studio/                                          routes/studio/*.php   one file per area
+   doc/      document model, schema (shared JSON)                app/Http/Controllers/Studio/**  thin controllers
+   engine/   store, commands + undo, selection,                  app/Services/Design/**   DocumentSanitiser, PageStore (CAS),
+             transform, snap, text layout,                         VersionService, ShareService, ReviewService,
+             ONE SVG renderer, autosave, recovery                  TemplateInstantiator, BriefRecommender, BrandService,
+   output/   export (png jpg svg pdf gif webm),                    Assistant/*  (Anthropic Messages API, proposals only)
+             animation, smart resize                             app/Services/Integrations/**  Notify, Files, InfoDot webhook
+   ui/       shell, Simple and Pro panels, modules             app/Models  HasWorkspaceScope: a row you may not see is a 404
+   assist/ collab/ pages/  assistant, comments, review, pages    database/templates/*.php  the curated library (PHP builder DSL)
+ resources/css/ds/  tokens + components ("The Light Table")    resources/design/document-schema.json   THE document contract
+ public/fonts/{ui,design}  self-hosted woff2, no CDN            read by PHP (validate, clamp) AND JS (defaults, migrate)
+```
 
-Signed-in users can upload images from the asset panel in a project's editor.
+- **One document model, two runtimes.** `resources/design/document-schema.json` is read by both the PHP sanitiser and the JS engine. The server never trusts the client document: it re-validates, clamps, strips unknown keys and checks asset ownership on every save. Saves are compare-and-swap on a page `revision`; "Saved" appears only after a `2xx`.
+- **One renderer.** The page is drawn as SVG by one function, used for the screen, thumbnails and every export, so what you see is what you download. Fonts are self-hosted and embedded when exporting.
+- **No framework in the editor.** Vanilla ES modules built by Vite. Livewire and Alpine remain only for the Jetstream account pages. No script, stylesheet or font loads from a CDN at runtime.
+- **Tenancy.** Workspace = Jetstream team, synced from InfoDot. A role is read from the database on every request, so a removal bites at once.
+- **Private files.** Uploads and thumbnails live on a private disk (`storage/app/private/design-assets`), re-encoded through GD to drop metadata, and are served only through policy-checked routes.
+- **Shared-host runtime.** No Node on the host, no daemon: the frontend is built on the CI runner, the scheduler and the queue worker are started by cron (`queue:work --stop-when-empty`).
 
-| | |
-|---|---|
-| Accepted | JPG, PNG, WebP. The type is read from the file's content, never its name or the browser's claim. |
-| **Not accepted** | **SVG** (an SVG can carry script, so it is refused outright), GIF, anything else. |
-| Size | 8 MB per file (`design.assets.max_kilobytes`). |
-| Dimensions | Each side 16 to 8000 px and at most 40 megapixels. Checked from the header, before the image is decoded. |
-| Quota | 200 MB of stored bytes per user (`DESIGN_ASSET_QUOTA_MB`), checked inside a transaction that locks the user row. |
-| Rate limit | 20 uploads per user per minute (`DESIGN_ASSET_UPLOADS_PER_MINUTE`). |
-| Duplicates | Identical content from the same user returns the existing asset instead of storing a second copy and costs no quota. If that asset sits in another project it moves to the library so both places can see it. |
+The design language is "The Light Table" (`DESIGN.md`, `docs/R45_DS.md`).
 
-**What is stored.** The image is decoded and re-encoded with GD, which drops EXIF (including GPS) and anything appended after the image data; EXIF orientation is applied to the pixels first. Animated WebP keeps only its first frame. The file is written to a private disk (`storage/app/private/design-assets`, disk `design_assets`) under a random name, with its sha256, size, dimensions and MIME type recorded on the `design_assets` row. `content_hash` is the hash of the stored bytes.
+## Run it locally
 
-**How it is served.** Only through `GET /design/assets/{asset}/file`, behind login and `DesignAssetPolicy`; another user's asset is a 404. The response carries the stored `Content-Type`, `X-Content-Type-Options: nosniff`, a sandboxing `Content-Security-Policy`, `Cache-Control: private` and an ETag. There is no public URL.
-
-**Deleting.** Deleting an asset removes its file from the disk unless another row still points at the same path. Deleting a project moves its uploads to the library.
-
-**Assets and projects.** An asset belongs to one project or to the user's library (no project). The editor panel shows the current project's assets and the library. AI results are filed under the project that asked for them and stay labelled as placeholders; they are external URLs, not files on our disk.
-
-### Not supported
-
-- SVG upload (deliberate; see above).
-- Real AI image generation. No provider is connected; the mock driver returns placehold.co stand-ins that the UI labels "Placeholder (no AI provider connected)".
-- Collaboration or sharing of assets between users or teams. Assets are per user.
-
-### Upgrade notes
-
-1. Run `php artisan migrate` (adds `design_project_id`, `disk`, `content_hash`, `width`, `height` to `design_assets`; all nullable, existing rows stay valid).
-2. The new `design_assets` disk is defined in `config/filesystems.php`. Point `DESIGN_ASSET_DISK` at another private disk (for example an S3 bucket with no public access) to move storage; never at `public`. Make sure `storage/app/private` is writable and included in backups.
-3. The PHP `gd` extension (with WebP support) is required for sanitising. Without it, uploads are still accepted but stored **unmodified**, so EXIF/GPS is not stripped; each such row has `meta.reencoded = false`. Set `DESIGN_ASSET_REENCODE=false` to choose that deliberately. Check with `php -m | grep gd`.
-4. GD holds a decoded image at 4 bytes per pixel, so a 40 megapixel image needs roughly 160 MB. Images that would not fit in PHP's `memory_limit` are refused with a clear message instead of crashing; raise `memory_limit` if you want the full range.
-5. If the web server or a proxy limits request bodies (nginx `client_max_body_size`, PHP `upload_max_filesize` / `post_max_size`), keep them at 8 MB or above or users will see "larger than the server accepts".
-
-## Image elements and export
-
-A canvas page holds `text`, `rectangle` and `image` elements. Every element can carry `rotation` (degrees, about its centre) and `opacity` (0 to 1). An `image` element stores `asset_id`, never a URL.
-
-- **Place** an asset from the panel with the add-image button. AI placeholders can be placed too; they are drawn with a PLACEHOLDER tag in the editor.
-- **Validation** (`UpdateDesignCanvasRequest`): at most 300 elements and 512 KB of serialized JSON per page (`design.canvas.*`), numeric bounds on position, size, rotation and opacity, hex-only colours, unknown keys dropped, and every `asset_id` must be an asset owned by the user who is saving. Another user's id is a 422, never accepted.
-- **Deleting a placed asset is refused** (409, naming the project and page) until it is removed from the canvas, so a page never points at a file that is gone.
-
-**SVG export** (always available) embeds images as data URIs read from the private disk (6 MB per image and 20 MB per export; over either cap the image is replaced by a labelled box that says so), applies rotation and opacity, and breaks long text into lines. SVG cannot wrap text itself, so line breaks use an estimated glyph width; another viewer's font may wrap slightly differently from the editor. AI placeholders are external URLs and are never fetched; they export as a labelled "Placeholder image" box.
-
-**PNG export** rasterises with GD: rectangles, images, rotation, opacity. It is narrower than SVG on purpose:
-
-- **Text needs a font.** GD draws scalable text only from a TrueType file and none ships with the app. Set `DESIGN_EXPORT_FONT` to an absolute `.ttf` path to enable it. Without one, a canvas that contains text is **refused** with a message pointing at SVG, rather than exported with the text missing (the PNG button is disabled with the reason).
-- Canvases over 4096 px a side or 16 megapixels are refused, as are renders that would not fit in `memory_limit`.
-- Opacity is exact for opaque pixels and approximate for already-translucent edges.
-
-JPEG and PDF export do not exist.
-
-## The canvas editor
-
-The editor is a vanilla-JavaScript studio (no framework, no Alpine) built by Vite: the engine in `resources/js/studio/{doc,engine}/` does every document change as an undoable command, and the workspace UI in `resources/js/studio/ui/` is built on a small module registry (`docs/R45_UI_EDITOR.md`). The page boots from one JSON data block and saves each changed page with a compare-and-swap revision. The Node test suite (`npm run test:js`, Node 20 or newer, no dependencies) covers the engine and every pure UI module.
-
-| | |
-|---|---|
-| Move | Drag. Snaps to the page edges and centre with a visible guide (hold Alt to turn snapping off). |
-| Resize | Eight handles on the selected element; Shift keeps the aspect ratio (corner handles). Works on rotated elements: the opposite side stays put. |
-| Rotate | The dot above the selection; Shift snaps to 15 degrees. |
-| Arrange | Bring to front / forward / backward / send to back (`Ctrl/Cmd+]`, `]`, `[`, `Ctrl/Cmd+[`), duplicate (`Ctrl/Cmd+D`), delete (`Del`). |
-| Nudge | Arrow keys, 1 px; Shift for 10 px. |
-| Undo / redo | `Ctrl/Cmd+Z`, `Ctrl/Cmd+Shift+Z` (or `Ctrl+Y`). In memory only: up to 100 steps per page, gone on reload. Typing and arrow-key bursts count as one step. |
-| Zoom | 25% to 400%: buttons, `Ctrl`+wheel (also trackpad pinch), Fit. Starts fitted. |
-| Text | Tap twice on a text element, or use the Text field in Properties. X, Y, size, rotation and opacity can also be typed. |
-| Touch | Everything above runs on pointer events, so mouse, pen and touch share one code path. |
-
-**Saving.** Edits autosave after 500 ms. The header shows `Unsaved changes…`, `Saving…`, `Saved` or `Not saved`; a failure also puts a banner on screen that stays until a save succeeds (network errors retry every 8 seconds, or press Retry), and leaving the page with unsaved work asks first. Every save carries the page's `revision`; the server only writes if it still matches and bumps it in the same statement. A stale save returns **409** and the editor stops saving, saying the page changed elsewhere, and offers "Reload their version" or an explicit "Overwrite with mine". Nothing is overwritten silently.
-
-**Not supported:** multi-select, grouping, copy/paste between pages, live collaboration (two people editing see a conflict, not each other's cursors). The editor stacks its panels below 1100 px, and the app shell around it is responsive (see "The responsive shell" below).
-
-## The responsive shell
-
-`resources/views/layouts/app.blade.php` is a two-state shell with a single breakpoint at 860 px (`max-width: 859.98px` for phones and small tablets, `min-width: 860px` for desktop; use those exact values so the two never overlap).
-
-- At 860 px and above: the 260 px sidebar is permanent and the top bar sits to its right, as before.
-- Below 860 px: the sidebar becomes an off-canvas drawer. The top bar gets a labelled **Menu** button (`#shell-menu-button`, `aria-expanded`, `aria-controls="shell-drawer"`); the drawer is `#shell-drawer` (the existing `<aside class="sidebar">`), with a close button (`#shell-drawer-close`) and a backdrop (`#shell-backdrop`). While it is open the page content and top bar are `inert`, body scroll is locked, focus moves into the drawer, and Escape, the backdrop, the close button or following a nav link close it and return focus to the Menu button. Growing the window past 860 px closes it. When closed the drawer is `visibility:hidden`, so it is not focusable or read by assistive technology. State lives in `dotShell()` (an inline function in the layout head, driven by the Alpine that Livewire already boots); there is no build step.
-- The top bar height is `--topbar-h` (54 px desktop, 56 px mobile) and the content offset uses the same variable, so they cannot drift apart.
-- `prefers-reduced-motion` turns the drawer transitions off.
-
-**Page bodies.** Wrap a non-editor page in `<div class="page">` (use `page--narrow` for forms). Helpers: `.page-head` (title row that wraps), `.card-grid` (auto-fill grid; set `--card-min` for a different minimum), `.kpi-grid`, `.form-grid-3` (three columns, one on phones). Inside `.page` the buttons and inputs get 44 px tap targets on phones. The canvas editor keeps its own `.ed-root` layout.
-
-**Adding a wide table.** Give the container `class="table-scroll"` (plus `tabindex="0" role="region" aria-label="..."` so keyboard users can scroll it) and put the `<table>` directly inside; the table gets a `34rem` minimum width so it scrolls inside the container instead of the page. See `design-system/token-sets/show.blade.php`.
-
-Tests: `tests/Feature/ResponsiveShellTest.php` pins these hooks on the real routes.
-
-## Domain Models
-
-**Canvas / AI tool:**
-- **DesignProject** — canvas project with metadata (type, dimensions, unit)
-- **DesignCanvas** — one or more pages per project, JSON `elements` blob
-- **DesignAsset** — uploaded images (stored on a private disk) and AI placeholder references
-- **AiGenerationLog** — one row per AI generation request
-
-**Design-token / component-library scaffold:**
-- **TokenSet** — a versioned group of tokens (e.g. "Core Palette")
-- **DesignToken** — a single color/type/spacing/motion token
-- **Component** — a reusable UI component definition
-- **TokenConsumptionRecord** — which ecosystem platform consumes which token set, pinned to which version
-
-## Tech Stack
-
-| Layer | Technology |
-|---|---|
-| Framework | Laravel 12 |
-| Language | PHP 8.4 |
-| Frontend | Livewire 3 · Alpine.js 3 · Tailwind CSS |
-| Database | PostgreSQL 16 (shared across the Dot Ecosystem) |
-| Realtime | Laravel Reverb |
-| Auth | Laravel Sanctum + Jetstream (teams, 2FA) |
-| AI | Multi-provider: Anthropic, OpenAI, Stability, Replicate |
-| Storage | AWS S3 / Local (Flysystem) |
-| Search | Laravel Scout · Meilisearch (planned) |
-| Queue | Redis · Laravel Horizon (planned) |
-
-## Quick Start
+Requirements: PHP 8.3 or newer with `gd` (JPEG, PNG, WebP), `intl`, `bcmath`, `mbstring`, `fileinfo`, `curl` and a database driver; Composer; Node 22.
 
 ```bash
-git clone <this-repo-url> Dot.Design
-cd Dot.Design
 cp .env.example .env
 composer install
-npm install && npm run build   # Vite assets; the editor scripts need no build
 php artisan key:generate
+# SQLite is the quickest local database: set DB_CONNECTION=sqlite and DB_DATABASE=/absolute/path/dev.sqlite, then
+touch /absolute/path/dev.sqlite
 php artisan migrate
-php artisan db:seed
+php artisan design:seed-templates          # the 58 curated templates
+php artisan db:seed --class=DesignSystemSeeder
+npm ci && npm run build                    # or `npm run dev` for hot reload
 php artisan serve
 ```
 
-> **Ecosystem SSO:** Set `DB_*` env vars to the shared Dot Ecosystem PostgreSQL instance. Users authenticated elsewhere in the ecosystem gain access automatically via Sanctum handoff tokens through `EcosystemAuthController`.
+There is no public sign-up. Create a local user in `php artisan tinker` (`User::factory()->withPersonalTeam()->create(['email' => 'you@example.test', 'password' => bcrypt('a-long-password')])`), or run `php artisan db:seed` for the development seeder. **Never run `db:seed` against production**: `DatabaseSeeder` creates a user with a known password. Grant yourself operator rights (curated templates, design-system catalogue) with `User::where('email', ...)->update(['is_platform_operator' => true])`.
 
-## Ecosystem
+The assistant needs `ANTHROPIC_API_KEY`; everything else works without it. `php artisan design:preflight` tells you what is missing on any machine.
 
-**Dot.Design** is one of roughly 20 platforms in the Dot Ecosystem, connected via shared PostgreSQL and Sanctum SSO, and unified by a shared knowledge repository, **Dot.Brain**. See `wiki.md` in this repo for Dot.Design's own account of what's implemented, and Dot.Brain's `platforms/dot-design.md` for the ecosystem-ingested view (currently a known, tracked mismatch — see `wiki.md` §1.1).
+## Test it
 
-### Publishing metrics to Dot.Analytics
+```bash
+php artisan test --compact             # PHP: feature + unit, SQLite in memory
+npm run test:js                        # the editor engine, output, assistant, collaboration (node:test, no browser)
+npm run build && tests/Support/signed-in-smoke.sh   # boots the app like production and walks every key page
+node scripts/ops/check-vite-manifest.mjs            # every @vite entry in the views is in the build
+php scripts/ops/generate-docs.php --check           # docs/API.md and docs/DATABASE.md match the code
+```
 
-Once a day Dot.Design queues one signed, aggregate-only snapshot for Dot.Analytics (`php artisan design:publish-metrics`, scheduled daily at 00:10 UTC).
+CI (`.github/workflows/ci.yml`) runs the PHP suite, the JS suite with the build and manifest check, and the signed-in smoke on every pull request. `docs/TESTING.md` describes the layers.
 
-**These numbers describe the platform, not a customer company.** Projects and assets belong to individual users, not to companies or teams. So the snapshot is a platform-wide aggregate, filed under one InfoDot company that you name in `ANALYTICS_COMPANY_UUID` (the operator's own company). It is not split per team or per user, and no customer is ever described by it.
+## Deploy
 
-What is sent (exactly these keys, all whole numbers, nothing else):
+Manual, from GitHub Actions: `gh workflow run deploy.yml -f confirm=deploy`. It runs the CI gate, builds the frontend on the runner, takes a rollback copy and a `pg_dump` on the host, updates the code, migrates, seeds templates, runs `design:preflight`, installs the cron lines and smoke-checks the live site. Everything the host and `.env` must have, the first-deploy checklist, rollback and the cron lines are in **`docs/deployment.md`**; what the owner does after a deploy (operator, assistant key, integrations, backups, revoking share links, deleting a workspace) is in **`docs/R45_OPERATIONS.md`**.
 
-| Key | Meaning |
+## Documentation index
+
+| Read | For |
 |---|---|
-| `projects` | Design projects that exist right now |
-| `assets` | Rows in the asset library right now: uploaded images and labelled AI placeholders alike |
+| `docs/deployment.md` | First deploy, routine deploys, every environment variable, host requirements |
+| `docs/R45_OPERATIONS.md` | Owner runbook: first steps after a deploy, backups and restore, monitoring, rollback, revoking shares, purging a workspace |
+| `docs/R45_ARCHITECTURE.md` | The contract: product shape, document model, data model, editor architecture, honest limits |
+| `docs/R45_DECISIONS.md` | Every decision made during the rebuild, with the reason |
+| `docs/API.md`, `docs/DATABASE.md` | Routes and tables, generated from the code |
+| `docs/R45_BACKEND.md` | Pages, versions, shares, comments, reviews, activity, the capability matrix |
+| `docs/R45_BUSINESS.md` | Formats, brief flow, recommender, templates, brand kits |
+| `docs/R45_ENGINE.md`, `docs/R45_UI_CONTRACT.md`, `docs/R45_UI_EDITOR.md` | The editor engine API, the module registry, the workspace |
+| `docs/R45_UI_CREATE.md`, `docs/R45_UI_BRAND.md`, `docs/R45_UI_COLLAB.md` | Start flow, brand studio, collaboration screens |
+| `docs/R45_OUTPUT.md` | Export, animation, smart resize |
+| `docs/R45_AI.md` | The assistant: what is AI, safety rules, endpoints |
+| `docs/R45_LIBRARY.md` | Templates, icons, elements, and the tools that check them |
+| `docs/R45_INTEGRATIONS.md` | What Dot.Design really connects to, and the owner steps on the other side |
+| `docs/R45_DS.md`, `DESIGN.md` | The design system |
+| `docs/R45_AUDIT.md`, `docs/R45_RESEARCH.md`, `docs/R45_SKILLS.md` | The audit that started the rebuild, the research, the design skills used |
+| `docs/SECURITY.md`, `docs/ACCESSIBILITY.md`, `docs/TESTING.md` | Standards and checklists (each carries a status note saying what is built) |
 
-Both are current counts, not windows. Projects and assets are hard-deleted in this app, so a deleted one is simply not counted; deleting a project keeps its uploads in the library, so they stay counted. The body is `{platform, company_uuid, taken_at, period: "day", metrics: {...}}`; `taken_at` is the start of the UTC day, so a retry or a second run the same day is an idempotent replay at Dot.Analytics. **No names, emails, file paths or any row data are sent.**
-
-Nothing is sent until **all three** of `ANALYTICS_INGEST_URL`, `ANALYTICS_INGEST_SECRET` and `ANALYTICS_COMPANY_UUID` are set. The secret must be the same value as `ANALYTICS_INGEST_SECRET_DESIGN` in Dot.Analytics' `.env`. Requests are signed with `X-InfoDot-Timestamp` and `X-InfoDot-Signature: sha256=` + HMAC-SHA256 of `"{timestamp}.{raw body}"`, computed at send time.
-
-| Variable | Default | Notes |
-|---|---|---|
-| `ANALYTICS_INGEST_URL` | empty | Full Dot.Analytics URL, ending `/api/ingest/snapshots`. Empty means nothing is published |
-| `ANALYTICS_INGEST_SECRET` | empty | Same value as `ANALYTICS_INGEST_SECRET_DESIGN` in Dot.Analytics. Empty means nothing is published |
-| `ANALYTICS_PLATFORM_KEY` | `design` | This platform's key in Dot.Analytics' metric catalogue |
-| `ANALYTICS_COMPANY_UUID` | empty | InfoDot company uuid the platform-wide numbers are filed under. Empty means nothing is published |
-
-It cannot hurt Dot.Design: the send is a queued job (5 second timeout, 3 tries with backoff) that never throws, and a circuit breaker leaves Dot.Analytics alone for 5 minutes after 3 failed deliveries in a row. A Dot.Analytics outage or a wrong setting only means the day's snapshot is not delivered.
-
-To run it you need the scheduler (`* * * * * php artisan schedule:run`) and a queue worker (`php artisan queue:work`). Check what would be sent with `php artisan design:publish-metrics --dry-run`; it prints the payload and sends nothing.
+`docs/CANVAS-EDITOR.md`, `CODE-ARCHITECTURE.md`, `AI-INTEGRATION.md`, `REALTIME-COLLABORATION.md`, `UI-DESIGN.md`, `UX-IMPROVEMENTS.md`, `PERFORMANCE.md` and `DEVOPS.md` are proposals written before the rebuild. Each begins with a note saying which parts were superseded; none of them describes the running system. `wiki.md` is the platform's wiki for Dot.Brain.
 
 ## License
 
 MIT
-
-## Tooling notes
-
-- **Tailwind is still loaded from the CDN** by `layouts/app.blade.php`, not from the Vite build. Vite and Tailwind are configured (`npm run build` works), but moving the app layout over is not a mechanical swap: the layout loads the CDN with `preflight: false` and `darkMode: 'class'`, while `resources/css/app.css` pulls in Tailwind's full base layer and `tailwind.config.js` adds `@tailwindcss/forms`, which would restyle every unstyled input; `package.json` also lists `@tailwindcss/vite` v4 next to `tailwindcss` v3. Doing it properly needs a visual pass over every page, so it was left as is. Only the guest, welcome and error pages use the Vite bundle.
-- `npm run test:js` runs the editor's Node tests; `./vendor/bin/phpunit` runs the PHP suite.

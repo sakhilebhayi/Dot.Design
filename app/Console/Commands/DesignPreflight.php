@@ -178,7 +178,8 @@ class DesignPreflight extends Command
         } elseif ($memory < self::MIN_MEMORY_BYTES) {
             $row(self::FAIL, 'memory_limit', "{$ini['memory_limit']} is too low to decode images at all. Set it to 256M.");
         } elseif ($memory < self::RECOMMENDED_MEMORY_BYTES) {
-            $safeMp = max(0, (int) floor(($memory - 8 * 1024 * 1024) / 4 / 1_000_000));
+            // The app itself holds roughly 32 MB, and MemoryGuard keeps 8 MB of slack; GD needs 4 bytes per pixel.
+            $safeMp = max(0, (int) floor(($memory - 40 * 1024 * 1024) / 4 / 1_000_000));
             $row(self::WARN, 'memory_limit', "{$ini['memory_limit']}: images above about {$safeMp} megapixels are refused with a clear message (the app allows {$maxMegapixels}; a rotated photo needs a second copy). Set 256M to accept normal camera photos.");
         } else {
             $row(self::PASS, 'memory_limit', (string) ($ini['memory_limit'] ?? ''));
