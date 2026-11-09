@@ -5,6 +5,7 @@
     $pageTitle = isset($header) ? trim(strip_tags((string) $header)) : '';
     $hasTeams = $user && \Laravel\Jetstream\Jetstream::hasTeamFeatures();
     $tokenRoute = \Illuminate\Support\Facades\Route::has('api-tokens.index') ? route('api-tokens.index') : null;
+    $isAdmin = $user && $team && \Illuminate\Support\Facades\Route::has('design.activity.page') && in_array(\App\Support\Design\DesignAccess::teamRole($user->id, $team->id), ['owner', 'admin'], true);
 @endphp
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
@@ -53,6 +54,7 @@
                     @endforeach
                     <div class="lt-menu__sep"></div>
                     @if ($nav['team'])<x-ds.menu-item :href="$nav['team']" icon="settings">Workspace settings</x-ds.menu-item>@endif
+                    @if ($isAdmin)<x-ds.menu-item :href="route('design.activity.page', ['team_id' => $team->id])" icon="clock">Activity</x-ds.menu-item>@endif
                     @can('create', \Laravel\Jetstream\Jetstream::newTeamModel())
                         <x-ds.menu-item :href="route('teams.create')" icon="plus">Create workspace</x-ds.menu-item>
                     @endcan
@@ -134,6 +136,7 @@
                 <a href="{{ $item['href'] }}" class="lt-menu__item" @if($item['current']) aria-current="page" @endif><x-ds.icon :name="$item['icon']" />{{ $item['label'] }}</a>
             @endforeach
             @if ($nav['team'])<a href="{{ $nav['team'] }}" class="lt-menu__item"><x-ds.icon name="settings" />Workspace settings</a>@endif
+            @if ($isAdmin)<a href="{{ route('design.activity.page', ['team_id' => $team->id]) }}" class="lt-menu__item"><x-ds.icon name="clock" />Activity</a>@endif
             @if ($nav['profile'])<a href="{{ $nav['profile'] }}" class="lt-menu__item"><x-ds.icon name="user" />Profile and security</a>@endif
             @if ($tokenRoute && \Laravel\Jetstream\Jetstream::hasApiFeatures())<a href="{{ $tokenRoute }}" class="lt-menu__item"><x-ds.icon name="key" />API tokens</a>@endif
             <div class="lt-menu__sep"></div>

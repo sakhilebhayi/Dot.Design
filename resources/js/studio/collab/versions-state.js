@@ -3,7 +3,8 @@
 export const KIND_LABELS = { auto: 'Automatic', manual: 'Saved by name', approved: 'Approved', restore: 'Before a restore' };
 
 export function describeVersion(v) {
-    const kind = KIND_LABELS[v.kind] || 'Version';
+    // The snapshot the review flow pins is stored as a named version; say what it is for.
+    const kind = v.kind === 'manual' && v.label === 'Sent for review' ? 'Sent for review' : (KIND_LABELS[v.kind] || 'Version');
     let title = v.label && String(v.label).trim();
     if (!title) title = v.kind === 'auto' ? 'Automatic save' : kind;
     return {

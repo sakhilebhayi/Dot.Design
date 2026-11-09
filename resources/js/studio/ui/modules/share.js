@@ -71,7 +71,8 @@ export function mountShare(el, ctx) {
                 const res = await ctx.api.put(urls.project, { visibility: value });
                 if (destroyed) return;
                 if (res.ok) {
-                    status.textContent = 'Saved.';
+                    status.textContent = '';
+                    ctx.toast(value === 'team' ? 'Everyone in the workspace can now open this design.' : 'Only you can open this design now.', { kind: 'ok' });
                     people.invalidate();
                     const fresh = await people.load(true);
                     if (!destroyed && fresh.ok) renderAccess(fresh.data);
@@ -85,8 +86,8 @@ export function mountShare(el, ctx) {
             });
             group.append(h('label', { class: 'cb-choice', for: id }, radio, h('span', { class: 'cb-choice__body' }, h('span', { class: 'cb-choice__label', text: label }), h('span', { class: 'cb-choice__text', text }))));
         }
-        accessBox.append(h('h3', { class: 'cb-h', id: 'cb-share-access', text: 'Who can open it in Dot.Design' }), group,
-            canChange ? null : h('p', { class: 'cb-hint', text: 'Only the person who made this design, or a workspace owner or admin, can change this.' }), status);
+        accessBox.append(...[h('h3', { class: 'cb-h', id: 'cb-share-access', text: 'Who can open it in Dot.Design' }), group,
+            canChange ? null : h('p', { class: 'cb-hint', text: 'Only the person who made this design, or a workspace owner or admin, can change this.' }), status].filter(Boolean));
 
         peopleBox.append(h('h3', { class: 'cb-h', id: 'cb-share-people', text: 'People with access' }));
         const withAccess = data.people.filter((p) => p.can_view);
@@ -117,7 +118,7 @@ export function mountShare(el, ctx) {
     const form = buildForm();
     const resultBox = h('div', { class: 'cb-result', 'aria-live': 'polite' });
     const listBox = h('div', { class: 'cb-links' });
-    linkBox.append(h('h3', { class: 'cb-h', id: 'cb-share-links', text: 'Share link' }), form.el, resultBox, listBox);
+    linkBox.append(h('h3', { class: 'cb-h', id: 'cb-share-links', text: 'Share link' }), resultBox, form.el, listBox);
 
     function buildForm() {
         const permission = select([{ value: 'view', label: 'View only' }, { value: 'comment', label: 'View and comment' }], { value: 'view' });
@@ -201,7 +202,7 @@ export function mountShare(el, ctx) {
             ul.append(h('li', { class: `cb-linkrow cb-linkrow--${d.state}` },
                 h('div', { class: 'cb-linkrow__main' },
                     h('span', { class: 'cb-linkrow__title' }, d.permission, ' ', tag(d.stateLabel, d.state === 'active' ? 'ok' : 'neutral')),
-                    h('span', { class: 'cb-linkrow__meta', text: [`Made ${timeAgo(s.created_at)}`, d.state === 'active' ? expiresIn(s.expires_at) : '', d.downloads, d.views, s.last_viewed_at ? `last opened ${timeAgo(s.last_viewed_at)}` : 'not opened yet'].filter(Boolean).join('. ') + '.' })),
+                    h('span', { class: 'cb-linkrow__meta', text: [`Made ${timeAgo(s.created_at)}`, d.state === 'active' ? expiresIn(s.expires_at) : '', d.downloads, d.views, s.last_viewed_at ? `Last opened ${timeAgo(s.last_viewed_at)}` : 'Not opened yet'].filter(Boolean).join('. ') + '.' })),
                 revoke));
         }
         listBox.append(ul);

@@ -3,9 +3,9 @@
 namespace App\Http\Controllers\Studio;
 
 use App\Http\Controllers\Controller;
+use App\Models\DesignActivity;
 use App\Models\DesignProject;
 use App\Models\Team;
-use App\Models\DesignActivity;
 use App\Support\Design\ActivitySentence;
 use App\Support\Design\DesignAccess;
 use Illuminate\Contracts\View\View;

@@ -31,15 +31,19 @@ export function createComposer(opts) {
         h('div', { class: 'cb-composer__foot' }, counter, h('span', { class: 'cb-composer__btns' }, cancel, submit)));
 
     let options = [];
+    let enabled = 0; // the first `enabled` options can be chosen; the rest are people who cannot open this design yet
     let active = 0;
     let mention = null;
 
     const closeList = () => { list.hidden = true; ta.setAttribute('aria-expanded', 'false'); ta.removeAttribute('aria-activedescendant'); mention = null; options = []; };
     const paintList = () => {
-        list.replaceChildren(...options.map((p, i) => h('li', {
-            class: `cb-mention${i === active ? ' is-active' : ''}`, role: 'option', id: `${id}-o${i}`, 'aria-selected': i === active ? 'true' : 'false',
-            onmousedown: (e) => { e.preventDefault(); choose(p); },
-        }, h('span', { class: 'cb-mention__name', text: p.name }), h('span', { class: 'cb-mention__role', text: p.role_label }))));
+        list.replaceChildren(...options.map((p, i) => {
+            const off = i >= enabled;
+            return h('li', {
+                class: `cb-mention${i === active ? ' is-active' : ''}${off ? ' is-off' : ''}`, role: 'option', id: `${id}-o${i}`, 'aria-selected': i === active ? 'true' : 'false', 'aria-disabled': off ? 'true' : null,
+                onmousedown: (e) => { e.preventDefault(); if (!off) choose(p); },
+            }, h('span', { class: 'cb-mention__name', text: p.name }), h('span', { class: 'cb-mention__role', text: off ? 'Cannot open this design yet' : p.role_label }));
+        }));
         list.hidden = options.length === 0;
         ta.setAttribute('aria-expanded', options.length ? 'true' : 'false');
         if (options.length) ta.setAttribute('aria-activedescendant', `${id}-o${active}`); else ta.removeAttribute('aria-activedescendant');
@@ -57,7 +61,10 @@ export function createComposer(opts) {
     const detect = () => {
         mention = activeMention(ta.value, ta.selectionStart);
         if (!mention) { closeList(); return; }
-        options = filterPeople(opts.people.filter((p) => p.can_view !== false), mention.query);
+        const found = filterPeople(opts.people, mention.query, 8);
+        const can = found.filter((p) => p.can_view !== false);
+        enabled = can.length;
+        options = can.concat(found.filter((p) => p.can_view === false)).slice(0, 8);
         active = 0;
         paintList();
     };
@@ -71,9 +78,9 @@ export function createComposer(opts) {
     ta.addEventListener('blur', () => setTimeout(closeList, 120));
     ta.addEventListener('keydown', (e) => {
         if (!list.hidden && options.length) {
-            if (e.key === 'ArrowDown') { e.preventDefault(); active = (active + 1) % options.length; paintList(); return; }
-            if (e.key === 'ArrowUp') { e.preventDefault(); active = (active - 1 + options.length) % options.length; paintList(); return; }
-            if (e.key === 'Enter' || e.key === 'Tab') { e.preventDefault(); choose(options[active]); return; }
+            if (e.key === 'ArrowDown' && enabled) { e.preventDefault(); active = (active + 1) % enabled; paintList(); return; }
+            if (e.key === 'ArrowUp' && enabled) { e.preventDefault(); active = (active - 1 + enabled) % enabled; paintList(); return; }
+            if ((e.key === 'Enter' || e.key === 'Tab') && enabled) { e.preventDefault(); choose(options[active]); return; }
             if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); closeList(); return; }
         }
         if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) { e.preventDefault(); el.requestSubmit(); }
@@ -98,7 +105,7 @@ export function createComposer(opts) {
 
 /** The text of a comment with its @mentions picked out, as plain text nodes and <span>s. */
 export function bodyNodes(comment, peopleById) {
-    const names = (comment.mentions || []).map((id) => peopleById.get(id)).filter(Boolean);
+    const names = (comment.mentions || []).map((id) => peopleById.get(id)).filter(Boolean).map((p) => p.name);
     return splitMentions(comment.body, names).map((seg) => (seg.mention ? h('span', { class: 'cb-at', text: seg.text }) : seg.text));
 }
 
@@ -121,7 +128,7 @@ export function threadCard(thread, env) {
             h('span', { class: 'cb-comment__who', text: who.name }),
             who.guest ? tag('Guest', 'neutral') : null,
             h('time', { class: 'cb-comment__time', datetime: c.created_at, title: dateTime(c.created_at), text: timeAgo(c.created_at) }),
-            c.updated_at && c.updated_at !== c.created_at && Date.parse(c.updated_at) - Date.parse(c.created_at) > 60000 ? h('span', { class: 'cb-comment__edited', text: 'edited' }) : null);
+            null);
     };
 
     const renderComment = (c, isTop) => {

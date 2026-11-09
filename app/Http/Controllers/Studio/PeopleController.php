@@ -21,7 +21,7 @@ class PeopleController extends StudioController
 {
     private const ROLE_LABELS = ['owner' => 'Owner', 'admin' => 'Admin', 'editor' => 'Editor', 'viewer' => 'Reviewer'];
 
-    private const MAX_PEOPLE = 200;
+    private const MAX_PEOPLE = 100;
 
     public function index(Request $request, DesignProject $project): JsonResponse
     {
@@ -51,8 +51,9 @@ class PeopleController extends StudioController
                 continue;
             }
 
-            $caps = DesignCapability::forRole($role);
-            $canView = DesignAccess::can($user, $project, DesignCapability::View);
+            $roleCaps = DesignCapability::forRole($role);
+            $held = DesignAccess::capabilities($user, $project); // once per person; the answers below are read from it
+            $canView = in_array(DesignCapability::View, $held, true);
             $isCreator = (int) $project->user_id === $userId;
 
             $people[] = [
@@ -63,8 +64,8 @@ class PeopleController extends StudioController
                 'is_you' => $userId === $viewer->id,
                 'is_creator' => $isCreator,
                 'can_view' => $canView,
-                'can_comment' => $canView && DesignAccess::can($user, $project, DesignCapability::Comment),
-                'can_approve' => in_array(DesignCapability::Approve, $caps, true),
+                'can_comment' => $canView && in_array(DesignCapability::Comment, $held, true),
+                'can_approve' => in_array(DesignCapability::Approve, $roleCaps, true),
                 'access' => $isCreator ? 'Made this design' : ($canView ? ($project->visibility === 'team' ? 'Workspace member' : 'Invited or reviewing') : 'No access'),
             ];
         }

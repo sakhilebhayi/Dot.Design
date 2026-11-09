@@ -82,14 +82,16 @@ export function createController(ctx) {
     };
 
     // ------------------------------------------------------------------ data
+    let inflight = false;
     async function load() {
-        if (state.load === 'loading') return;
-        state.load = state.threads.length ? 'ready' : 'loading';
-        notify();
+        if (inflight) return;
+        inflight = true;
+        if (state.load !== 'ready') { state.load = 'loading'; notify(); }
         const [res, ppl] = await Promise.all([ctx.api.get(urls.comments), people.load()]);
         if (ppl.ok) peopleList = ppl.data.people;
         if (res.ok && res.data) { state.threads = res.data.comments || []; state.load = 'ready'; state.error = null; }
-        else { state.load = 'error'; state.error = explain(res, { what: 'load the comments' }); }
+        else if (state.load !== 'ready') { state.load = 'error'; state.error = explain(res, { what: 'load the comments' }); }
+        inflight = false;
         notify();
     }
 
@@ -233,7 +235,7 @@ export function createController(ctx) {
         const numbers = numberThreads(visible());
         pop.append(
             h('div', { class: 'cb-pop__bar' }, h('span', { class: 'cb-pop__title', text: `Comment ${numbers.get(t.id) || ''}` }), button({ label: 'Close', size: 'sm', variant: 'ghost', onClick: closePopover, ariaLabel: 'Close comment' })),
-            threadCard(t, env({ number: 0, active: true, onFocus: null, pageLabel: null })));
+            threadCard(t, env({ number: 0, active: false, onFocus: null, pageLabel: null })));
         pop.hidden = false;
         position();
     }
@@ -378,7 +380,7 @@ export function createController(ctx) {
                 }
             }
             const note = !canComment ? h('p', { class: 'cb-hint', text: 'You can read comments on this design but not add them.' }) : null;
-            root.replaceChildren(top, filters, note, body);
+            root.replaceChildren(...[top, filters, note, body].filter(Boolean));
         }
         render();
         load();

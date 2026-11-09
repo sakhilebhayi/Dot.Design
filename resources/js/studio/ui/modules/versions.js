@@ -99,7 +99,7 @@ function mountPanel(el, ctx) {
                 if (list.cursor) body.append(button({ label: list.status === 'more' ? 'Loading...' : 'Show older versions', variant: 'secondary', size: 'sm', disabled: list.status === 'more', onClick: () => load(true) }));
             }
         }
-        root.replaceChildren(top, saveForm, filters, body);
+        root.replaceChildren(...[top, saveForm, filters, body].filter(Boolean));
     }
 
     function versionRow(v) {

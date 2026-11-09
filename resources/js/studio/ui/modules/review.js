@@ -138,12 +138,13 @@ export function createReviewController(ctx) {
                 d.pinnedVersionId ? button({ label: 'Compare with now', variant: 'ghost', size: 'sm', onClick: () => ctx.openDialog('versions.view', { versionId: d.pinnedVersionId }) }) : null);
         } else if (d.banner) {
             parts.push(h('span', { class: 'cb-revbar__text', text: d.banner.text }));
+            if (d.banner.note) parts.push(h('span', { class: 'cb-revbar__note', text: d.banner.note }));
             if (d.key === 'stale' || d.key === 'changes_requested') {
                 if (d.canRequest) parts.push(button({ label: 'Request a new review', variant: 'primary', size: 'sm', onClick: () => ctx.openDialog('review.request') }));
             }
             if (d.canDownloadFinal && can(ctx.config, 'export')) parts.push(button({ label: 'Download final', variant: 'secondary', size: 'sm', onClick: () => ctx.openDialog('export') }));
         }
-        el.append(...parts);
+        el.append(...parts.filter(Boolean));
         el.hidden = false;
         el.classList.toggle('is-attention', d.canDecide || d.key === 'stale');
     }

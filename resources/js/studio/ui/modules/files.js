@@ -115,7 +115,9 @@ export function mountFiles(el, ctx) {
                         link ? h('a', { class: 'cb-btn cb-btn--secondary', href: link, target: '_blank', rel: 'noopener noreferrer', text: 'Open in Dot.Files' }) : null,
                         button({ label: 'Done', variant: 'primary', onClick: () => ctx.closeDialog() }))));
             } else {
-                const msg = res.data && res.data.error ? { text: res.data.error, kind: 'bad' } : explain(res, { what: 'save the file to Dot.Files' });
+                const msg = res.data && res.data.error ? { text: res.data.error, kind: 'bad' }
+                    : res.status === 404 ? { text: 'Dot.Files is not switched on for this server, so nothing was saved. Ask whoever runs Dot.Design to connect it.', kind: 'warn' }
+                    : explain(res, { what: 'save the file to Dot.Files' });
                 err.append(notice(msg.text, msg.kind));
             }
         });

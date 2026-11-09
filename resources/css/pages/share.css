@@ -1,0 +1,105 @@
+/* The public share viewer and the neutral "link not available" page. Standalone: it carries the design system's tokens
+   and controls but none of the signed-in shell. */
+@import '../ds/tokens.css';
+@import '../ds/base.css';
+@import '../ds/vocab.css';
+@import '../ds/components.css';
+
+.sv { min-height: 100dvh; display: flex; flex-direction: column; background: var(--lt-ground); }
+.sv-skip { position: absolute; left: var(--lt-space-3); top: -4rem; z-index: 20; padding: var(--lt-space-2) var(--lt-space-3); background: var(--lt-btn); color: var(--lt-btn-ink); border-radius: var(--lt-radius-2); }
+.sv-skip:focus { top: var(--lt-space-3); }
+
+/* top bar */
+.sv-bar { display: flex; align-items: center; gap: var(--lt-space-4); padding: var(--lt-space-3) var(--lt-space-5); background: var(--lt-panel); border-bottom: 1px solid var(--lt-rule); }
+.sv-brand { display: inline-flex; align-items: center; gap: var(--lt-space-2); font-family: var(--lt-font-display); font-weight: 600; letter-spacing: -0.015em; color: var(--lt-ink); white-space: nowrap; }
+.sv-mark { width: 1.25rem; height: 1.25rem; border-radius: 50%; background: var(--lt-ink); box-shadow: inset 0 0 0 5px var(--lt-ink), 0 0 0 1px var(--lt-ink); position: relative; }
+.sv-mark::after { content: ""; position: absolute; inset: 5px; border-radius: 50%; background: var(--lt-accent); }
+.sv-title { min-width: 0; flex: 1; display: grid; gap: 1px; }
+.sv-title h1 { font: 600 var(--lt-text-xl)/1.2 var(--lt-font-display); letter-spacing: -0.015em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sv-title p { font-size: var(--lt-text-xs); color: var(--lt-ink-3); }
+.sv-theme { min-height: 2.25rem; padding: 0 var(--lt-space-3); border: 1px solid var(--lt-edge); border-radius: var(--lt-radius-2); background: var(--lt-panel); color: var(--lt-ink-2); font-size: var(--lt-text-sm); }
+.sv-theme:hover { background: var(--lt-panel-sunk); color: var(--lt-ink); }
+.js .sv-theme[hidden] { display: inline-flex !important; }
+
+/* body: viewer, and the comment column when comments are allowed */
+.sv-body { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr); }
+.sv-view { min-width: 0; display: grid; align-content: start; outline: none; }
+@media (min-width: 62rem) {
+    .sv-body:has(.sv-comment:not([hidden])) { grid-template-columns: minmax(0, 1fr) 21rem; }
+    .sv-view { height: calc(100dvh - 3.75rem); grid-template-rows: minmax(0, 1fr); }
+    .sv-interactive:not([hidden]) { display: grid; grid-template-rows: minmax(0, 1fr) auto auto; min-height: 0; }
+}
+
+.sv-interactive[hidden] { display: none; }
+.js .sv-interactive[hidden] { display: grid !important; }
+.js .sv-fallback { display: none; }
+.sv-stage { position: relative; background: var(--lt-stage); height: min(70dvh, 46rem); min-height: 16rem; overflow: hidden; cursor: grab; }
+.sv-stage:active { cursor: grabbing; }
+@media (min-width: 62rem) { .sv-stage { height: auto; min-height: 0; } }
+.sv-stage .studio-stage svg { filter: drop-shadow(0 1px 2px rgb(14 18 22 / 0.18)) drop-shadow(0 8px 20px rgb(14 18 22 / 0.18)); }
+
+.sv-toolbar { display: flex; flex-wrap: wrap; justify-content: space-between; gap: var(--lt-space-2) var(--lt-space-4); padding: var(--lt-space-2) var(--lt-space-5); background: var(--lt-panel); border-top: 1px solid var(--lt-rule); }
+.sv-toolbar__group { display: flex; align-items: center; gap: var(--lt-space-2); }
+.sv-tool { min-height: 2.25rem; min-width: 2.25rem; padding: 0 var(--lt-space-3); border: 1px solid var(--lt-edge); border-radius: var(--lt-radius-2); background: var(--lt-panel); color: var(--lt-ink); font-size: var(--lt-text-sm); font-weight: 600; }
+.sv-tool:hover:not(:disabled) { background: var(--lt-panel-sunk); }
+.sv-tool:disabled { background: var(--lt-panel-sunk); color: var(--lt-ink-3); border-color: var(--lt-rule-strong); cursor: not-allowed; }
+.sv-pagelabel, .sv-zoomlabel { min-width: 5.5rem; text-align: center; font-size: var(--lt-text-sm); color: var(--lt-ink-2); font-variant-numeric: tabular-nums; }
+.sv-zoomlabel { min-width: 3rem; }
+
+.sv-strip { display: flex; gap: var(--lt-space-3); padding: var(--lt-space-3) var(--lt-space-5); overflow-x: auto; background: var(--lt-panel-sunk); scroll-snap-type: x proximity; }
+.sv-strip[hidden] { display: none; }
+.sv-thumb { flex: none; display: grid; gap: var(--lt-space-1); justify-items: center; padding: var(--lt-space-1); border-radius: var(--lt-radius-2); color: var(--lt-ink-2); font-size: var(--lt-text-xs); scroll-snap-align: start; }
+.sv-thumb__frame { display: block; background: var(--lt-stage); padding: var(--lt-space-1); }
+.sv-thumb__frame svg { height: 3.75rem; width: auto; max-width: 8rem; background: var(--lt-paper); }
+.sv-thumb[aria-current="true"] { background: var(--lt-accent-wash); color: var(--lt-ink); }
+.sv-thumb[aria-current="true"] .sv-thumb__frame { outline: 2px solid var(--lt-accent); }
+
+/* no-script fallback: every page, stacked, drawn by the server */
+.sv-fallback { display: grid; gap: var(--lt-space-6); padding: var(--lt-space-5); background: var(--lt-stage); justify-items: center; }
+.sv-fallback__page { width: min(100%, 60rem); display: grid; gap: var(--lt-space-2); }
+.sv-fallback__page svg { width: 100%; height: auto; background: var(--lt-paper); box-shadow: 0 1px 2px rgb(14 18 22 / 0.18), 0 8px 20px rgb(14 18 22 / 0.18); }
+.sv-fallback__page figcaption { font-size: var(--lt-text-xs); color: var(--lt-ink-2); }
+.sv-thumb svg { display: block; }
+
+/* comment column */
+.sv-comment { padding: var(--lt-space-5); background: var(--lt-panel); display: grid; gap: var(--lt-space-4); align-content: start; border-top: 1px solid var(--lt-rule); }
+.js .sv-comment[hidden] { display: grid !important; }
+@media (min-width: 62rem) { .sv-comment { border-top: 0; border-left: 1px solid var(--lt-rule); height: calc(100dvh - 3.75rem); overflow-y: auto; } }
+.sv-comment h2 { font: 600 var(--lt-text-lg)/1.3 var(--lt-font-display); letter-spacing: -0.01em; }
+.sv-comment form { display: grid; gap: var(--lt-space-3); }
+.sv-hint { font-size: var(--lt-text-xs); color: var(--lt-ink-3); line-height: 1.5; }
+.sv-count { font-size: var(--lt-text-xs); color: var(--lt-ink-3); text-align: right; }
+.sv-count.is-over { color: var(--lt-bad); font-weight: 600; }
+.sv-pinrow { display: grid; gap: var(--lt-space-1); justify-items: start; }
+.sv-pinrow button[aria-pressed="true"] { background: var(--lt-accent); color: var(--lt-accent-ink); border-color: var(--lt-accent); }
+.sv-honey { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
+.sv-status { min-height: 1.25rem; font-size: var(--lt-text-sm); color: var(--lt-ink-2); }
+.sv-status.is-ok { color: var(--lt-ok); }
+.sv-status.is-bad { color: var(--lt-bad); }
+.sv-mine { display: grid; gap: var(--lt-space-2); }
+.sv-mine h3 { font: 600 var(--lt-text-sm)/1.3 var(--lt-font-ui); }
+.sv-mine ul { display: grid; gap: var(--lt-space-2); }
+.sv-mine li { padding: var(--lt-space-3); border-radius: var(--lt-radius-2); background: var(--lt-panel-sunk); font-size: var(--lt-text-sm); overflow-wrap: anywhere; white-space: pre-wrap; }
+.sv-mine li b { display: block; font-size: var(--lt-text-xs); color: var(--lt-ink-3); font-weight: 400; margin-bottom: 2px; }
+.sv-noscript { padding: var(--lt-space-4) var(--lt-space-5); font-size: var(--lt-text-sm); color: var(--lt-ink-2); }
+
+/* pins the visitor made this visit */
+.sv-pins { position: absolute; inset: 0; overflow: hidden; pointer-events: none; z-index: 3; }
+.sv-pins.is-placing { pointer-events: auto; cursor: crosshair; background: color-mix(in srgb, var(--lt-accent) 6%, transparent); }
+.sv-pin { position: absolute; left: 0; top: 0; width: 1.625rem; height: 1.625rem; margin-top: -1.625rem; display: grid; place-items: center; border-radius: 50% 50% 50% 0; background: var(--lt-ink); color: var(--lt-panel); font: 600 var(--lt-text-xs)/1 var(--lt-font-ui); box-shadow: 0 0 0 2px var(--lt-paper), 0 2px 6px rgb(14 18 22 / 0.35); pointer-events: auto; border: 0; }
+.sv-pin--draft { background: var(--lt-accent); color: var(--lt-accent-ink); pointer-events: none; }
+
+/* the neutral page */
+.sv--gone { align-items: center; justify-content: center; padding: var(--lt-space-5); }
+.sv-gone { max-width: 28rem; display: grid; gap: var(--lt-space-3); justify-items: start; padding: var(--lt-space-6); background: var(--lt-panel); border-radius: var(--lt-radius-3); box-shadow: 0 0 0 1px var(--lt-rule-strong); }
+.sv-gone h1 { font: 600 var(--lt-text-2xl)/1.12 var(--lt-font-display); letter-spacing: -0.02em; text-wrap: balance; }
+.sv-gone p { color: var(--lt-ink-2); font-size: var(--lt-text-md); line-height: 1.55; }
+
+@media (max-width: 40rem) {
+    .sv-bar { padding: var(--lt-space-3) var(--lt-space-4); gap: var(--lt-space-3); }
+    .sv-brand__name { display: none; }
+    .sv-toolbar, .sv-strip, .sv-comment { padding-inline: var(--lt-space-4); }
+    .sv-fallback { padding: var(--lt-space-3); }
+}
+@media (pointer: coarse) { .sv-tool, .sv-theme { min-height: 2.75rem; } .sv-pin { width: 2rem; height: 2rem; margin-top: -2rem; } }
+@media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }

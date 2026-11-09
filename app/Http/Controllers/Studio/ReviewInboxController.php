@@ -16,6 +16,8 @@ use Illuminate\Http\Request;
  */
 class ReviewInboxController extends Controller
 {
+    private const PROJECT_COLUMNS = ['id', 'name', 'status', 'team_id', 'user_id', 'visibility', 'width', 'height', 'thumbnail_path', 'thumbnail_updated_at'];
+
     public const TABS = ['assigned' => 'Assigned to me', 'requested' => 'Requested by me', 'decisions' => 'Recent decisions'];
 
     public function __construct(private readonly ReviewService $reviews, private readonly ThumbnailStore $thumbnails) {}
@@ -26,7 +28,8 @@ class ReviewInboxController extends Controller
         $tab = array_key_exists((string) $request->query('tab'), self::TABS) ? (string) $request->query('tab') : 'assigned';
 
         $rows = match ($tab) {
-            'assigned', 'requested' => $this->reviews->inbox($user, $tab),
+            // The service's own eager load leaves out the size and thumbnail columns the rows draw, so those are loaded in one more query.
+            'assigned', 'requested' => $this->reviews->inbox($user, $tab)->load(['project' => fn ($q) => $q->select(self::PROJECT_COLUMNS)]),
             default => $this->decisions(),
         };
 
@@ -48,7 +51,7 @@ class ReviewInboxController extends Controller
             ->whereIn('status', [ReviewStatus::Approved->value, ReviewStatus::ChangesRequested->value, ReviewStatus::Stale->value])
             ->whereNotNull('decided_at')
             ->whereHas('project')
-            ->with(['project:id,name,status,team_id,user_id,visibility,width,height,thumbnail_path,thumbnail_updated_at', 'requester:id,name', 'reviewer:id,name', 'version:id,kind,label,created_at'])
+            ->with(['project' => fn ($q) => $q->select(self::PROJECT_COLUMNS), 'requester:id,name', 'reviewer:id,name', 'version:id,kind,label,created_at'])
             ->orderByDesc('decided_at')->orderByDesc('id')
             ->limit(50)
             ->get();
