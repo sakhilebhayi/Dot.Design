@@ -7,6 +7,8 @@ use App\Http\Controllers\Studio\BrandPaletteController;
 use App\Http\Controllers\Studio\BrandProjectController;
 use App\Http\Controllers\Studio\BriefController;
 use App\Http\Controllers\Studio\FormatsController;
+use App\Http\Controllers\Studio\StartController;
+use App\Http\Controllers\Studio\TemplateBrowserController;
 use App\Http\Controllers\Studio\TemplateController;
 use App\Http\Middleware\Studio\AcceptsJson;
 use Illuminate\Support\Facades\Route;
@@ -21,10 +23,8 @@ Route::prefix('design')->name('design.')->middleware(AcceptsJson::class)->group(
     Route::post('projects/from-brief', [BriefController::class, 'store'])->middleware('throttle:design-briefs')->name('projects.from-brief');
 
     // Templates
-    Route::get('templates', [TemplateController::class, 'index'])->name('templates.index');
     Route::get('templates/facets', [TemplateController::class, 'facets'])->name('templates.facets');
     Route::post('templates', [TemplateController::class, 'store'])->middleware('throttle:design-briefs')->name('templates.store');
-    Route::get('templates/{template}', [TemplateController::class, 'show'])->name('templates.show');
     Route::post('templates/{template}/fill', [TemplateController::class, 'fill'])->middleware('throttle:design-briefs')->name('templates.fill');
     Route::put('templates/{template}', [TemplateController::class, 'update'])->name('templates.update');
     Route::delete('templates/{template}', [TemplateController::class, 'destroy'])->name('templates.destroy');
@@ -50,4 +50,16 @@ Route::prefix('design')->name('design.')->middleware(AcceptsJson::class)->group(
     Route::post('projects/{project}/brand/apply', [BrandProjectController::class, 'apply'])->name('projects.brand.apply');
     Route::post('projects/{project}/brand/dismiss', [BrandProjectController::class, 'dismiss'])->name('projects.brand.dismiss');
     Route::put('projects/{project}/brand-kit', [BrandProjectController::class, 'link'])->name('projects.brand.link');
+});
+
+// R-45 create flow: pages, not JSON, so they sit outside the JSON-only group above.
+Route::prefix('design')->name('design.')->group(function () {
+    // The Start screen and the guided brief. "new" cannot collide with a project id: those live under projects/.
+    Route::get('new', [StartController::class, 'index'])->name('start');
+    Route::get('new/brief', [StartController::class, 'brief'])->name('start.brief');
+
+    // The same two URLs the template JSON lives at: a browser gets the page, a script asking for JSON gets the JSON.
+    // Registered after templates/facets so that fixed path keeps winning over {template}.
+    Route::get('templates', [TemplateBrowserController::class, 'index'])->name('templates.index');
+    Route::get('templates/{template}', [TemplateBrowserController::class, 'show'])->name('templates.show');
 });

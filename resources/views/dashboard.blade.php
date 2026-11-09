@@ -2,7 +2,7 @@
     $user = auth()->user();
     $team = $user?->currentTeam;
     $formats = \App\Support\Ui\StartFormats::all();
-    $createRoute = route('design.projects.create');
+    $createRoute = route('design.start');
     $recent = $projects->sortByDesc(fn ($p) => $p->updated_at?->getTimestamp() ?? 0)->take(8)->values();
     $brand = \App\Support\Ui\BrandStatus::for($user);
     $brandRoute = collect(['design.brand.index', 'brand.index', 'design.brand-kits.index'])->first(fn ($name) => \Illuminate\Support\Facades\Route::has($name));
@@ -18,7 +18,7 @@
     <section aria-labelledby="start-title">
         <div class="lt-section__head">
             <h2 id="start-title" class="lt-section__title">Start something</h2>
-            <p class="lt-small">Pick a size. The canvas opens at that size.</p>
+            <p class="lt-small">Pick a size, then open a blank canvas or a ready-made design.</p>
         </div>
         <div class="lt-start" role="list">
             @foreach ($formats as $format)
@@ -37,7 +37,7 @@
             @if ($recent->isEmpty())
                 <x-ds.empty title="Nothing on the table yet">
                     Choose a size above and your first design will appear here, at its true proportions.
-                    <x-slot name="actions"><x-ds.button :href="$createRoute" icon="plus">Start a design</x-ds.button></x-slot>
+                    <x-slot name="actions"><x-ds.button :href="$createRoute" icon="plus">Start a design</x-ds.button><x-ds.button :href="route('design.templates.index')" variant="ghost">Start from a template</x-ds.button></x-slot>
                 </x-ds.empty>
             @else
                 <div class="lt-contacts">

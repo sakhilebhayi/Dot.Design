@@ -1,7 +1,7 @@
 @php
     $listing = \App\Support\Ui\DesignListing::apply($projects, request());
     $items = $listing['items'];
-    $createRoute = route('design.projects.create');
+    $createRoute = route('design.start');
     $query = array_filter(['q' => $listing['q'], 'type' => $listing['type'], 'status' => $listing['status'], 'sort' => $listing['sort'] !== 'recent' ? $listing['sort'] : null]);
     $link = fn (array $change) => route('design.projects.index', array_filter(array_merge($query, $change), fn ($v) => $v !== null && $v !== ''));
     $sortLabels = ['recent' => 'Recently edited', 'name' => 'Name', 'oldest' => 'Oldest first'];
@@ -57,6 +57,7 @@
             Posters, social posts, flyers and cards each start from a size. Pick one and the canvas opens at its true proportions.
             <x-slot name="actions">
                 <x-ds.button :href="$createRoute" icon="plus">Start a design</x-ds.button>
+                <x-ds.button :href="route('design.templates.index')" variant="ghost">Start from a template</x-ds.button>
             </x-slot>
         </x-ds.empty>
         <div class="lt-start" role="list" style="margin-top: var(--lt-space-5);">
