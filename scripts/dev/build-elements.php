@@ -8,6 +8,7 @@ declare(strict_types=1);
 $root = dirname(__DIR__, 2);
 require $root.'/database/templates/Support/bootstrap.php';
 
+use Database\Templates\Support\Colour;
 use Database\Templates\Support\Page;
 use Database\Templates\Support\Palette;
 use Database\Templates\Support\TypePair;
@@ -350,7 +351,7 @@ $pa[] = item('pattern-zigzag', 'Zigzag lines', 'pattern', 'zigzag,lines,retro', 
 $pa[] = item('pattern-rings', 'Overlapping rings', 'pattern', 'rings,circles,geometric', $mk(600, 600, function ($g) {
     for ($r = 0; $r < 5; $r++) {
         for ($c = 0; $c < 5; $c++) {
-            $g->ellipse($c * 100 + 4, $r * 100 + 4, 190 > 600 - ($c * 100 + 4) ? 96 : 190, 190 > 600 - ($r * 100 + 4) ? 96 : 190, null, ['name' => 'Ring', 'stroke' => [($r + $c) % 2 ? 'accent' : 'ink', 3]]);
+            $g->ellipse($c * 100 + 4, $r * 100 + 4, 600 - ($c * 100 + 4) < 190 ? 96 : 190, 600 - ($r * 100 + 4) < 190 ? 96 : 190, null, ['name' => 'Ring', 'stroke' => [($r + $c) % 2 ? 'accent' : 'ink', 3]]);
         }
     }
 }, 'Overlapping rings'));
@@ -388,8 +389,8 @@ $pl = static function (string $key, string $name, string $use, array $c): array 
     foreach ($c as $i => $hex) {
         $colors[] = ['key' => $roles[$i] === 'extra' ? 'background' : $roles[$i], 'name' => $names[$i], 'hex' => $hex, 'role' => $roles[$i]];
     }
-    $white = Database\Templates\Support\Colour::contrast('#ffffff', $c[0]);
-    $dark = Database\Templates\Support\Colour::contrast($c[3], $c[0]);
+    $white = Colour::contrast('#ffffff', $c[0]);
+    $dark = Colour::contrast($c[3], $c[0]);
 
     return ['key' => $key, 'name' => $name, 'use' => $use, 'colors' => $colors, 'text_on_main' => $white >= $dark ? ['hex' => '#ffffff', 'ratio' => round($white, 2)] : ['hex' => $c[3], 'ratio' => round($dark, 2)]];
 };

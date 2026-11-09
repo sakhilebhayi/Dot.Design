@@ -23,7 +23,7 @@ $m = $p->m;
 $pw = 230;
 $p->rect(0, 0, $pw, $p->h, 'ink', ['name' => 'Side panel']);
 $p->text('Your Business', 36, 44, $pw - 60, ['font' => 'head', 'size' => 16, 'color' => 'bg', 'ls' => 0.1, 'case' => 'upper', 'role' => 'contact', 'bind' => 'business_name', 'name' => 'Business name']);
-$p->text("Work you can rely on", 36, 190, $pw - 62, ['font' => 'head', 'size' => 40, 'color' => 'bg', 'lh' => 1.1, 'ls' => -0.01, 'role' => 'headline', 'bind' => 'headline', 'name' => 'Headline']);
+$p->text('Work you can rely on', 36, 190, $pw - 62, ['font' => 'head', 'size' => 40, 'color' => 'bg', 'lh' => 1.1, 'ls' => -0.01, 'role' => 'headline', 'bind' => 'headline', 'name' => 'Headline']);
 $p->text('Clear quotes, skilled people and work that is finished on time.', 36, 440, $pw - 66, ['size' => 15, 'color' => 'bg', 'lh' => 1.5, 'role' => 'body', 'bind' => 'subheadline', 'name' => 'Subheading']);
 $p->contactList([['phone', Sample::PHONE, 'phone', 'phone'], ['mail', Sample::EMAIL, 'email', 'email'], ['globe', Sample::WEBSITE, 'website', 'website']], 36, 640, $pw - 50, 12, 'bg', 'extra', 1.0);
 

@@ -175,6 +175,7 @@ class LibraryTemplatesTest extends TestCase
         foreach ($t['pages'] as $p) {
             $walk($p['elements']);
         }
+        $this->addToAssertionCount(1); // templates without icons have nothing to look up
     }
 
     #[DataProvider('templates')]

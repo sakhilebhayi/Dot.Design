@@ -5,7 +5,6 @@ declare(strict_types=1);
 require_once __DIR__.'/Support/bootstrap.php';
 
 use Database\Templates\Support\Palette;
-use Database\Templates\Support\Sample;
 use Database\Templates\Support\Template;
 use Database\Templates\Support\TypePair;
 

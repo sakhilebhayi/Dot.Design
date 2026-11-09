@@ -13,9 +13,9 @@ final class Palette
     public readonly array $tokens;
 
     /**
-     * @param ?array<string,string> $tokens which palette colours follow the brand kit. Default: light pages
-     *                                      map accent to primary and ink to neutral; dark pages map the page
-     *                                      colour to primary and accent to accent.
+     * @param  ?array<string,string>  $tokens  which palette colours follow the brand kit. Default: light pages
+     *                                         map accent to primary and ink to neutral; dark pages map the page
+     *                                         colour to primary and accent to accent.
      */
     public function __construct(string $bg, string $ink, string $accent, string $surface, string $extra, public readonly string $label = '', ?array $tokens = null)
     {

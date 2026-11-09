@@ -59,7 +59,7 @@ $p->photo($m, 120, $cw, 190, 'photo_2', 'plain', ['name' => 'Section picture']);
 $p->text('Picture caption: say what is shown and why it matters.', $m, 322, $cw, ['size' => 9.5, 'italic' => true, 'color' => 'extra', 'role' => 'body', 'name' => 'Caption']);
 $p->text('Begin each section with the main point in a sentence or two. Then use the two columns below for the supporting detail: what happened, why it happened and what it means for the people who read this.', $x1, 370, $w1, ['size' => 11, 'lh' => 1.7, 'role' => 'body', 'name' => 'Body text, first column']);
 $p->text('Short paragraphs, plain words and clear headings make a report easier to trust. Add figures only when you have checked them, and say where they come from.', $x2, 370, $w2, ['size' => 11, 'lh' => 1.7, 'role' => 'body', 'name' => 'Body text, second column']);
-$p->text("Our priority is to do fewer things, and do them well.", $m + 20, 600, $cw - 40, ['font' => 'head', 'size' => 20, 'italic' => true, 'color' => 'accent', 'role' => 'subhead', 'name' => 'Pull quote', 'lh' => 1.4]);
+$p->text('Our priority is to do fewer things, and do them well.', $m + 20, 600, $cw - 40, ['font' => 'head', 'size' => 20, 'italic' => true, 'color' => 'accent', 'role' => 'subhead', 'name' => 'Pull quote', 'lh' => 1.4]);
 $p->text(Sample::WEBSITE, $m, $p->bottom() - 12, 300, ['size' => 10, 'color' => 'extra', 'role' => 'contact', 'bind' => 'website', 'name' => 'Website']);
 
 return $t->done();

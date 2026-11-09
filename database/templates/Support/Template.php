@@ -27,7 +27,7 @@ final class Template
     }
 
     /**
-     * @param array{slot_labels?:array<string,string>,slug:string,name:string,description:string,category:string,kind:string,industries:array,purposes:array,styles:array,platforms:array,format_key:string,popularity?:int,margin?:float} $meta
+     * @param  array{slot_labels?:array<string,string>,slug:string,name:string,description:string,category:string,kind:string,industries:array,purposes:array,styles:array,platforms:array,format_key:string,popularity?:int,margin?:float}  $meta
      */
     public static function start(array $meta): self
     {

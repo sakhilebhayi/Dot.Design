@@ -578,7 +578,7 @@ final class TemplateSchemaValidator
             $n = $argc[$U];
             if ($n === 0) {
                 if ($args !== []) {
-                    $out[] = "Z takes no arguments";
+                    $out[] = 'Z takes no arguments';
                 }
                 $cx = $sx;
                 $cy = $sy;
