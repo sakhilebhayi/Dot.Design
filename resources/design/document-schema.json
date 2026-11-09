@@ -38,7 +38,7 @@
     "uuid_or_id": "^[A-Za-z0-9_-]{1,64}$",
     "font_key": "^[a-z0-9-]{1,40}$",
     "token_ref": "^brand\\.(colors\\.[a-z0-9-]{1,30}|fonts\\.(heading|body|accent))$",
-    "bind_key": "^[a-z_]{1,40}$",
+    "bind_key": "^[a-z][a-z0-9_]{0,39}$",
     "icon_key": "^[a-z0-9-]{1,40}$"
   },
   "paint": {
