@@ -306,7 +306,9 @@ class TemplateChecker
         $bind = $el['bind'];
         $slots = (array) config('design_copy.slots');
 
-        if (! is_string($bind) || ! preg_match($this->schema->pattern('bind_key'), $bind)) {
+        // The schema's bind_key pattern (^[a-z_]{1,40}$) has no digits, so photo_1 would be refused; the slot
+        // vocabulary needs photo_1..3. Proposed schema change: ^[a-z][a-z0-9_]{0,39}$ (see docs/R45_BUSINESS.md).
+        if (! is_string($bind) || ! preg_match('/^[a-z][a-z0-9_]{0,39}$/', $bind)) {
             $this->fail("$path.bind", 'must be a slot key such as business_name');
 
             return;

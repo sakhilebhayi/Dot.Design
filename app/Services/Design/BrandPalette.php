@@ -10,7 +10,7 @@ use RuntimeException;
 /**
  * Pulls up to five colours out of a logo so Simple mode can offer "use my logo colours".
  * GD only, no network, deterministic: the image is shrunk to at most 96 px, transparent pixels are
- * ignored, the remaining pixels are median-cut into boxes, near-duplicate boxes are merged, and the
+ * ignored, the remaining pixels are clustered by popularity (see cluster()), and the
  * result is ranked by how much of the logo each colour covers (weighted towards saturated colours,
  * so a logo on a white box still offers its brand colours first). Near-white, near-black and grey
  * colours are returned too, flagged neutral and placed after the brand colours.
@@ -19,9 +19,9 @@ class BrandPalette
 {
     private const SAMPLE = 96;
 
-    private const BOXES = 10;
+    private const BOXES = 12;
 
-    private const MERGE_DISTANCE = 32;
+    private const CLUSTER_DISTANCE = 56;
 
     private const MAX_PIXELS = 40_000_000;
 
@@ -60,7 +60,7 @@ class BrandPalette
             throw new RuntimeException('That picture is fully transparent, so it has no colours to read.');
         }
 
-        $colors = $this->rank($this->mergeNear($this->medianCut($pixels)), count($pixels), max(1, min(8, $max)));
+        $colors = $this->rank($this->cluster($pixels), count($pixels), max(1, min(8, $max)));
 
         return ['colors' => $colors, 'roles' => $this->suggestRoles($colors)];
     }
@@ -93,114 +93,117 @@ class BrandPalette
         imagefill($small, 0, 0, imagecolorallocatealpha($small, 0, 0, 0, 127));
         imagecopyresampled($small, $source, 0, 0, 0, 0, $w, $h, $width, $height);
 
-        $pixels = [];
+        // grid[y][x] = [r, g, b] or null for transparent pixels
+        $grid = [];
         for ($y = 0; $y < $h; $y++) {
             for ($x = 0; $x < $w; $x++) {
                 $rgba = imagecolorat($small, $x, $y);
                 $alpha = ($rgba >> 24) & 0x7F;
-                if ($alpha >= 64) {
-                    continue; // more than half transparent
-                }
-                $pixels[] = [($rgba >> 16) & 0xFF, ($rgba >> 8) & 0xFF, $rgba & 0xFF];
+                $grid[$y][$x] = $alpha >= 64 ? null : [($rgba >> 16) & 0xFF, ($rgba >> 8) & 0xFF, $rgba & 0xFF];
             }
         }
+
+        $all = [];
+        $flat = [];
+        for ($y = 0; $y < $h; $y++) {
+            for ($x = 0; $x < $w; $x++) {
+                $p = $grid[$y][$x];
+                if ($p === null) {
+                    continue;
+                }
+                $all[] = $p;
+                // Pixels on an edge are blends of two real colours (anti-aliasing, resampling); they would show up as
+                // dust colours, so they are left out unless the picture has hardly anything else.
+                if (! $this->isEdge($grid, $x, $y, $w, $h, $p)) {
+                    $flat[] = $p;
+                }
+            }
+        }
+
+        $pixels = count($flat) >= max(10, (int) (count($all) * 0.05)) ? $flat : $all;
 
         return $pixels;
     }
 
+    /** @param array<int, array<int, array{0: int, 1: int, 2: int}|null>> $grid */
+    private function isEdge(array $grid, int $x, int $y, int $w, int $h, array $p): bool
+    {
+        foreach ([[1, 0], [-1, 0], [0, 1], [0, -1]] as [$dx, $dy]) {
+            $nx = $x + $dx;
+            $ny = $y + $dy;
+            if ($nx < 0 || $ny < 0 || $nx >= $w || $ny >= $h) {
+                continue;
+            }
+            $n = $grid[$ny][$nx];
+            if ($n === null || $this->distance($p, $n) > 40) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     /**
+     * Popularity clustering on a 5-bit-per-channel histogram: the most common colours become cluster
+     * centres (skipping any within CLUSTER_DISTANCE of a centre already taken), everything else joins
+     * its nearest centre. Unlike median cut this keeps a logo's few flat colours apart instead of
+     * averaging them into mud, and it is fully deterministic.
+     *
      * @param  list<array{0: int, 1: int, 2: int}>  $pixels
      * @return list<array{rgb: array{0: float, 1: float, 2: float}, count: int}>
      */
-    private function medianCut(array $pixels): array
+    private function cluster(array $pixels): array
     {
-        $boxes = [$pixels];
+        $buckets = [];
+        foreach ($pixels as [$r, $g, $b]) {
+            $key = (($r >> 3) << 10) | (($g >> 3) << 5) | ($b >> 3);
+            $buckets[$key] ??= ['count' => 0, 'sum' => [0, 0, 0]];
+            $buckets[$key]['count']++;
+            $buckets[$key]['sum'][0] += $r;
+            $buckets[$key]['sum'][1] += $g;
+            $buckets[$key]['sum'][2] += $b;
+        }
 
-        while (count($boxes) < self::BOXES) {
-            // Split the box with the widest single-channel spread (most visually mixed) and enough pixels.
-            $pick = null;
-            $pickRange = 0;
-            $pickChannel = 0;
+        $list = [];
+        foreach ($buckets as $key => $bucket) {
+            $list[] = ['key' => $key, 'count' => $bucket['count'], 'rgb' => [$bucket['sum'][0] / $bucket['count'], $bucket['sum'][1] / $bucket['count'], $bucket['sum'][2] / $bucket['count']]];
+        }
+        usort($list, fn (array $a, array $b) => [$b['count'], $a['key']] <=> [$a['count'], $b['key']]);
 
-            foreach ($boxes as $i => $box) {
-                if (count($box) < 2) {
-                    continue;
-                }
-                [$channel, $range] = $this->widestChannel($box);
-                if ($range > $pickRange) {
-                    [$pick, $pickRange, $pickChannel] = [$i, $range, $channel];
-                }
-            }
-
-            if ($pick === null || $pickRange < 8) {
+        $centres = [];
+        foreach ($list as $bucket) {
+            if (count($centres) >= self::BOXES) {
                 break;
             }
-
-            $box = $boxes[$pick];
-            usort($box, fn (array $a, array $b) => [$a[$pickChannel], $a[0], $a[1], $a[2]] <=> [$b[$pickChannel], $b[0], $b[1], $b[2]]);
-            $mid = intdiv(count($box), 2);
-            array_splice($boxes, $pick, 1, [array_slice($box, 0, $mid), array_slice($box, $mid)]);
-        }
-
-        return array_map(function (array $box): array {
-            $n = count($box);
-            $sum = [0, 0, 0];
-            foreach ($box as $p) {
-                $sum[0] += $p[0];
-                $sum[1] += $p[1];
-                $sum[2] += $p[2];
-            }
-
-            return ['rgb' => [$sum[0] / $n, $sum[1] / $n, $sum[2] / $n], 'count' => $n];
-        }, $boxes);
-    }
-
-    /** @return array{0: int, 1: int} channel index and its spread */
-    private function widestChannel(array $box): array
-    {
-        $best = [0, 0];
-
-        foreach ([0, 1, 2] as $channel) {
-            $values = array_column($box, $channel);
-            $range = max($values) - min($values);
-            if ($range > $best[1]) {
-                $best = [$channel, $range];
-            }
-        }
-
-        return $best;
-    }
-
-    /**
-     * @param  list<array{rgb: array{0: float, 1: float, 2: float}, count: int}>  $colors
-     * @return list<array{rgb: array{0: float, 1: float, 2: float}, count: int}>
-     */
-    private function mergeNear(array $colors): array
-    {
-        usort($colors, fn (array $a, array $b) => $b['count'] <=> $a['count']);
-        $merged = [];
-
-        foreach ($colors as $color) {
-            $absorbed = false;
-            foreach ($merged as &$existing) {
-                if ($this->distance($existing['rgb'], $color['rgb']) < self::MERGE_DISTANCE) {
-                    $total = $existing['count'] + $color['count'];
-                    foreach ([0, 1, 2] as $c) {
-                        $existing['rgb'][$c] = ($existing['rgb'][$c] * $existing['count'] + $color['rgb'][$c] * $color['count']) / $total;
-                    }
-                    $existing['count'] = $total;
-                    $absorbed = true;
+            $far = true;
+            foreach ($centres as $centre) {
+                if ($this->distance($centre, $bucket['rgb']) <= self::CLUSTER_DISTANCE) {
+                    $far = false;
                     break;
                 }
             }
-            unset($existing);
-
-            if (! $absorbed) {
-                $merged[] = $color;
+            if ($far) {
+                $centres[] = $bucket['rgb'];
             }
         }
 
-        return $merged;
+        $clusters = array_map(fn (array $centre) => ['sum' => [0.0, 0.0, 0.0], 'count' => 0], $centres);
+        foreach ($list as $bucket) {
+            $best = 0;
+            $bestDistance = INF;
+            foreach ($centres as $i => $centre) {
+                $d = $this->distance($centre, $bucket['rgb']);
+                if ($d < $bestDistance) {
+                    [$best, $bestDistance] = [$i, $d];
+                }
+            }
+            foreach ([0, 1, 2] as $c) {
+                $clusters[$best]['sum'][$c] += $bucket['rgb'][$c] * $bucket['count'];
+            }
+            $clusters[$best]['count'] += $bucket['count'];
+        }
+
+        return array_map(fn (array $c) => ['rgb' => [$c['sum'][0] / $c['count'], $c['sum'][1] / $c['count'], $c['sum'][2] / $c['count']], 'count' => $c['count']], $clusters);
     }
 
     /**
@@ -227,6 +230,9 @@ class BrandPalette
                 'weight' => $share * (0.5 + $s),
             ];
         }
+
+        $solid = array_values(array_filter($rows, fn (array $r) => $r['share'] >= 0.015));
+        $rows = $solid !== [] ? $solid : array_slice($rows, 0, 1);
 
         usort($rows, fn (array $a, array $b) => [(int) $a['is_neutral'], -$a['weight'], $a['hex']] <=> [(int) $b['is_neutral'], -$b['weight'], $b['hex']]);
 
