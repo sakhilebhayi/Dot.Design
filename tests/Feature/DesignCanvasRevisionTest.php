@@ -9,10 +9,12 @@ use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
+use Tests\Support\ReadsEditorBoot;
 use Tests\TestCase;
 
 class DesignCanvasRevisionTest extends TestCase
 {
+    use ReadsEditorBoot;
     use RefreshDatabase;
 
     private function setUpCanvas(): array
@@ -138,8 +140,8 @@ class DesignCanvasRevisionTest extends TestCase
         [$user, $project, $canvas] = $this->setUpCanvas();
         $this->save($user, $project, $canvas, ['revision' => 1, 'elements' => []])->assertOk();
 
-        $html = html_entity_decode($this->actingAs($user)->get(route('design.projects.show', $project))->assertOk()->getContent());
+        $boot = $this->editorBoot($this->actingAs($user)->get(route('design.projects.show', $project))->assertOk()->getContent());
 
-        $this->assertStringContainsString('"revision":2', $html);
+        $this->assertSame(2, $boot['pages'][0]['revision']);
     }
 }

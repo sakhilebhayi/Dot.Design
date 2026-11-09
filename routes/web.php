@@ -109,7 +109,6 @@ Route::middleware([
         Route::get('projects', [DesignProjectController::class, 'index'])->name('projects.index');
         Route::get('projects/create', [DesignProjectController::class, 'create'])->name('projects.create');
         Route::post('projects', [DesignProjectController::class, 'store'])->name('projects.store');
-        Route::get('projects/{project}', [DesignProjectController::class, 'show'])->name('projects.show');
         Route::delete('projects/{project}', [DesignProjectController::class, 'destroy'])->name('projects.destroy');
 
         Route::post('projects/{project}/canvases', [DesignCanvasController::class, 'store'])->name('projects.canvases.store');
@@ -127,7 +126,7 @@ Route::middleware([
     });
 
     // R-45 studio routes (docs/R45_ARCHITECTURE.md section 6): one file per owner so parallel work does not collide.
-    foreach (['backend', 'business', 'collab', 'ai', 'output', 'integrations'] as $studioRoutes) {
+    foreach (['backend', 'business', 'collab', 'ai', 'output', 'integrations', 'editorui'] as $studioRoutes) {
         require __DIR__.'/studio/'.$studioRoutes.'.php';
     }
 

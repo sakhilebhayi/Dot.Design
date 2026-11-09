@@ -4,8 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Events\DesignProjectCreated;
 use App\Events\DesignProjectDeleted;
-use App\Models\AiGenerationLog;
-use App\Models\DesignAsset;
 use App\Models\DesignProject;
 use App\Services\Design\ActivityLog;
 use App\Services\Design\Formats;
@@ -76,34 +74,6 @@ class DesignProjectController extends Controller
         event(new DesignProjectCreated($project));
 
         return redirect()->route('design.projects.show', $project)->with('status', 'Project created.');
-    }
-
-    public function show(DesignProject $project): View
-    {
-        $this->authorize('view', $project);
-
-        $project->load('canvases');
-
-        // This project's own assets plus the user's library (assets with no
-        // project). The per-user global scope still applies to the whole
-        // group, so nothing here can reach another user's rows.
-        $assets = DesignAsset::where(fn ($query) => $query
-            ->where('design_project_id', $project->id)
-            ->orWhereNull('design_project_id'))
-            ->latest('id')->limit(100)->get();
-        $assetUsage = DesignAsset::usageFor($project->user_id);
-
-        // The editor draws an image element from its asset's details. Include
-        // every asset the project's pages reference, even one filed under a
-        // different project (so not in the panel above), plus the panel's own.
-        $referenced = $project->canvases
-            ->flatMap(fn ($canvas) => collect($canvas->elements)->where('type', 'image')->pluck('asset_id'))
-            ->filter()->unique()->values();
-        $assetIndex = DesignAsset::whereIn('id', $referenced)->get()->concat($assets)
-            ->unique('id')->mapWithKeys(fn ($asset) => [$asset->id => $asset->toEditorArray()]);
-        $generations = AiGenerationLog::where('design_project_id', $project->id)->latest()->limit(10)->get();
-
-        return view('design.projects.show', compact('project', 'assets', 'assetUsage', 'assetIndex', 'generations'));
     }
 
     /**

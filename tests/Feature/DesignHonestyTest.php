@@ -7,6 +7,7 @@ use App\Models\DesignAsset;
 use App\Models\DesignProject;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Support\ReadsEditorBoot;
 use Tests\TestCase;
 
 /**
@@ -15,6 +16,7 @@ use Tests\TestCase;
  */
 class DesignHonestyTest extends TestCase
 {
+    use ReadsEditorBoot;
     use RefreshDatabase;
 
     private function project(User $user): DesignProject
@@ -36,15 +38,18 @@ class DesignHonestyTest extends TestCase
         $this->assertStringNotContainsString('Image generated', session('status'));
     }
 
-    public function test_editor_labels_mock_output_and_the_generate_panel(): void
+    public function test_editor_is_told_which_picture_is_a_labelled_placeholder(): void
     {
         $user = User::factory()->withPersonalTeam()->create();
         $project = $this->project($user);
         $this->actingAs($user)->post(route('design.projects.ai-generations.store', $project), ['prompt' => 'a fox']);
 
-        $html = $this->actingAs($user)->get(route('design.projects.show', $project))->assertOk()->getContent();
+        $boot = $this->editorBoot($this->actingAs($user)->get(route('design.projects.show', $project))->assertOk()->getContent());
 
-        $this->assertGreaterThanOrEqual(2, substr_count($html, 'Placeholder (no AI provider connected)'));
+        // The editor draws the label itself; the page hands it the flag and the wording (the old generate panel moved to the assistant module).
+        $placeholder = collect($boot['assets'])->first(fn ($a) => $a['placeholder'] === true);
+        $this->assertNotNull($placeholder);
+        $this->assertSame('Placeholder (no AI provider connected)', $placeholder['placeholder_label']);
     }
 
     public function test_generated_asset_is_marked_as_placeholder_in_meta(): void

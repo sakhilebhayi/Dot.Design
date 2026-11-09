@@ -91,7 +91,7 @@ JPEG and PDF export do not exist.
 
 ## The canvas editor
 
-The editor is Alpine.js with no extra framework. Its logic is split so the part that can be tested is: `public/js/design-editor/geometry.js` (resize and rotate maths, snapping, zoom, z-order, duplicate) and `history.js` (undo/redo) are pure functions with a Node test suite (`npm run test:js`, needs Node 20 or newer, no dependencies); `editor.js` is the Alpine glue. They are plain classic scripts rather than built bundles, so there is no build step and they load before Livewire starts Alpine.
+The editor is a vanilla-JavaScript studio (no framework, no Alpine) built by Vite: the engine in `resources/js/studio/{doc,engine}/` does every document change as an undoable command, and the workspace UI in `resources/js/studio/ui/` is built on a small module registry (`docs/R45_UI_EDITOR.md`). The page boots from one JSON data block and saves each changed page with a compare-and-swap revision. The Node test suite (`npm run test:js`, Node 20 or newer, no dependencies) covers the engine and every pure UI module.
 
 | | |
 |---|---|

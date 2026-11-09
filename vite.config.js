@@ -8,6 +8,7 @@ export default defineConfig({
                 'resources/css/app.css',
                 'resources/js/app.js',
                 'resources/js/studio/main.js',
+                'resources/css/studio.css',
                 // R-45 one entry per line so parallel branches merge cleanly
                 'resources/css/pages/share.css',
                 'resources/css/pages/reviews.css',
