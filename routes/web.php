@@ -126,6 +126,11 @@ Route::middleware([
         Route::delete('assets/{asset}', [DesignAssetController::class, 'destroy'])->name('assets.destroy');
     });
 
+    // R-45 studio routes (docs/R45_ARCHITECTURE.md section 6): one file per owner so parallel work does not collide.
+    foreach (['backend', 'business', 'collab', 'ai', 'output', 'integrations'] as $studioRoutes) {
+        require __DIR__.'/studio/'.$studioRoutes.'.php';
+    }
+
     // Design-token / component-library domain (MVP scaffold).
     // Deliberately global/shared -- not scoped to the current user or team.
     // See database/migrations/2026_08_01_000001_create_design_system_tables.php
@@ -166,6 +171,9 @@ Route::middleware([
         });
     });
 });
+
+// R-45 public studio routes (share-link viewer, public previews): no auth group, own throttling inside the file.
+require __DIR__.'/studio/public.php';
 
 // Public sign-up is closed (accounts are created by InfoDot at first sign-in). Keep the named route so any link or
 // invitation email that points at it lands on the login page instead of failing.

@@ -1,0 +1,145 @@
+{
+  "$comment": "Dot.Design document schema v2. SINGLE SOURCE OF TRUTH: the PHP validator (App\\Services\\Design\\DocumentSchema) and the JS engine (resources/js/studio/doc/schema.js) both read this file. Change it here, never in one runtime only. A page is one design_canvases row; its `elements` column holds the Element[] below.",
+  "version": 2,
+  "limits": {
+    "max_pages": 60,
+    "max_elements_per_page": 300,
+    "max_group_depth": 3,
+    "max_text_length": 5000,
+    "max_name_length": 80,
+    "max_json_bytes": 1048576,
+    "min_size": 1,
+    "max_size": 20000,
+    "max_coord": 40000,
+    "max_page_duration_ms": 60000
+  },
+  "enums": {
+    "type": ["text", "shape", "image", "icon", "group"],
+    "role": ["headline", "subhead", "body", "cta", "logo", "photo", "price", "badge", "contact", "decor", "background", "other"],
+    "shape_kind": ["rect", "ellipse", "triangle", "star", "polygon", "line", "arrow", "path"],
+    "text_align": ["left", "center", "right", "justify"],
+    "text_valign": ["top", "middle", "bottom"],
+    "text_case": ["none", "upper", "lower", "title"],
+    "auto_fit": ["none", "shrink", "grow"],
+    "image_fit": ["cover", "contain", "fill"],
+    "image_mask": ["none", "ellipse", "rounded", "star", "triangle", "hexagon"],
+    "blend": ["normal", "multiply", "screen", "overlay", "darken", "lighten"],
+    "dash": ["solid", "dashed", "dotted"],
+    "background_type": ["solid", "gradient", "image"],
+    "gradient_kind": ["linear", "radial"],
+    "anim_preset_in": ["none", "fade", "rise", "drop", "slide-left", "slide-right", "zoom-in", "pop", "wipe-left", "wipe-up", "type", "blur-in"],
+    "anim_preset_out": ["none", "fade", "sink", "slide-left", "slide-right", "zoom-out", "wipe-left"],
+    "anim_preset_loop": ["none", "pulse", "float", "spin", "wiggle"],
+    "anim_easing": ["linear", "ease-out", "ease-in-out", "spring"],
+    "page_transition": ["none", "fade", "slide", "zoom"]
+  },
+  "value_types": {
+    "hex": "^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$",
+    "uuid_or_id": "^[A-Za-z0-9_-]{1,64}$",
+    "font_key": "^[a-z0-9-]{1,40}$",
+    "token_ref": "^brand\\.(colors\\.[a-z0-9-]{1,30}|fonts\\.(heading|body|accent))$",
+    "bind_key": "^[a-z_]{1,40}$",
+    "icon_key": "^[a-z0-9-]{1,40}$"
+  },
+  "paint": {
+    "$comment": "A paint is a hex string, or a gradient object, or null (none).",
+    "gradient": {
+      "kind": "gradient_kind",
+      "angle": {"type": "number", "min": -360, "max": 360, "default": 90},
+      "stops": {"type": "array", "min": 2, "max": 6, "item": {"at": {"type": "number", "min": 0, "max": 1}, "color": "hex"}}
+    }
+  },
+  "page": {
+    "id": "db id (integer), assigned by the server; clients send it back unchanged",
+    "name": {"type": "string", "max": 80, "default": null},
+    "width": {"type": "number", "min": 16, "max": 20000, "default": "project.width"},
+    "height": {"type": "number", "min": 16, "max": 20000, "default": "project.height"},
+    "background": {
+      "type": {"enum": "background_type", "default": "solid"},
+      "color": {"type": "hex", "default": "#ffffff"},
+      "gradient": "paint.gradient or null",
+      "asset_id": {"type": "integer or null", "default": null},
+      "fit": {"enum": "image_fit", "default": "cover"}
+    },
+    "duration_ms": {"type": "integer", "min": 500, "max": 60000, "default": 5000},
+    "transition": {"enum": "page_transition", "default": "none"},
+    "guides": {"type": "array", "max": 40, "item": {"axis": ["x", "y"], "pos": "number"}},
+    "elements": "Element[] (max_elements_per_page)",
+    "revision": "integer, bumped by the server on every accepted save (compare-and-swap)"
+  },
+  "element": {
+    "common": {
+      "id": {"type": "uuid_or_id", "required": true},
+      "type": {"enum": "type", "required": true},
+      "name": {"type": "string", "max": 80, "default": null},
+      "role": {"enum": "role", "default": "other"},
+      "bind": {"type": "bind_key or null", "default": null, "$comment": "Template slot key, e.g. business_name, tagline, phone, offer, logo, photo_1. The brief fills bound slots; unbound elements are never touched."},
+      "x": {"type": "number", "min": -40000, "max": 40000, "required": true},
+      "y": {"type": "number", "min": -40000, "max": 40000, "required": true},
+      "width": {"type": "number", "min": 1, "max": 20000, "required": true},
+      "height": {"type": "number", "min": 1, "max": 20000, "required": true},
+      "rotation": {"type": "number", "min": -360, "max": 360, "default": 0},
+      "opacity": {"type": "number", "min": 0, "max": 1, "default": 1},
+      "locked": {"type": "boolean", "default": false},
+      "hidden": {"type": "boolean", "default": false},
+      "flip_x": {"type": "boolean", "default": false},
+      "flip_y": {"type": "boolean", "default": false},
+      "blend": {"enum": "blend", "default": "normal"},
+      "shadow": {"type": "object or null", "default": null, "props": {"x": {"min": -200, "max": 200}, "y": {"min": -200, "max": 200}, "blur": {"min": 0, "max": 200}, "color": "hex", "opacity": {"min": 0, "max": 1}}},
+      "animation": {"type": "object or null", "default": null, "props": {
+        "in": {"preset": "anim_preset_in", "delay_ms": {"min": 0, "max": 60000}, "duration_ms": {"min": 100, "max": 10000}, "easing": "anim_easing"},
+        "out": {"preset": "anim_preset_out", "delay_ms": {"min": 0, "max": 60000}, "duration_ms": {"min": 100, "max": 10000}, "easing": "anim_easing"},
+        "loop": {"preset": "anim_preset_loop", "duration_ms": {"min": 300, "max": 10000}}
+      }},
+      "tokens": {"type": "object or null", "default": null, "$comment": "Maps a color-carrying prop (color, fill, stroke_color, shadow_color) to a brand token_ref. Recorded when a brand colour is applied; resolved ONLY when the user accepts a brand update. Literal hex in the element is always what renders."}
+    },
+    "text": {
+      "text": {"type": "string", "max": 5000, "required": true},
+      "font": {"type": "font_key", "default": "inter", "$comment": "Key from config/design_fonts.php; unknown keys fall back to the default and are reported."},
+      "fontSize": {"type": "number", "min": 4, "max": 2000, "default": 32},
+      "fontWeight": {"type": "integer", "min": 100, "max": 900, "default": 400},
+      "italic": {"type": "boolean", "default": false},
+      "underline": {"type": "boolean", "default": false},
+      "strike": {"type": "boolean", "default": false},
+      "align": {"enum": "text_align", "default": "left"},
+      "valign": {"enum": "text_valign", "default": "top"},
+      "lineHeight": {"type": "number", "min": 0.6, "max": 3, "default": 1.2},
+      "letterSpacing": {"type": "number", "min": -0.2, "max": 1, "default": 0, "$comment": "em"},
+      "textCase": {"enum": "text_case", "default": "none"},
+      "color": {"type": "hex", "default": "#18181b"},
+      "autoFit": {"enum": "auto_fit", "default": "none"},
+      "stroke": {"type": "object or null", "default": null, "props": {"color": "hex", "width": {"min": 0, "max": 40}}}
+    },
+    "shape": {
+      "kind": {"enum": "shape_kind", "required": true},
+      "fill": {"type": "paint or null", "default": "#e4e4e7"},
+      "stroke": {"type": "object or null", "default": null, "props": {"color": "hex", "width": {"min": 0, "max": 100}, "dash": "dash", "cap": ["butt", "round"]}},
+      "radius": {"type": "number", "min": 0, "max": 5000, "default": 0, "$comment": "rect only"},
+      "sides": {"type": "integer", "min": 3, "max": 12, "default": 6, "$comment": "polygon only"},
+      "points": {"type": "integer", "min": 3, "max": 16, "default": 5, "$comment": "star only"},
+      "inner": {"type": "number", "min": 0.1, "max": 0.95, "default": 0.5, "$comment": "star inner radius ratio"},
+      "d": {"type": "string", "max": 20000, "default": null, "$comment": "path only; SVG path data in the element's own width x height box (viewBox 0 0 width height). Commands M L H V C S Q T Z only (absolute or relative); no arcs, no scripts."}
+    },
+    "image": {
+      "asset_id": {"type": "integer or null", "default": null, "$comment": "null = an empty picture slot rendered as an 'Add a picture' placeholder; never exported as content."},
+      "fit": {"enum": "image_fit", "default": "cover"},
+      "focal": {"type": "object", "default": {"x": 0.5, "y": 0.5}, "props": {"x": {"min": 0, "max": 1}, "y": {"min": 0, "max": 1}}},
+      "zoom": {"type": "number", "min": 1, "max": 8, "default": 1},
+      "mask": {"enum": "image_mask", "default": "none"},
+      "radius": {"type": "number", "min": 0, "max": 5000, "default": 0},
+      "border": {"type": "object or null", "default": null, "props": {"color": "hex", "width": {"min": 0, "max": 100}}},
+      "filters": {"type": "object or null", "default": null, "props": {"brightness": {"min": 0, "max": 2}, "contrast": {"min": 0, "max": 2}, "saturate": {"min": 0, "max": 2}, "blur": {"min": 0, "max": 40}, "grayscale": {"min": 0, "max": 1}, "sepia": {"min": 0, "max": 1}, "hue": {"min": -180, "max": 180}}}
+    },
+    "icon": {
+      "icon": {"type": "icon_key", "required": true, "$comment": "Key from resources/design/icons.json (own-drawn, MIT licensed in this repo)."},
+      "color": {"type": "hex", "default": "#18181b"},
+      "strokeWidth": {"type": "number", "min": 0.5, "max": 6, "default": 2}
+    },
+    "group": {
+      "children": {"type": "Element[]", "required": true, "$comment": "Child x/y are relative to the group's own top-left. width/height of the group are the bounding box of its children at creation and are re-derived on any child change. Max depth 3."}
+    }
+  },
+  "legacy": {
+    "$comment": "v1 elements (text|rectangle|image with fontSize,color,fill,asset_id) are upgraded on read by migrateElement() in BOTH runtimes. rectangle -> {type:'shape',kind:'rect',fill}. Text gains font:'inter'. All other v1 keys carry over unchanged. Migration is idempotent and never writes until the next real save."
+  }
+}
