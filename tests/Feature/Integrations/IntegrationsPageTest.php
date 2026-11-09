@@ -59,7 +59,7 @@ class IntegrationsPageTest extends IntegrationTestCase
     public function test_status_needs_a_signed_in_user(): void
     {
         $this->get(route('design.integrations.index'))->assertRedirect();
-        $this->getJson(route('design.integrations.status'))->assertRedirect();
+        $this->getJson(route('design.integrations.status'))->assertUnauthorized();
     }
 
     public function test_design_events_with_everything_off_make_no_call_and_break_nothing(): void
