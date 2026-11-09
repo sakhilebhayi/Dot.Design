@@ -53,6 +53,8 @@ export function mountSimplePanel(ctx, shell) {
             const list = [];
             if (kit && kit.colors) for (const c of kit.colors.slice(0, 8)) list.push({ hex: c.hex, token: 'brand.colors.' + c.key, label: c.name || c.key });
             for (const hex of ['#ffffff', '#f3f4f6', '#111827']) list.push({ hex, label: hex });
+            // the colour the page really is, when it is none of the choices (a template's own colour), so the current state is always visible
+            if (cur && !list.some((c) => c.hex.toLowerCase() === cur)) list.unshift({ hex: cur, label: 'This page: ' + cur });
             bgChips.replaceChildren(...list.map((c) => swatch(c.hex, { label: c.label, selected: cur === c.hex.toLowerCase(), onClick: () => setPageColour(ctx, ctx.selection().page, c.hex, { token: c.token || null }) })));
         };
         paint();

@@ -159,3 +159,44 @@ test('the fit action is offered only when the box is clearly taller than the tex
     // text that overflows a fixed box is also offered (the box is too small)
     assert.equal(boxFit(body({ height: 20 }), stub).offer, true);
 });
+
+// ---- recently used elements ----------------------------------------------------------------------------
+import { MAX_RECENT, cleanRecents, entryId, pushRecent, readRecents, writeRecents } from '../../resources/js/studio/ui/recents.js';
+import { addSize } from '../../resources/js/studio/ui/insert.js';
+
+test('recently used: newest first, no duplicates, capped', () => {
+    let list = [];
+    list = pushRecent(list, { t: 'shape', k: 'rect' });
+    list = pushRecent(list, { t: 'icon', k: 'phone' });
+    list = pushRecent(list, { t: 'shape', k: 'rect' });
+    assert.deepEqual(list.map(entryId), ['shape:rect', 'icon:phone']);
+    for (let i = 0; i < 20; i += 1) list = pushRecent(list, { t: 'lib', g: 'badges', k: 'Burst ' + i });
+    assert.equal(list.length, MAX_RECENT);
+    assert.equal(list[0].k, 'Burst 19');
+    assert.equal(entryId({ t: 'lib', g: 'badges', k: 'Sale' }), 'lib:badges:Sale');
+});
+
+test('stored recents are cleaned: bad entries, duplicates and oversized values are dropped', () => {
+    const raw = [{ t: 'shape', k: 'rect' }, { t: 'shape', k: 'rect' }, { t: 'bogus', k: 'x' }, null, 'text', { t: 'icon' }, { t: 'icon', k: 'a'.repeat(500) }, { t: 'lib', g: 7, k: 'x' }, { t: 'icon', k: 'phone', extra: 'dropped' }];
+    assert.deepEqual(cleanRecents(raw), [{ t: 'shape', k: 'rect' }, { t: 'icon', k: 'phone' }]);
+    assert.deepEqual(cleanRecents('nonsense'), []);
+    const store = new Map();
+    const storage = { getItem: (k) => (store.has(k) ? store.get(k) : null), setItem: (k, v) => store.set(k, v) };
+    writeRecents('k', [{ t: 'shape', k: 'star' }], storage);
+    assert.deepEqual(readRecents('k', storage), [{ t: 'shape', k: 'star' }]);
+    assert.deepEqual(readRecents('missing', storage), []);
+    store.set('bad', '{not json');
+    assert.deepEqual(readRecents('bad', storage), [], 'unreadable storage is an empty list, never an error');
+    assert.deepEqual(readRecents('k', { getItem() { throw new Error('blocked'); } }), []);
+});
+
+test('the size peek uses the same sizes insert() adds things at', () => {
+    const page = { width: 1000, height: 500 };
+    assert.deepEqual(addSize(page, { kind: 'shape', shape: 'rect' }), { width: 280, height: 200 });
+    assert.deepEqual(addSize(page, { kind: 'shape', shape: 'ellipse' }), { width: 280, height: 280 });
+    assert.deepEqual(addSize(page, { kind: 'shape', shape: 'line' }), { width: 360, height: 12 });
+    assert.deepEqual(addSize(page, { kind: 'icon' }), { width: 70, height: 70 });
+    assert.deepEqual(addSize(page, { kind: 'library', width: 400, height: 200 }), { width: 400, height: 200 });
+    assert.deepEqual(addSize(page, { kind: 'library', width: 1800, height: 900 }), { width: 900, height: 450 }, 'wider than 90% of the page comes in scaled');
+    assert.equal(addSize(page, { kind: 'text' }), null);
+});
