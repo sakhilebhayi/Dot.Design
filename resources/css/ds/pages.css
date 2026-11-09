@@ -73,9 +73,13 @@ a.lt-contact:hover .lt-contact__stage .lt-frame, a.lt-contact:focus-visible .lt-
 .lt-auth__table { display: none; background: var(--lt-stage); position: relative; padding: var(--lt-space-7); place-items: center; }
 @media (min-width: 60rem) { .lt-auth__table { display: grid; } }
 .lt-auth__table .lt-frame { width: min(100%, 22rem); }
-.lt-auth__sheet .lt-logo, .lt-auth__sheet .lt-logo img { display: block; width: 100%; height: 100%; }
-.lt-auth__sheet .lt-logo { padding: var(--lt-space-2); }
-.lt-auth__sheet .lt-logo img { object-fit: contain; }
+/* sizing only: which logo variant shows is decided in vocab.css and nothing here may set display on the images */
+.lt-auth__sheet .lt-logo { display: block; width: 100%; height: 100%; padding: var(--lt-space-2); }
+.lt-auth__sheet .lt-logo img { width: 100%; height: 100%; object-fit: contain; }
+/* the sign-in table: three real library templates on the stage, each held by its crop marks */
+.lt-auth__trio { display: flex; align-items: flex-end; justify-content: center; gap: var(--lt-space-6); width: min(100%, 44rem); }
+.lt-auth__trio .lt-frame { --fit: 17rem; width: min(30%, calc(var(--fit) * var(--w) / var(--h))); flex: none; height: auto; --crop-len: 12px; --crop-gap: 8px; }
+.lt-auth__trio .lt-frame:nth-child(3) { width: 36%; }
 .lt-auth__main { display: grid; align-content: center; padding: var(--lt-space-6) var(--lt-space-5); gap: var(--lt-space-6); }
 .lt-auth__box { width: 100%; max-width: 24rem; margin-inline: auto; display: grid; gap: var(--lt-space-5); }
 .lt-auth__title { font-family: var(--lt-font-display); font-weight: 600; font-size: var(--lt-text-2xl); letter-spacing: -0.02em; line-height: 1.1; }
