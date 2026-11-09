@@ -1,4 +1,1 @@
-[
-  {"slug": "promo-poster-bold", "scenario": "recolour", "code": "text-crosses-shape", "element": "Headline", "reason": "A three line display headline shares the top of the poster with the offer badge. The sample headline keeps its first line short; a longer first line reaches the badge. Fixing it needs auto layout, which the engine does not have."},
-  {"slug": "promo-poster-bold", "scenario": "recolour", "code": "text-overlap", "element": "Headline", "reason": "Same as above: a long first headline line meets the offer badge text."}
-]
+[]

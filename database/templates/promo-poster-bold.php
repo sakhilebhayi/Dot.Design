@@ -26,14 +26,15 @@ $p->text('Your Business', $m, $m, $cw * 0.6, ['size' => 20, 'weight' => 700, 'ls
 $p->text('@yourbusiness', $p->right() - 220, $m, 220, ['size' => 20, 'weight' => 700, 'align' => 'right', 'role' => 'contact', 'bind' => 'social_handle', 'name' => 'Social handle']);
 $p->rule($m, $m + 40, $cw, 5, 'ink', ['name' => 'Top rule']);
 
-$p->text("BIG\nWEEKEND\nSAVINGS", $m, 150, $cw, ['font' => 'head', 'size' => 196, 'lh' => 0.94, 'case' => 'upper', 'role' => 'headline', 'bind' => 'headline', 'name' => 'Headline']);
+// the headline keeps to the left of the badge, so a longer headline gets smaller instead of running into it
+$p->text("BIG\nWEEKEND\nSAVINGS", $m, 176, 516, ['font' => 'head', 'size' => 136, 'lh' => 1.02, 'case' => 'upper', 'role' => 'headline', 'bind' => 'headline', 'name' => 'Headline']);
 
-$p->ellipse(571, 104, 212, 212, 'accent', ['name' => 'Offer badge']);
+$p->ellipse(593, 112, 190, 190, 'accent', ['name' => 'Offer badge']);
 // the text box is the square inside the circle, so a longer offer shrinks to stay on the badge
-$p->text("UP TO\n40%\nOFF", 571 + 31, 104 + 31, 150, ['font' => 'head', 'size' => 44, 'lh' => 1.0, 'color' => 'extra', 'align' => 'center', 'valign' => 'middle', 'h' => 150, 'role' => 'badge', 'bind' => 'offer', 'name' => 'Offer text', 'case' => 'upper']);
+$p->text("UP TO\n40%\nOFF", 593 + 28, 112 + 28, 134, ['font' => 'head', 'size' => 40, 'lh' => 1.0, 'color' => 'extra', 'align' => 'center', 'valign' => 'middle', 'h' => 134, 'role' => 'badge', 'bind' => 'offer', 'name' => 'Offer text', 'case' => 'upper']);
 
-$p->text('Everything in store, one weekend only.', $m, 716, $cw, ['size' => 27, 'weight' => 700, 'role' => 'subhead', 'bind' => 'subheadline', 'name' => 'Subheading']);
-$p->photo($m, 772, $cw - 18, 230, 'photo_1', 'offset', ['name' => 'Main picture']);
+$p->text('Everything in store, one weekend only.', $m, 640, $cw, ['size' => 27, 'weight' => 700, 'role' => 'subhead', 'bind' => 'subheadline', 'name' => 'Subheading']);
+$p->photo($m, 700, $cw - 18, 300, 'photo_1', 'offset', ['name' => 'Main picture']);
 
 $p->rect(0, 1040, $p->w, $p->h - 1040, 'ink', ['name' => 'Footer band']);
 $p->text('Friday to Sunday, 9am to 5pm', $m, 1066, $cw, ['size' => 26, 'weight' => 700, 'color' => 'bg', 'role' => 'contact', 'bind' => 'date', 'name' => 'Dates and hours']);

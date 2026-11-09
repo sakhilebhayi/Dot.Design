@@ -84,7 +84,7 @@ ic('lightbulb', 'business', 'idea,tip,innovation,light', 'M9 18H15M10 21H14M12 3
 ic('rocket', 'business', 'launch,startup,fast,growth', 'M12 3C16 5 18 9 18 13L15 16H9L6 13C6 9 8 5 12 3Z'.c(12, 10, 1.8).'M6 13L3.5 15.5L6.5 16M18 13L20.5 15.5L17.5 16M10 19L12 21.5L14 19');
 ic('trophy', 'business', 'win,award,prize,champion', 'M8 4H16V9C16 11.2 14.2 13 12 13C9.8 13 8 11.2 8 9ZM8 5.5H4.5C4.5 8.5 5.5 10 8 10.3M16 5.5H19.5C19.5 8.5 18.5 10 16 10.3M12 13V17M9 17H15M8 20H16');
 ic('award', 'business', 'medal,badge,quality,prize', c(12, 9, 5.5).'M8.5 13.5L7 21L12 18.5L17 21L15.5 13.5');
-ic('users', 'business', 'team,people,group,staff', c(9, 8, 3.5).'M2.5 20C2.5 16.5 5.5 14 9 14C12.5 14 15.5 16.5 15.5 20M16 4.7C17.7 5 19 6.4 19 8C19 9.6 17.7 11 16 11.3M17.5 14.2C20 14.8 21.5 17 21.5 20');
+ic('users', 'business', 'team,people,group,family,staff', c(9, 8, 3.5).'M2.5 20C2.5 16.5 5.5 14 9 14C12.5 14 15.5 16.5 15.5 20M16 4.7C17.7 5 19 6.4 19 8C19 9.6 17.7 11 16 11.3M17.5 14.2C20 14.8 21.5 17 21.5 20');
 ic('user', 'business', 'person,profile,account,customer', c(12, 8, 4).'M4 21C4 16.5 7.5 14 12 14C16.5 14 20 16.5 20 21');
 ic('id-card', 'business', 'badge,staff,identity,pass', rr(3, 5, 18, 14, 2).c(9, 11, 2.2).'M5.5 16C5.8 14.5 7.2 13.7 9 13.7C10.8 13.7 12.2 14.5 12.5 16M14.5 10H18.5M14.5 14H18.5');
 ic('clipboard', 'business', 'list,tasks,notes,form', rr(5, 4, 14, 17, 2).rr(9, 2.5, 6, 3.5, 1).'M9 11H15M9 15H15');
@@ -124,7 +124,7 @@ ic('cart', 'commerce', 'shopping,basket,buy,store', 'M3 4H6L8 15H18L20 7H7'.c(9.
 ic('bag', 'commerce', 'shopping,purchase,retail,buy', 'M5 8H19L20 21H4ZM9 8V6.5C9 4.6 10.3 3 12 3C13.7 3 15 4.6 15 6.5V8');
 ic('tag', 'commerce', 'price,label,sale,offer', 'M3 12.5V4H12.5L21 12.5L12.5 21Z'.c(8, 8, 1.4));
 ic('percent', 'commerce', 'discount,sale,offer,deal', 'M19 5L5 19'.c(7.5, 7.5, 2.5).c(16.5, 16.5, 2.5));
-ic('gift', 'commerce', 'present,reward,voucher,offer', rr(3, 9, 18, 4, 1).'M5 13V21H19V13M12 9V21M12 9C12 9 9.5 9 8.5 7.7C7.5 6.3 8.5 4.5 10 5C11.5 5.5 12 9 12 9M12 9C12 9 14.5 9 15.5 7.7C16.5 6.3 15.5 4.5 14 5C12.5 5.5 12 9 12 9');
+ic('gift', 'commerce', 'present,reward,voucher,birthday,offer', rr(3, 9, 18, 4, 1).'M5 13V21H19V13M12 9V21M12 9C12 9 9.5 9 8.5 7.7C7.5 6.3 8.5 4.5 10 5C11.5 5.5 12 9 12 9M12 9C12 9 14.5 9 15.5 7.7C16.5 6.3 15.5 4.5 14 5C12.5 5.5 12 9 12 9');
 ic('truck', 'commerce', 'delivery,shipping,transport,courier', 'M2 6H14V17H2ZM14 9.5H18L21 13V17H14'.c(6.5, 18, 2).c(17.5, 18, 2));
 ic('credit-card', 'commerce', 'payment,card,pay,bank', rr(2.5, 5, 19, 14, 2).'M2.5 10H21.5M6 15H10');
 ic('receipt', 'commerce', 'invoice,bill,slip,payment', 'M5 3H19V21L16.5 19L14 21L12 19L10 21L7.5 19L5 21ZM9 8H15M9 12H15M9 15.5H12');
@@ -154,7 +154,7 @@ ic('cocktail', 'food', 'drink,bar,party,happy-hour', 'M4 4H20L12 13ZM12 13V20M8 
 ic('beer', 'food', 'drink,pub,bar,lager', 'M5 6H15V19C15 20.1 14.1 21 13 21H7C5.9 21 5 20.1 5 19ZM15 9H17.5C18.9 9 20 10.1 20 11.5V14C20 15.4 18.9 16.5 17.5 16.5H15M5 6C4.5 4 7 3 8.5 4C9.5 2.5 12 2.5 13 4C14.5 3.5 16 4.5 15 6');
 
 // ---- social ---------------------------------------------------------------------------------
-ic('heart', 'social', 'like,love,favourite,care', 'M12 20.5C5 15 3 11.5 3 8.5C3 5.8 5 4 7.5 4C9.5 4 11 5 12 6.8C13 5 14.5 4 16.5 4C19 4 21 5.8 21 8.5C21 11.5 19 15 12 20.5Z');
+ic('heart', 'social', 'like,love,wedding,favourite,care', 'M12 20.5C5 15 3 11.5 3 8.5C3 5.8 5 4 7.5 4C9.5 4 11 5 12 6.8C13 5 14.5 4 16.5 4C19 4 21 5.8 21 8.5C21 11.5 19 15 12 20.5Z');
 ic('thumbs-up', 'social', 'like,approve,good,review', 'M7 11L11 3C12.7 3 13.5 4.2 13.5 5.5V9H18.5C19.6 9 20.4 10 20.2 11L19 18C18.8 19.2 17.8 20 16.6 20H7ZM3.5 11H7V20H3.5Z');
 ic('share', 'social', 'send,network,post,spread', c(6, 12, 2.5).c(18, 6, 2.5).c(18, 18, 2.5).'M8.2 10.8L15.8 7.2M8.2 13.2L15.8 16.8');
 ic('camera', 'social', 'photo,picture,snap,shoot', 'M4 7H8L9.5 4.5H14.5L16 7H20C20.6 7 21 7.4 21 8V18C21 18.6 20.6 19 20 19H4C3.4 19 3 18.6 3 18V8C3 7.4 3.4 7 4 7Z'.c(12, 12.5, 3.7));
@@ -165,7 +165,7 @@ ic('bell', 'social', 'notification,alert,reminder,ring', 'M6 16V10.5C6 7.5 8.7 5
 ic('eye', 'social', 'view,see,visible,watch', 'M2 12C4.5 7.5 8 5.5 12 5.5C16 5.5 19.5 7.5 22 12C19.5 16.5 16 18.5 12 18.5C8 18.5 4.5 16.5 2 12Z'.c(12, 12, 3));
 ic('video', 'social', 'film,record,clip,movie', rr(3, 6, 13, 12, 2).'M16 10.5L21 7.5V16.5L16 13.5');
 ic('music-note', 'social', 'audio,song,sound,playlist', 'M9 18V5L20 3V16'.c(6.5, 18, 2.5).c(17.5, 16, 2.5));
-ic('mic', 'social', 'voice,podcast,record,audio', rr(9, 3, 6, 11, 3).'M5.5 11C5.5 14.9 8.4 18 12 18C15.6 18 18.5 14.9 18.5 11M12 18V21M9 21H15');
+ic('mic', 'social', 'microphone,voice,podcast,record,audio', rr(9, 3, 6, 11, 3).'M5.5 11C5.5 14.9 8.4 18 12 18C15.6 18 18.5 14.9 18.5 11M12 18V21M9 21H15');
 ic('image', 'social', 'photo,picture,gallery,upload', rr(3, 4, 18, 16, 2).c(8.5, 9.5, 1.8).'M3 17L8.5 12L13 16L16 13.5L21 18');
 ic('smile', 'social', 'happy,face,emoji,friendly', c(12, 12, 9).'M8 14C9 16 10.4 17 12 17C13.6 17 15 16 16 14'.dot(9, 9.5).dot(15, 9.5));
 ic('hashtag', 'social', 'tag,topic,trending,social', 'M9.5 4L7.5 20M16.5 4L14.5 20M4 9H20M4 15H20');
@@ -184,8 +184,8 @@ ic('bolt', 'services', 'electric,power,energy,fast', 'M13 2.5L4.5 13.5H11.5L10.5
 ic('droplet', 'services', 'water,plumbing,clean,liquid', 'M12 3C12 3 5.5 10 5.5 14.5C5.5 18.1 8.4 21 12 21C15.6 21 18.5 18.1 18.5 14.5C18.5 10 12 3 12 3Z');
 ic('plug', 'services', 'electrical,power,socket,charge', 'M9 3V8M15 3V8M6 8H18V12C18 15.3 15.3 18 12 18C8.7 18 6 15.3 6 12ZM12 18V21');
 ic('paint-roller', 'services', 'painting,decorating,walls,home', rr(4, 4, 14, 5, 1.5).'M18 6.5H20V12H11V15'.rr(9.5, 15, 3, 6, 1));
-ic('heartbeat', 'services', 'health,medical,pulse,clinic', 'M3 12H8L10 7L14 17L16 12H21');
-ic('graduation-cap', 'services', 'education,school,learning,course', 'M12 4L22 9L12 14L2 9ZM6 11.5V16C6 17.5 8.7 19 12 19C15.3 19 18 17.5 18 16V11.5M22 9V15');
+ic('heartbeat', 'services', 'health,medical,doctor,healthcare,pulse,clinic', 'M3 12H8L10 7L14 17L16 12H21');
+ic('graduation-cap', 'services', 'education,school,graduate,student,learning,course', 'M12 4L22 9L12 14L2 9ZM6 11.5V16C6 17.5 8.7 19 12 19C15.3 19 18 17.5 18 16V11.5M22 9V15');
 ic('book', 'services', 'read,learning,library,guide', 'M12 6.5C12 5.4 12.9 4.5 14 4.5H20V18.5H14C12.9 18.5 12 19 12 20C12 19 11.1 18.5 10 18.5H4V4.5H10C11.1 4.5 12 5.4 12 6.5ZM12 6.5V20');
 ic('bike', 'services', 'cycle,sport,delivery,transport', c(6, 16, 4).c(18, 16, 4).'M6 16L9.5 9H14L18 16M9.5 9L12 16H6M8 6H11M14 9L13 6H15.5');
 ic('airplane', 'services', 'flight,travel,trip,holiday', 'M12 3C12.8 3 13.5 3.7 13.5 4.5V9L21 13.5V15.5L13.5 13.5V18L16 19.8V21L12 20L8 21V19.8L10.5 18V13.5L3 15.5V13.5L10.5 9V4.5C10.5 3.7 11.2 3 12 3Z');
@@ -263,6 +263,14 @@ ic('list-check', 'checks', 'checklist,tasks,todo,done', 'M10 6H21M10 12H21M10 18
 ic('checkbox', 'checks', 'tick,form,select,done', rr(4, 4, 16, 16, 3).'M8.5 12.5L11 15L16 9');
 ic('checkbox-empty', 'checks', 'form,select,todo,empty', rr(4, 4, 16, 16, 3));
 ic('toggle-on', 'checks', 'switch,on,setting,enabled', rr(2, 7, 20, 10, 5).c(16.5, 12, 2.5));
+
+// ---- added in the library QA pass: words owners search for that had no icon -----------------------
+ic('tree', 'services', 'plant,garden,nature,landscaping,park', 'M12 3L17.5 11H14.5L19 17H5L9.5 11H6.5ZM12 17V21');
+ic('bed', 'services', 'hotel,sleep,accommodation,guest house,bnb', 'M3 5V20M3 15H21V20M21 15V11C21 9.9 20.1 9 19 9H11V15'.c(7, 11.5, 2.2));
+ic('wifi', 'services', 'internet,network,online,signal,connection', 'M2.5 9C8 4 16 4 21.5 9M5.5 12.5C9 9.5 15 9.5 18.5 12.5M8.5 16C10.5 14.3 13.5 14.3 15.5 16'.dot(12, 19.5));
+ic('crown', 'symbols', 'king,queen,premium,royal,best', 'M4 18L3 7L8 11L12 5L16 11L21 7L20 18ZM4 21H20');
+ic('printer', 'business', 'print,printing,copy,paper,office', 'M7 8V3H17V8M7 17H4V9H20V17H17M7 14H17V21H7Z');
+ic('paperclip', 'business', 'attach,attachment,clip,file', 'M19 11L12 18C9.8 20.2 6.2 20.2 4.3 18.3C2.4 16.4 2.4 12.8 4.6 10.6L12.6 2.6C14 1.2 16.3 1.2 17.7 2.6C19.1 4 19.1 6.3 17.7 7.7L9.7 15.7C8.9 16.5 7.6 16.5 6.8 15.7C6 14.9 6 13.6 6.8 12.8L13.5 6.1');
 
 // ---------------------------------------------------------------------------------------------
 ksort($I);

@@ -6,6 +6,8 @@ import { createFontManager } from '/studio/engine/fonts.js';
 import { createIconRegistry } from '/studio/engine/icons.js';
 import { renderPageToSvgString } from '/studio/engine/render.js';
 import { createCanvasMeasurer, layoutText } from '/studio/engine/text-layout.js';
+import { createStudio } from '/studio/engine/studio.js';
+import { browserDeps, exportPageRaster } from '/studio/output/export-raster.js';
 
 const manifest = await (await fetch('/data/fonts.json')).json();
 const iconsJson = await (await fetch('/design/icons.json')).json();
@@ -61,6 +63,23 @@ const QA = {
     /** Measure arbitrary strings with the engine's measurer (used to calibrate the node metrics). */
     widths(items) { return items.map((i) => measure.measure(i.text, i.spec)); },
     failedFonts: () => fonts.failed(),
+    /**
+     * Exports one page with the product's own output module (a real engine instance, the real export path: SVG with
+     * embedded fonts drawn to a canvas) and returns the PNG as base64.
+     */
+    async exportPage(pages, format, { index = 0, scale = 1, type = 'png' } = {}) {
+        const root = document.createElement('div');
+        root.style.cssText = 'position:absolute;left:-9999px;top:0;width:800px;height:600px';
+        document.body.append(root);
+        const studio = createStudio({ root, document: { format, pages: pages.map((p, i) => ({ ...p, id: p.id || `pg${i}`, revision: 1 })) }, fonts: { manifest }, icons: iconsJson, brand: { colors: [], fonts: {} } });
+        try {
+            const r = await exportPageRaster(browserDeps(studio), { pageIndex: index, format: type, target: { mode: 'scale', scale } });
+            const bytes = await r.bytes();
+            let bin = '';
+            for (let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
+            return { base64: btoa(bin), width: r.width, height: r.height, message: r.message };
+        } finally { studio.destroy(); root.remove(); }
+    },
 };
 window.QA = QA;
 window.QA_READY = true;
