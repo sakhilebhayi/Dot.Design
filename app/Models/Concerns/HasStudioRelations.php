@@ -19,6 +19,12 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  */
 trait HasStudioRelations
 {
+    /** Casts for the R-45 columns, merged here so the model's own casts() stays free for its other owners. */
+    public function initializeHasStudioRelations(): void
+    {
+        $this->mergeCasts(['thumbnail_updated_at' => 'datetime']);
+    }
+
     public function team(): BelongsTo
     {
         return $this->belongsTo(Team::class);
