@@ -7,6 +7,7 @@
 @import './ds/shell.css';
 @import './ds/pages.css';
 @import './ds/landing.css';
+@import './ds/landing-fonts.css';
 @import './ds/legacy.css';
 
 @tailwind base;
