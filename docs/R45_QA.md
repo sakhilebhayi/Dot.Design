@@ -29,7 +29,7 @@ Needs: PHP 8.3+, Node 22.5+ (the specs read the SQLite file with the built-in `n
 
 ## Workflows
 
-All 24 tests pass on this branch (last full run: 10 spec files, 24 tests, 0 failures).
+All 25 tests pass on this branch (last full run from a clean checkout state: 10 spec files, 25 tests, 0 failures, about 9 minutes).
 
 | # | Workflow | What is automated (real clicks, real files) | Result | Found and fixed |
 |---|---|---|---|---|
@@ -96,4 +96,4 @@ Seams listed in the wave-2 reports, checked:
 
 ## Counts
 
-PHP 1,417 -> 1,421 tests (4 added: `flags.ai` over four combinations, one `h1`, shrink-to-fit slots, dashboard without an AI block; 1 existing test rewritten, `DesignHonestyTest::test_dashboard_does_not_show_mock_provider_activity_at_all`). JS 615 -> 615 (no change; the new behaviour is covered by the browser specs). End to end: 0 -> 24 tests in 10 files.
+PHP 1,417 -> 1,421 tests (4 added: `flags.ai` over four combinations, one `h1`, shrink-to-fit slots, dashboard without an AI block; 1 existing test rewritten, `DesignHonestyTest::test_dashboard_does_not_show_mock_provider_activity_at_all`). JS 615 -> 615 (no change; the new behaviour is covered by the browser specs). End to end: 0 -> 25 tests in 10 files.
