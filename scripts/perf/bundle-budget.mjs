@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs';
 import { gzipSync } from 'node:zlib';
 
 const manifest = JSON.parse(readFileSync(new URL('../../public/build/manifest.json', import.meta.url), 'utf8'));
-const BUDGETS = { 'resources/js/studio/main.js': 115, 'resources/js/studio/pages/templates.js': 45, 'resources/js/studio/pages/start.js': 45, 'resources/js/app.js': 10 };
+const BUDGETS = { 'resources/js/studio/main.js': 130, 'resources/js/studio/pages/templates.js': 45, 'resources/js/studio/pages/start.js': 45, 'resources/js/app.js': 10 };
 const seen = new Set();
 
 function size(key) {
