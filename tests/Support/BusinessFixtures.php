@@ -8,6 +8,7 @@ use App\Models\DesignProject;
 use App\Models\DesignTemplate;
 use App\Models\Team;
 use App\Models\User;
+use App\Services\Design\StarterProjectBuilder;
 use App\Services\Design\TemplateImporter;
 use Illuminate\Support\Facades\Storage;
 
@@ -108,7 +109,7 @@ trait BusinessFixtures
     {
         $this->seedFixtureTemplates();
 
-        $built = app(\App\Services\Design\StarterProjectBuilder::class)->create(
+        $built = app(StarterProjectBuilder::class)->create(
             $user,
             $brief + ['goal' => 'announce_sale', 'business_name' => 'Thandi Bakery', 'details' => [], 'photos' => []],
             $this->fixtureTemplate(),

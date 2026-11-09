@@ -6,6 +6,7 @@ use App\Events\DesignProjectCreated;
 use App\Models\DesignCanvas;
 use App\Models\DesignProject;
 use App\Models\DesignTemplate;
+use App\Services\Design\BrandKitService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
@@ -208,7 +209,7 @@ class BriefEndpointsTest extends TestCase
         $user = $this->workspaceUser();
         $kit = $this->makeKit($user);
         $logo = $this->makeAsset($user);
-        app(\App\Services\Design\BrandKitService::class)->attachAsset($kit, $user, $logo->id, 'logo');
+        app(BrandKitService::class)->attachAsset($kit, $user, $logo->id, 'logo');
         $kit->refresh();
 
         $base = ['goal' => 'announce_sale', 'business_name' => 'X', 'brand_kit_id' => $kit->id];

@@ -5,7 +5,6 @@ namespace App\Services\Design;
 use App\Contracts\Design\ActivityRecorder;
 use App\Models\BrandAsset;
 use App\Models\BrandKit;
-use App\Models\DesignAsset;
 use App\Models\User;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\Eloquent\Collection;
@@ -362,6 +361,7 @@ class BrandKitService
             $key = $value[$slot] ?? 'inter';
             if (! is_string($key) || ! in_array($key, $allowed, true)) {
                 $errors["fonts.$slot"] = 'That font is not available. Pick one from the list.';
+
                 continue;
             }
             $out[$slot] = $key;

@@ -3,6 +3,7 @@
 namespace App\Services\Design;
 
 use App\Contracts\Design\ActivityRecorder;
+use App\Models\DesignCanvas;
 use App\Models\DesignProject;
 use App\Models\DesignTemplate;
 use App\Models\User;
@@ -171,7 +172,7 @@ class TemplateLibrary
     }
 
     /** @param array<string, string> $bindings element id => slot key */
-    private function pageFrom(\App\Models\DesignCanvas $canvas, DesignProject $project, array $bindings): array
+    private function pageFrom(DesignCanvas $canvas, DesignProject $project, array $bindings): array
     {
         $page = [
             'elements' => $this->cleanElements((array) $canvas->elements, $bindings),
@@ -205,7 +206,7 @@ class TemplateLibrary
         return $page;
     }
 
-    private function column(\App\Models\DesignCanvas $canvas, string $column): mixed
+    private function column(DesignCanvas $canvas, string $column): mixed
     {
         return Schema::hasColumn('design_canvases', $column) ? DB::table('design_canvases')->where('id', $canvas->id)->value($column) : null;
     }

@@ -18,9 +18,10 @@ class BriefValidator
 
     /**
      * @param  array<string, mixed>  $input
-     * @param  bool  $requireEssentials  true when creating a project (goal and business name are needed); false for previews
+     * @param  bool  $requireEssentials  true when creating a project (the business name is needed); false for previews
+     * @param  bool  $requireGoal  false when a template is already chosen and the goal adds nothing (template fill preview)
      */
-    public function validate(array $input, ?User $user = null, bool $requireEssentials = true): BriefValidation
+    public function validate(array $input, ?User $user = null, bool $requireEssentials = true, bool $requireGoal = true): BriefValidation
     {
         $errors = [];
         $ignored = [];
@@ -36,7 +37,9 @@ class BriefValidator
         if (is_string($goal) && $this->flow->hasGoal($goal)) {
             $brief['goal'] = $goal;
         } elseif ($goal === null || $goal === '') {
-            $errors['goal'] = 'Pick what you would like to make.';
+            if ($requireGoal) {
+                $errors['goal'] = 'Pick what you would like to make.';
+            }
         } else {
             $errors['goal'] = 'That is not one of the choices. Pick what you would like to make from the list.';
         }

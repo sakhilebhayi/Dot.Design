@@ -84,7 +84,7 @@ class TemplateController extends Controller
     {
         $model = $this->resolve($template, $templates, $request);
 
-        $validation = $validator->validate((array) $request->input('brief', []), $request->user(), requireEssentials: false);
+        $validation = $validator->validate((array) $request->input('brief', []), $request->user(), requireEssentials: false, requireGoal: false);
         if ($validation->errors !== []) {
             throw ValidationException::withMessages($validation->errors);
         }

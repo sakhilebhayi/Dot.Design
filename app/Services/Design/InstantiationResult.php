@@ -10,8 +10,8 @@ final class InstantiationResult
 {
     /**
      * @param  list<array<string, mixed>>  $pages
-     * @param  list<array<string, mixed>>  $filled   slot, element_id, page, source (brief|brand), type
-     * @param  list<array<string, mixed>>  $left     slot, element_id, page, reason (no_value|no_picture|not_visible|unsupported)
+     * @param  list<array<string, mixed>>  $filled  slot, element_id, page, source (brief|brand), type
+     * @param  list<array<string, mixed>>  $left  slot, element_id, page, reason (no_value|no_picture|not_visible|unsupported)
      * @param  list<array<string, mixed>>  $brandApplied  element_id, prop, token, from, to
      * @param  list<string>  $warnings
      */

@@ -4,7 +4,6 @@ namespace App\Services\Design;
 
 use App\Models\DesignTemplate;
 use App\Models\User;
-use Illuminate\Support\Collection;
 
 /**
  * Deterministic recommendations from a brief: no AI, no randomness, no clock. The same brief and

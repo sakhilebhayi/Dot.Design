@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Business;
 
+use App\Services\Design\BrandKitService;
 use App\Services\Design\TemplateInstantiator;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\Support\BusinessFixtures;
@@ -135,7 +136,7 @@ class InstantiatorTest extends TestCase
         $this->actingAs($user);
         $kit = $this->makeKit($user, ['tagline' => 'Built to last']);
         $logo = $this->makeAsset($user);
-        app(\App\Services\Design\BrandKitService::class)->attachAsset($kit, $user, $logo->id, 'logo');
+        app(BrandKitService::class)->attachAsset($kit, $user, $logo->id, 'logo');
         $this->seedFixtureTemplates();
 
         $result = app(TemplateInstantiator::class)->instantiate(
