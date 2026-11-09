@@ -19,7 +19,7 @@ export function button({ label, variant = 'secondary', size, onClick, type = 'bu
 
 /** Labelled control wrapper. `control` is an element (input, select, textarea); the label is wired with for/id. */
 export function field(label, control, { hint, error } = {}) {
-    const id = control.id || uid('f');
+    const id = control.id || uid('cbf');
     control.id = id;
     const hintEl = hint ? h('p', { class: 'cb-hint', id: `${id}-hint`, text: hint }) : null;
     const errEl = h('p', { class: 'cb-error', id: `${id}-error`, hidden: !error, role: 'alert', text: error || '' });

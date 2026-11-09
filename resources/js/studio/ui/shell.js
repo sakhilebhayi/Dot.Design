@@ -44,13 +44,18 @@ export function createShell(ctx) {
     let activeTab = null;
     const railButtons = new Map();
 
+    function syncRailStop() {
+        const stop = railButtons.get(activeTab) || railButtons.values().next().value;
+        for (const b of railButtons.values()) b.tabIndex = b === stop ? 0 : -1;
+    }
+
     function renderRail() {
         const tabs = ctx.registry.leftTabs(ctx.mode).filter((t) => !t.visible || t.visible(ctx));
         rail.textContent = '';
         railButtons.clear();
         const list = h('div', { class: 'st-rail__list', attrs: { role: 'tablist', 'aria-orientation': 'vertical', 'aria-label': 'Panels' } });
         for (const t of tabs) {
-            const b = h('button', { class: 'st-rail__tab', attrs: { type: 'button', role: 'tab', 'aria-selected': String(activeTab === t.id), 'aria-controls': 'st-left-pane', id: 'st-tab-' + t.id }, data: { tab: t.id }, onClick: () => toggleTab(t.id) },
+            const b = h('button', { class: 'st-rail__tab', attrs: { type: 'button', role: 'tab', 'aria-selected': String(activeTab === t.id), 'aria-controls': 'st-pane-' + t.id, tabindex: '-1', id: 'st-tab-' + t.id }, data: { tab: t.id }, onClick: () => toggleTab(t.id) },
                 icon(t.icon || 'layers'), h('span', { class: 'st-rail__label', text: t.label }));
             railButtons.set(t.id, b);
             list.appendChild(b);
@@ -61,9 +66,12 @@ export function createShell(ctx) {
             if (i < 0) return;
             const horizontal = isCompact();
             const next = e.key === (horizontal ? 'ArrowRight' : 'ArrowDown') ? 1 : e.key === (horizontal ? 'ArrowLeft' : 'ArrowUp') ? -1 : 0;
-            if (next) { e.preventDefault(); btns[(i + next + btns.length) % btns.length].focus(); }
+            if (next) { e.preventDefault(); btns[(i + next + btns.length) % btns.length].focus(); } else if (e.key === 'Home') { e.preventDefault(); btns[0].focus(); } else if (e.key === 'End') { e.preventDefault(); btns[btns.length - 1].focus(); }
         });
+        // One tab stop for the whole rail (roving tabindex): the open tab, else the first.
+        list.addEventListener('focusin', (e) => { for (const b of railButtons.values()) b.tabIndex = b === e.target ? 0 : -1; });
         rail.appendChild(list);
+        syncRailStop();
         if (activeTab && !tabs.some((t) => t.id === activeTab)) closeTabs();
     }
 
@@ -74,7 +82,7 @@ export function createShell(ctx) {
         leftTitle.textContent = tab.label;
         for (const [tid, m] of mounted) m.pane.hidden = tid !== id;
         if (!mounted.has(id)) {
-            const pane = h('div', { class: 'st-pane', id: 'st-left-pane', attrs: { role: 'tabpanel', 'aria-labelledby': 'st-tab-' + id }, data: { tab: id } });
+            const pane = h('div', { class: 'st-pane', id: 'st-pane-' + id, attrs: { role: 'tabpanel', 'aria-labelledby': 'st-tab-' + id }, data: { tab: id } });
             leftBody.appendChild(pane);
             let handle = null;
             try { handle = tab.mount(pane, ctx) || null; } catch (e) {
@@ -90,6 +98,7 @@ export function createShell(ctx) {
         left.hidden = false;
         root.dataset.left = 'open';
         for (const [tid, b] of railButtons) b.setAttribute('aria-selected', String(tid === id));
+        syncRailStop();
         store.set(TAB_KEY, id);
         if (isCompact()) { right.hidden = true; root.dataset.right = 'closed'; }
         ctx.emit('tab', { id });
@@ -97,10 +106,14 @@ export function createShell(ctx) {
         return true;
     }
     function closeTabs() {
+        const closedId = activeTab;
         activeTab = null;
         left.hidden = true;
         root.dataset.left = 'closed';
+        const wasFocus = left.contains(document.activeElement) ? railButtons.get(closedId) : null;
         for (const b of railButtons.values()) b.setAttribute('aria-selected', 'false');
+        syncRailStop();
+        if (wasFocus) wasFocus.focus({ preventScroll: true });
         store.set(TAB_KEY, 'none');
         ctx.emit('tab', { id: null });
     }

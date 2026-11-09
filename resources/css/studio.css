@@ -7,6 +7,7 @@
 @import './ds/base.css';
 @import './ds/vocab.css';
 @import './ds/components.css';
+@import './ds/a11y.css';
 
 .st-html, .st-body { height: 100%; overflow: hidden; background: var(--lt-ground); }
 .st-body { overscroll-behavior: none; }
@@ -50,6 +51,7 @@
 .st-top__fit { }
 
 .st-save { display: inline-flex; align-items: center; gap: var(--lt-space-2); min-height: 2rem; padding: 0 var(--lt-space-3); border-radius: 999px; font-size: var(--lt-text-sm); font-weight: 500; color: var(--lt-ink-2); background: var(--lt-panel-sunk); box-shadow: inset 0 0 0 1px var(--lt-rule); white-space: nowrap; cursor: default; flex: none; }
+.st-save-live { display: inline-flex; flex: none; }
 .st-save svg { width: 0.9375rem; height: 0.9375rem; }
 .st-save[data-kind="ok"] { color: var(--lt-ok); background: var(--lt-ok-wash); box-shadow: none; }
 .st-save[data-kind="bad"] { color: var(--lt-bad); background: var(--lt-bad-wash); box-shadow: none; cursor: pointer; }
@@ -308,7 +310,8 @@
 .st-layer.is-on { background: var(--lt-accent-wash); }
 .st-layer.is-hidden .st-layer__name { opacity: 0.5; text-decoration: line-through; }
 .st-layer__main { display: flex; align-items: center; gap: var(--lt-space-2); flex: 1 1 auto; min-width: 0; min-height: 2.125rem; padding: 0 var(--lt-space-2); text-align: left; border-radius: var(--lt-radius-2); }
-.st-layer__fold { flex: none; width: 1.125rem; display: grid; place-items: center; color: var(--lt-ink-3); }
+.st-layer__fold { flex: none; width: 1.5rem; height: 1.75rem; display: grid; place-items: center; color: var(--lt-ink-3); border-radius: var(--lt-radius-1); }
+button.st-layer__fold:hover { color: var(--lt-ink); background: var(--lt-panel); }
 .st-layer__type { color: var(--lt-ink-3); flex: none; }
 .st-layer__name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: var(--lt-text-sm); }
 .st-layer__tools { display: inline-flex; flex: none; opacity: 0; }
@@ -448,7 +451,7 @@
     .st-seg__btn { min-height: 2.75rem; }
     .st-sw { width: 2.75rem; height: 2.75rem; }
     .st-layer__main { min-height: 2.75rem; }
-    .st-layer__btn { width: 2.75rem; height: 2.75rem; }
+    .st-layer__btn, button.st-layer__fold { width: 2.75rem; height: 2.75rem; }
     .st-page__btn { min-width: 2.75rem; }
     .st-pageadd { min-width: 2.75rem; }
     .st-colourbtn, .st-fontbtn { min-height: 2.75rem; }
@@ -508,7 +511,7 @@
 @media (max-width: 48rem) {
     .st-name__size { max-width: 10rem; }
     .st-save { padding: 0 var(--lt-space-2); }
-    .st-save__text { display: none; }
+    .st-save__text { position: absolute; width: 1px; height: 1px; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; } /* still the button's name */
     .st-top__mode, .st-top__slots, .st-top__btn, .st-top__primary, .st-zoom, .st-top__keys, .st-top__group.st-zoom { display: none; }
     .st-top__spacer { display: none; }
 }

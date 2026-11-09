@@ -23,6 +23,7 @@ export function previewSurface(host, { manifest, assetUrl, assetSize } = {}) {
     clear(host);
     const svg = document.createElementNS(SVG_NS, 'svg');
     svg.setAttribute('role', 'img');
+    svg.setAttribute('aria-label', 'Template preview');
     svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
     host.appendChild(svg);
     const renderer = createLiveRenderer(svg, { document, measure, icons, fonts: fm, assetUrl: assetUrl || (() => null), assetSize: assetSize || (() => null) });

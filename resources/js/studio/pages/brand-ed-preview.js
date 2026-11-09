@@ -31,7 +31,7 @@ export function withLogo(page, asset) {
 }
 
 export function mountPreview(host, ctx) {
-    const list = el('div', { class: 'br-preview__list' });
+    const list = el('div', { class: 'br-preview__list', role: 'region', 'aria-labelledby': 'pv-title', tabindex: '0' });
     const note = el('p', { class: 'lt-small', role: 'status' });
     let surfaces = [];
 

@@ -37,10 +37,10 @@ export function mountLayers(ctx, shell) {
             const li = h('li', { class: ['st-layer', sel.has(e.id) && 'is-on', e.hidden && 'is-hidden', e.locked && 'is-locked'], attrs: { role: 'treeitem', 'aria-selected': String(sel.has(e.id)), 'aria-level': r.depth + 1, 'aria-expanded': e.type === 'group' ? String(!collapsed.has(e.id)) : null }, data: { id: e.id, parent: r.parentId || '', index: r.index } });
             li.style.setProperty('--depth', r.depth);
             const fold = e.type === 'group'
-                ? h('button', { class: 'st-layer__fold', attrs: { type: 'button', 'aria-label': collapsed.has(e.id) ? 'Expand group' : 'Collapse group' }, onClick: (ev) => { ev.stopPropagation(); if (collapsed.has(e.id)) collapsed.delete(e.id); else collapsed.add(e.id); render(); } }, icon(collapsed.has(e.id) ? 'chevron-right' : 'chevron-down', 'lt-icon--sm'))
+                ? h('button', { class: 'st-layer__fold', attrs: { type: 'button', 'aria-label': `${collapsed.has(e.id) ? 'Expand' : 'Collapse'} ${elementLabel(e)}`, 'aria-expanded': String(!collapsed.has(e.id)), tabindex: '-1' }, onClick: (ev) => { ev.stopPropagation(); if (collapsed.has(e.id)) collapsed.delete(e.id); else collapsed.add(e.id); render(); } }, icon(collapsed.has(e.id) ? 'chevron-right' : 'chevron-down', 'lt-icon--sm'))
                 : h('span', { class: 'st-layer__fold' });
             const label = h('span', { class: 'st-layer__name', text: elementLabel(e) });
-            const main = h('button', { class: 'st-layer__main', attrs: { type: 'button', tabindex: sel.has(e.id) || (!s.selection.length && r === rows[0]) ? '0' : '-1' } }, fold, icon(typeIcon(e), 'st-layer__type'), label);
+            const main = h('button', { class: 'st-layer__main', attrs: { type: 'button', tabindex: sel.has(e.id) || (!s.selection.length && r === rows[0]) ? '0' : '-1' } }, icon(typeIcon(e), 'st-layer__type'), label);
             main.addEventListener('click', (ev) => {
                 if (drag && drag.moved) return;
                 const add = ev.shiftKey || ev.metaKey || ev.ctrlKey;
@@ -54,9 +54,10 @@ export function mountLayers(ctx, shell) {
                 if (ev.key === 'ArrowDown' && items[at + 1]) { ev.preventDefault(); items[at + 1].focus(); } else if (ev.key === 'ArrowUp' && items[at - 1]) { ev.preventDefault(); items[at - 1].focus(); } else if (ev.key === 'F2') { ev.preventDefault(); startRename(e, label); } else if ((ev.key === 'Delete' || ev.key === 'Backspace') && sel.has(e.id)) { ev.preventDefault(); ctx.run('element.remove', { ids: [e.id] }); } else if (ev.key === 'ArrowRight' && e.type === 'group' && collapsed.has(e.id)) { collapsed.delete(e.id); render(); } else if (ev.key === 'ArrowLeft' && e.type === 'group' && !collapsed.has(e.id)) { collapsed.add(e.id); render(); } else if ((ev.altKey) && (ev.key === 'ArrowUp' || ev.key === 'ArrowDown')) { ev.preventDefault(); ctx.run('element.reorder', { ids: [e.id], to: ev.key === 'ArrowUp' ? 'forward' : 'back' }); }
             });
             main.addEventListener('focus', () => { if (!sel.has(e.id)) studio.select([e.id], { group: r.parentId }); });
-            const eye = h('button', { class: 'st-layer__btn', attrs: { type: 'button', 'aria-label': e.hidden ? `Show ${elementLabel(e)}` : `Hide ${elementLabel(e)}`, 'aria-pressed': String(!!e.hidden) }, onClick: (ev) => { ev.stopPropagation(); ctx.run('element.hide', { ids: [e.id], value: !e.hidden }); } }, icon(e.hidden ? 'eye-off' : 'eye', 'lt-icon--sm'));
-            const lock = h('button', { class: 'st-layer__btn', attrs: { type: 'button', 'aria-label': e.locked ? `Unlock ${elementLabel(e)}` : `Lock ${elementLabel(e)}`, 'aria-pressed': String(!!e.locked) }, onClick: (ev) => { ev.stopPropagation(); ctx.run('element.lock', { ids: [e.id], value: !e.locked }); } }, icon(e.locked ? 'lock' : 'unlock', 'lt-icon--sm'));
-            li.append(main, h('span', { class: 'st-layer__tools' }, eye, lock));
+            const rove = sel.has(e.id) || (!s.selection.length && r === rows[0]) ? '0' : '-1';
+            const eye = h('button', { class: 'st-layer__btn', attrs: { type: 'button', tabindex: rove, 'aria-label': e.hidden ? `Show ${elementLabel(e)}` : `Hide ${elementLabel(e)}`, 'aria-pressed': String(!!e.hidden) }, onClick: (ev) => { ev.stopPropagation(); ctx.run('element.hide', { ids: [e.id], value: !e.hidden }); } }, icon(e.hidden ? 'eye-off' : 'eye', 'lt-icon--sm'));
+            const lock = h('button', { class: 'st-layer__btn', attrs: { type: 'button', tabindex: rove, 'aria-label': e.locked ? `Unlock ${elementLabel(e)}` : `Lock ${elementLabel(e)}`, 'aria-pressed': String(!!e.locked) }, onClick: (ev) => { ev.stopPropagation(); ctx.run('element.lock', { ids: [e.id], value: !e.locked }); } }, icon(e.locked ? 'lock' : 'unlock', 'lt-icon--sm'));
+            li.append(fold, main, h('span', { class: 'st-layer__tools' }, eye, lock));
             // drag to reorder within the same parent
             main.addEventListener('pointerdown', (ev) => { if (ev.button !== 0 || ev.target.closest('.st-layer__fold')) return; drag = { r, startY: ev.clientY, moved: false, li, target: null }; });
             frag.appendChild(li);

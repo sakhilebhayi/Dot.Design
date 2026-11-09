@@ -4,6 +4,7 @@
 @import '../ds/base.css';
 @import '../ds/vocab.css';
 @import '../ds/components.css';
+@import '../ds/a11y.css';
 
 .sv { min-height: 100dvh; display: flex; flex-direction: column; background: var(--lt-ground); }
 .sv-skip { position: absolute; left: var(--lt-space-3); top: -4rem; z-index: 20; padding: var(--lt-space-2) var(--lt-space-3); background: var(--lt-btn); color: var(--lt-btn-ink); border-radius: var(--lt-radius-2); }

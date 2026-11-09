@@ -17,7 +17,8 @@ export function openPopover(anchor, build, opts = {}) {
     const compact = isCompact() && !opts.at;
     const el = h('div', { class: ['st-pop', compact && 'st-pop--sheet', opts.className], attrs: { role: 'dialog', 'aria-label': opts.label || 'Options', tabindex: '-1' } });
     if (opts.width && !compact) el.style.setProperty('--pop-w', typeof opts.width === 'number' ? opts.width + 'px' : opts.width);
-    const host = document.querySelector('.st-app') || document.body;
+    // Inside <main> so a menu is never content outside every landmark; it is fixed-position, so where it sits in the tree is invisible.
+    const host = document.querySelector('.st-stagewrap') || document.querySelector('.st-app') || document.body;
     host.appendChild(el);
     let cleanup = null;
     let closed = false;

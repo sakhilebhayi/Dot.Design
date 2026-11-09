@@ -1,0 +1,67 @@
+/*
+ * Accessibility adaptations that sit on top of the tokens and components (R-45 a11y, docs/R45_A11Y.md).
+ * Loaded after components.css by every entry that carries the design system.
+ *   1. forced-colors (Windows High Contrast and similar): borders drawn with box-shadow vanish there, so controls get a real
+ *      outline, state is carried by system colours, and the artwork on the stage is never recoloured.
+ *   2. prefers-contrast: more: stronger rules and edges, no translucent washes behind text.
+ *   3. prefers-reduced-motion: spinners keep a (static) shape, nothing slides, fades or pulses.
+ */
+
+/* ---- 1. forced colours ----------------------------------------------------------------------------------------------- */
+@media (forced-colors: active) {
+    :focus-visible,
+    .lt-input:focus, .lt-select:focus, .lt-textarea:focus {
+        outline: 2px solid Highlight;
+        outline-offset: 2px;
+    }
+    /* controls that were outlined by a shadow now get an outline of their own (inset, so nothing moves) */
+    .lt-btn, .lt-icon-btn, .lt-chip, .lt-tag, .lt-fchip, .lt-seg, .lt-seg > button, .lt-input, .lt-select, .lt-textarea,
+    .st-save, .st-tog, .st-seg__btn, .st-rail__tab, .st-float__btn, .st-top__btn, .st-sw, .st-colourbtn, .st-fontbtn,
+    .st-page__btn, .st-pageadd, .st-layer__btn, .st-pop, .st-coach, .st-toast, .cb-btn, .cb-chip, .cb-tag, .cb-input,
+    .out-format, .as-tag, .br-pair, .br-fontopt, .cf-pick, .cf-asset {
+        outline: 1px solid ButtonText;
+        outline-offset: -1px;
+    }
+    :focus-visible { outline: 2px solid Highlight; outline-offset: 2px; }
+    /* selected, pressed, current and on: Highlight with its own text colour (not colour alone: the aria state is also in the name) */
+    [aria-pressed="true"], [aria-current="true"], [aria-selected="true"], [aria-checked="true"], .is-on, .is-current, .is-active {
+        forced-color-adjust: none;
+        background: Highlight;
+        color: HighlightText;
+        outline: 2px solid HighlightText;
+        outline-offset: -3px;
+    }
+    [aria-pressed="true"] svg, [aria-current="true"] svg, [aria-selected="true"] svg, [aria-checked="true"] svg, .is-on svg, .is-current svg { color: HighlightText; }
+    [disabled], [aria-disabled="true"] { color: GrayText; outline-color: GrayText; }
+    /* status chips carry text and an icon already; keep a visible edge and say the state in system colours */
+    .lt-tag--ok, .lt-tag--warn, .lt-tag--bad, .lt-tag--accent, .st-save[data-kind] { outline: 1px solid CanvasText; }
+    .st-save[data-kind="bad"], .lt-tag--bad { border-bottom: 3px double CanvasText; }
+    /* the page, the swatches and every picture keep their own colours: they are the work, not the interface */
+    .studio-stage, .studio-stage svg, .lt-frame, .lt-swatch, .st-sw, .st-page__thumb, img, canvas, video, .st-cards img {
+        forced-color-adjust: none;
+    }
+    /* selection chrome on the stage uses system colours (read from these properties by the overlay) */
+    .st-app { --studio-select: Highlight; --studio-guide: LinkText; --studio-hover: Highlight; }
+    .st-ruler, .st-grid { forced-color-adjust: none; }
+    a { color: LinkText; }
+    .lt-skip:focus { outline: 2px solid Highlight; }
+}
+
+/* ---- 2. more contrast ------------------------------------------------------------------------------------------------ */
+@media (prefers-contrast: more) {
+    :root {
+        --lt-rule: var(--lt-rule-strong);
+        --lt-edge: var(--lt-ink-2);
+    }
+    :focus-visible { outline-width: 3px; }
+    .lt-tag, .lt-chip { box-shadow: inset 0 0 0 1px var(--lt-ink-2); }
+}
+
+/* ---- 3. reduced motion: refine the blanket rule in base.css ----------------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+    /* a spinner that cannot spin must still read as "working": a static ring with a gap, and the words beside it carry the state */
+    .lt-spin { animation: none !important; }
+    /* skeletons and the breathing bar become flat tones (they are not essential motion) */
+    [class*="skeleton"], .lt-skel, .lt-sheen { animation: none !important; background-position: 0 0 !important; }
+    html { scroll-behavior: auto; }
+}

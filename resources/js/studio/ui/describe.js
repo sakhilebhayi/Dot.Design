@@ -3,6 +3,7 @@
  * words the panels need. No DOM. Unit tested.
  */
 import { find, flatten } from '../doc/tree.js';
+import { formatUnit } from './units.js';
 
 export function activePage(state) {
     return state.doc.pages.find((p) => p.id === state.activePageId) || state.doc.pages[0];
@@ -93,4 +94,47 @@ export function common(elements, get) {
         if (JSON.stringify(v) !== JSON.stringify(first)) return MIXED;
     }
     return first;
+}
+
+const TYPE_WORD = { text: 'text', image: 'picture', shape: 'shape', icon: 'icon', group: 'group' };
+
+/** Where an element is, in words a person can use without seeing it: "left 42, top 100, 280 wide, 121 high". */
+export function describePlace(e, unit = 'px') {
+    const f = (n) => formatUnit(n, unit);
+    const u = unit === 'px' ? '' : ' ' + unit;
+    return `left ${f(e.x)}${u}, top ${f(e.y)}${u}, ${f(e.width)}${u} wide, ${f(e.height)}${u} high`;
+}
+
+/**
+ * One line for the screen reader list of the page: "Headline, text, Winter pie special. Left 42, top 100, 280 wide, 121 high.
+ * Locked." The name is the layer name, or what the element says. Pictures read their alternative text when they have one.
+ */
+export function describeElementLine(e, unit = 'px') {
+    const name = elementLabel(e);
+    const kind = e.type === 'shape' ? labelForKind(e.kind).toLowerCase() : TYPE_WORD[e.type] || e.type;
+    const bits = [name];
+    if (name.toLowerCase() !== kind) bits.push(kind);
+    if (e.type === 'text' && (e.text || '').trim()) {
+        const said = e.text.replace(/\s+/g, ' ').trim().slice(0, 80);
+        if (said !== name) bits.push(said);
+    }
+    if (e.type === 'image' && typeof e.alt === 'string' && e.alt.trim()) bits.push(e.alt.trim().slice(0, 140));
+    if (e.type === 'image' && (e.asset_id === null || e.asset_id === undefined)) bits.push('empty picture spot');
+    let line = bits.join(', ') + '. ' + describePlace(e, unit).replace(/^l/, 'L') + '.';
+    if (e.locked) line += ' Locked.';
+    if (e.hidden) line += ' Hidden.';
+    return line;
+}
+
+/** "Page 2 of 3, 595 by 842, 24 elements, 1 selected." */
+export function describePage(page, index, total, selected = 0, unit = 'px') {
+    const n = flatten(page.elements).length;
+    const f = (v) => formatUnit(v, unit);
+    const u = unit === 'px' ? ' pixels' : ' ' + unit;
+    return `Page ${index + 1} of ${total}, ${f(page.width)} by ${f(page.height)}${u}, ${n} ${n === 1 ? 'element' : 'elements'}${selected ? `, ${selected} selected` : ''}.`;
+}
+
+/** What is said after a move or resize from the keyboard: "Headline: left 43, top 100, 281 wide, 121 high". */
+export function describeGeometryChange(e, unit = 'px') {
+    return `${elementLabel(e)}: ${describePlace(e, unit)}`;
 }

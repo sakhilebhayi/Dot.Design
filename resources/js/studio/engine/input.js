@@ -16,7 +16,7 @@ import { find } from '../doc/tree.js';
 import { cursorFor, framePoints, hitHandle } from './overlay.js';
 import { contextList, hitTest, marqueeIds, selectionFrame } from './selection.js';
 import { collectTargets, snapEdges, snapMove } from './snap.js';
-import { MIN_SIZE, isCorner, moveBoxes, nudge, resizeBox, resizeUnit, rotateUnit, unionBounds } from './transform.js';
+import { MIN_SIZE, isCorner, keyboardResize, moveBoxes, nudge, resizeBox, resizeUnit, rotateUnit, unionBounds } from './transform.js';
 import { looksLikeClip } from './clipboard.js';
 
 const DRAG_THRESHOLD_MOUSE = 3;
@@ -25,6 +25,13 @@ const LONG_PRESS_MS = 520;
 const DOUBLE_TAP_MS = 320;
 const SNAP_PX = 6;
 const SNAP_PX_TOUCH = 10;
+
+// A focused control outside the canvas owns its own keys: Enter presses the button, Delete or an arrow does not reach the design.
+const CONTROL = 'button, a[href], select, summary, [role=tab], [role=menuitem], [role=menuitemradio], [role=treeitem], [role=option], [role=radio], [role=checkbox], [role=switch], [role=slider], [role=tree], [role=dialog], dialog';
+export function isControlTarget(t, root) {
+    if (!t || t.nodeType !== 1 || (root && (t === root || root.contains(t)))) return false;
+    return !!(t.closest && t.closest(CONTROL));
+}
 
 function isEditable(t) {
     if (!t || t.nodeType !== 1) return false;
@@ -45,6 +52,7 @@ export function createInput(deps) {
     let pinch = null;
     let spaceDown = false;
     let rect = { left: 0, top: 0 };
+    let keyMenuAt = 0;
     let lastTap = { t: 0, x: 0, y: 0 };
     let longPress = null;
     let pasteStreak = { payload: '', n: 0 };
@@ -538,6 +546,7 @@ export function createInput(deps) {
 
     function onContextMenu(e) {
         if (destroyed || !deps.enabled()) return;
+        if (Date.now() - keyMenuAt < 400) { e.preventDefault(); return; } // the keyboard path already opened it
         if (e.target && e.target.closest && e.target.closest('[data-studio-ignore]')) return;
         e.preventDefault();
         updateRect();
@@ -576,8 +585,9 @@ export function createInput(deps) {
         const mod = e.metaKey || e.ctrlKey;
         const key = e.key;
         const s = state();
+        const onControl = isControlTarget(t, root);
 
-        if (key === ' ' && !mod && !e.altKey) {
+        if (key === ' ' && !mod && !e.altKey && !onControl) {
             if (!spaceDown) { spaceDown = true; setCursor('grab'); }
             if (t === root || t === doc.body) e.preventDefault();
             return;
@@ -597,6 +607,8 @@ export function createInput(deps) {
             return; // everything else (zoom, reload, new tab, copy/cut/paste events …) belongs to the browser
         }
 
+        if (onControl && key !== 'Escape') return;
+
         if (key === 'Escape') {
             if (session && core.inTransaction()) { core.cancel(); session = null; resetTransient(); redraw(); return; }
             if (s.group) { core.enterGroup(null); return; }
@@ -607,9 +619,32 @@ export function createInput(deps) {
             if (s.selection.length) { e.preventDefault(); deps.exec('element.remove', { ids: s.selection }); }
             return;
         }
+        if (key === 'ContextMenu' || (key === 'F10' && e.shiftKey)) {
+            // The keyboard way to the right-click menu: it opens at the selection (or the page centre), not at the pointer.
+            if (t !== root) return;
+            e.preventDefault();
+            keyMenuAt = Date.now();
+            updateRect();
+            const frame = s.selection.length ? selectionFrame(core.activePage(s), s.selection) : null;
+            const page = core.activePage(s);
+            const b = frame ? frame.box : { x: page.width / 2, y: page.height / 2, width: 0, height: 0 };
+            const p = viewport.pageToScreen(b.x + b.width / 2, b.y + b.height / 2);
+            deps.emit('contextmenu', { x: rect.left + p.x, y: rect.top + p.y, ids: s.selection.slice(), source: 'keyboard' });
+            return;
+        }
         if (key.startsWith('Arrow')) {
             if (!s.selection.length) return;
             e.preventDefault();
+            if (e.altKey) {
+                // Alt + arrows resize from the top left corner, 1 unit (Shift: 10). The same step as the nudge.
+                const page = core.activePage(s);
+                for (const id of s.selection) {
+                    const hit = find(page.elements, id);
+                    if (!hit || hit.element.locked) continue;
+                    deps.exec('element.resize', { id, ...keyboardResize(hit.element, key, e.shiftKey), anchor: 'topleft' }, { key: 'kresize:' + s.selection.join(',') });
+                }
+                return;
+            }
             const d = nudge(key, e.shiftKey);
             deps.exec('element.move', { ids: s.selection, dx: d.dx, dy: d.dy }, { key: 'nudge:' + s.selection.join(',') });
             return;

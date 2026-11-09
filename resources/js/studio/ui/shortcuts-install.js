@@ -12,7 +12,8 @@ const mac = isMacPlatform();
 
 export const ENGINE_KEYS = [
     ['Editing', [['Undo', 'mod+z'], ['Redo', 'mod+shift+z'], ['Duplicate', 'mod+d'], ['Delete', 'Delete'], ['Select everything', 'mod+a'], ['Group', 'mod+g'], ['Ungroup', 'mod+shift+g'], ['Copy, cut, paste', 'mod+c'], ['Paste in place', 'mod+shift+v']]],
-    ['Moving', [['Nudge 1 pixel', 'Arrow keys'], ['Nudge 10 pixels', 'shift+Arrow keys'], ['Select the next or previous element', 'Tab'], ['Edit text, or open a group', 'Enter'], ['Leave text, group or selection', 'Escape']]],
+    ['Moving', [['Nudge 1 pixel', 'Arrow keys'], ['Nudge 10 pixels', 'shift+Arrow keys'], ['Make bigger or smaller by 1 pixel', 'alt+Arrow keys'], ['Make bigger or smaller by 10 pixels', 'alt+shift+Arrow keys'], ['Select the next or previous element', 'Tab'], ['Edit text, or open a group', 'Enter'], ['Leave text, group or selection', 'Escape'], ['Open the menu for the selection', 'shift+F10'], ['Open the menu on a keyboard with a menu key', 'Menu']]],
+    ['Layers (Pro)', [['Select the next or previous layer', 'Arrow keys'], ['Rename the layer', 'F2'], ['Move the layer forward', 'alt+Up'], ['Move the layer back', 'alt+Down'], ['Open a group', 'Right'], ['Close a group', 'Left']]],
     ['Order', [['Move forward or back', ']'], ['Bring to front', 'mod+]'], ['Send to back', 'mod+[']]],
     ['Dragging', [['Keep to one direction', 'hold shift'], ['Turn snapping off', 'hold alt'], ['Resize from the centre', 'hold alt'], ['Keep the shape', 'hold shift'], ['Turn in 15 degree steps', 'hold shift'], ['Pan', 'hold Space and drag']]],
 ];

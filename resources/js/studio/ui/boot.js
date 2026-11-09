@@ -17,6 +17,10 @@ import { installReposition } from './reposition.js';
 import { createShell } from './shell.js';
 import { installShortcuts } from './shortcuts-install.js';
 import { createStage, textPreset } from './stage.js';
+import { installStageModel } from './stage-model.js';
+import { describeGeometryChange, activePage } from './describe.js';
+import { displayUnit } from './units.js';
+import { find } from '../doc/tree.js';
 import { installThumbnails } from './thumbnail.js';
 import { createTopbar } from './topbar.js';
 import { createDialogs, createToasts } from './overlays.js';
@@ -105,7 +109,13 @@ function start(root, config) {
         const m = (metas || []).filter((x) => x.kind === 'command' || x.kind === 'undo' || x.kind === 'redo').pop();
         if (!m) return;
         const what = String(m.label || labelFor(m.name || '') || 'Edit').toLowerCase();
-        said = m.kind === 'undo' ? `Undid ${what}` : m.kind === 'redo' ? `Redid ${what}` : `${what.charAt(0).toUpperCase()}${what.slice(1)}`;
+        // A move or resize says where the element is now (a keyboard user cannot see it land).
+        let where = null;
+        if (m.kind === 'command' && (m.name === 'element.move' || m.name === 'element.resize')) {
+            const st = studio.getState();
+            if (st.selection.length === 1) { const hit = find(activePage(st).elements, st.selection[0]); if (hit) where = describeGeometryChange(hit.element, displayUnit(config.project, config.formats)); }
+        }
+        said = where || (m.kind === 'undo' ? `Undid ${what}` : m.kind === 'redo' ? `Redid ${what}` : `${what.charAt(0).toUpperCase()}${what.slice(1)}`);
         clearTimeout(saidTimer);
         saidTimer = setTimeout(() => announce(said), 350);
     });
@@ -123,6 +133,7 @@ function start(root, config) {
 
     createTopbar(ctx, shell, { onPreview: () => preview.open(), openShortcuts: openSheet });
     createStage(ctx, shell);
+    installStageModel(ctx, shell);
     installReposition(ctx, shell);
     createFloating(ctx, shell);
     installContextMenu(ctx);

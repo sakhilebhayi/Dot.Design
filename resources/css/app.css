@@ -3,6 +3,7 @@
 @import './ds/base.css';
 @import './ds/vocab.css';
 @import './ds/components.css';
+@import './ds/a11y.css';
 @import './ds/shell.css';
 @import './ds/pages.css';
 @import './ds/landing.css';

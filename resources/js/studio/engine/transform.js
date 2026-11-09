@@ -25,6 +25,15 @@ export function nudge(key, shift) {
 }
 
 /**
+ * Keyboard resize (Alt + arrow): the size after one step, never below MIN_SIZE. Right and Down grow, Left and Up shrink,
+ * Shift is the big step. `width` and `height` are unchanged on the axis the key does not touch.
+ */
+export function keyboardResize(el, key, shift) {
+    const { dx, dy } = nudge(key, shift);
+    return { width: Math.max(MIN_SIZE, el.width + dx), height: Math.max(MIN_SIZE, el.height + dy) };
+}
+
+/**
  * New box after dragging `handle` by the parent-space pointer delta (dx, dy).
  * The delta is moved into the element's own (unrotated) frame, the size is
  * changed there, and the centre is shifted so the side opposite the handle

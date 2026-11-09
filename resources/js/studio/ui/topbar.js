@@ -22,6 +22,9 @@ export function createTopbar(ctx, shell, { onPreview, openShortcuts }) {
     const top = shell.top;
     const project = ctx.config.project;
 
+    // The one page heading: the editor has no visible title, the design name field is the visible one.
+    const pageHeading = h('h1', { class: 'lt-sr', text: `${project.name}, design editor` });
+
     // ---- back + name ----------------------------------------------------------------------------
     const back = h('a', { class: 'lt-icon-btn st-top__back', href: ctx.config.urls['design.projects.index'] || '/dashboard', attrs: { 'aria-label': 'Back to your designs', 'data-tip': 'Your designs', 'data-tip-side': 'bottom' } }, icon('arrow-left'));
     back.addEventListener('click', async (e) => {
@@ -45,14 +48,16 @@ export function createTopbar(ctx, shell, { onPreview, openShortcuts }) {
         const next = name.value.trim();
         if (ctx.readOnly || !next || next === project.name) { name.value = project.name; sizeName(); return; }
         const r = await ctx.api.put(ctx.url('design.projects.update'), { name: next });
-        if (r.ok) { project.name = next; document.title = next + ' | Dot.Design'; ctx.toast('Renamed.'); } else { name.value = project.name; sizeName(); ctx.toast(r.message || 'The name could not be changed.', { kind: 'bad' }); }
+        if (r.ok) { project.name = next; document.title = next + ' | Dot.Design'; pageHeading.textContent = `${next}, design editor`; ctx.toast('Renamed.'); } else { name.value = project.name; sizeName(); ctx.toast(r.message || 'The name could not be changed.', { kind: 'bad' }); }
     });
     const nameBox = h('div', { class: 'st-top__name' }, nameWrap, ctx.readOnly ? h('span', { class: 'lt-tag', text: 'View only' }) : null);
 
     // ---- save chip --------------------------------------------------------------------------------
     const chipIcon = h('span', { class: 'st-save__icon' });
     const chipText = h('span', { class: 'st-save__text' });
-    const chip = h('button', { class: 'st-save', attrs: { type: 'button', role: 'status', 'aria-live': 'polite' } }, chipIcon, chipText);
+    const chip = h('button', { class: 'st-save', attrs: { type: 'button' } }, chipIcon, chipText);
+    // The live region is a wrapper: a button must keep its own role, and its text is what changes.
+    const chipLive = h('span', { class: 'st-save-live', attrs: { role: 'status', 'aria-live': 'polite' } }, chip);
     let savedAt = null;
     function renderSave() {
         const state = studio.save.state;
@@ -159,7 +164,7 @@ export function createTopbar(ctx, shell, { onPreview, openShortcuts }) {
         openMenu(more, items, { label: 'More', align: 'end' });
     });
 
-    top.append(back, nameBox, chip, h('div', { class: 'st-top__spacer' }), history, zoom, modeBox, slots, preview, primarySlots, keys, more);
+    top.append(pageHeading, back, nameBox, chipLive, h('div', { class: 'st-top__spacer' }), history, zoom, modeBox, slots, preview, primarySlots, keys, more);
     renderSlots();
 
     return { renderSlots, renderSave, nameInput: name, openPopover };

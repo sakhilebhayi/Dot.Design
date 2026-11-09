@@ -28,7 +28,7 @@
 .cb-label { font: 600 var(--lt-text-sm)/1.4 var(--lt-font-ui); color: var(--lt-ink); }
 .cb-hint { margin: 0; font-size: var(--lt-text-xs); line-height: 1.5; color: var(--lt-ink-3); }
 .cb-error { margin: 0; font-size: var(--lt-text-xs); color: var(--lt-bad); }
-.cb-link { color: var(--lt-accent); text-underline-offset: 0.2em; }
+.cb-link { color: var(--lt-accent); text-decoration: underline; text-underline-offset: 0.2em; }
 .cb-check { display: flex; align-items: flex-start; gap: var(--lt-space-2); font-size: var(--lt-text-sm); color: var(--lt-ink); cursor: pointer; }
 .cb-check input { margin-top: 3px; accent-color: var(--lt-accent); }
 .cb-check--sm { font-size: var(--lt-text-xs); color: var(--lt-ink-2); }
