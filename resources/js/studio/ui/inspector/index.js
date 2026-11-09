@@ -4,8 +4,8 @@
  * when it applies and writes through the engine, so every change is undoable.
  */
 import { selectionFrame } from '../../engine/selection.js';
-import { applyColour, applyFont } from '../actions.js';
-import { MIXED, common } from '../describe.js';
+import { applyColour, applyFont, setPageColour } from '../actions.js';
+import { MIXED, common, effectiveBackground } from '../describe.js';
 import { h, icon } from '../dom.js';
 import { colourField, fieldRow, numberField, segmented, sliderField, toggleButton } from '../fields.js';
 import { UNITS, displayUnit, formatUnit, parseLength, pxTo } from '../units.js';
@@ -34,7 +34,7 @@ export function registerInspector(ctx) {
     section({ id: 'icon', label: 'Icon', order: 41, when: (sel) => has(sel, 'icon'), mount: mountIcon });
     section({ id: 'image', label: 'Picture', order: 42, when: (sel) => sel.count === 1 && sel.kind === 'image', mount: mountImage });
     section({ id: 'stroke', label: 'Outline', order: 50, when: (sel) => has(sel, 'shape', 'text'), mount: mountStroke });
-    section({ id: 'effects', label: 'Appearance', order: 60, when: (sel) => sel.count > 0, mount: mountEffects });
+    section({ id: 'effects', label: 'Effects', order: 60, when: (sel) => sel.count > 0, mount: mountEffects });
     section({ id: 'identity', label: 'Layer', order: 70, when: (sel) => sel.count > 0, mount: mountIdentity });
 }
 
@@ -51,7 +51,7 @@ function mountPage(el, ctx) {
     add(fieldRow('Name', { el: name, input: name }), () => { if (document.activeElement !== name) name.value = page().name || ''; });
 
     const size = h('p', { class: 'st-note' });
-    add(size, () => { const p = page(); const u = readUnit(ctx.config.project, ctx.config.formats); size.textContent = `${formatUnit(p.width, u)} by ${formatUnit(p.height, u)} ${u}. To change the size, use Resize in the top bar.`; });
+    add(size, () => { const p = page(); const u = readUnit(ctx.config.project, ctx.config.formats); size.textContent = `${formatUnit(p.width, u)} by ${formatUnit(p.height, u)} ${u}. To make another size, use Other sizes in the top bar.`; });
 
     // background
     const bg = h('div', { class: 'st-subsec' });
@@ -62,15 +62,25 @@ function mountPage(el, ctx) {
         if (v === 'image' && !b.asset_id) { ctx.openTab('background', { focus: true }); return; }
         ctx.run('page.update', { id: p.id, changes: { background: base } });
     } });
-    const bgColour = colourField({ ctx, label: 'Background colour', value: null, onPick: (hex, meta) => (meta.token ? ctx.run('brand.apply', { prop: 'background', token: meta.token }) : ctx.run('page.update', { id: page().id, changes: { background: { ...page().background, type: 'solid', color: hex } } }, { key: 'bg:' + page().id })) });
+    const bgColour = colourField({ ctx, label: 'Background colour', value: null, onPick: (hex, meta) => setPageColour(ctx, page(), hex, { token: meta.token || null }) });
     const more = h('button', { class: 'lt-btn lt-btn--secondary lt-btn--sm', attrs: { type: 'button' }, onClick: () => ctx.openTab('background', { focus: true }) }, 'Gradients and pictures');
     bg.append(kind.el, bgColour.el, more);
-    add(h('div', { class: 'st-group' }, h('h3', { class: 'st-group__title', text: 'Background' }), bg), () => { const b = page().background || {}; kind.set(b.type || 'solid'); bgColour.set(b.color); });
+    add(h('div', { class: 'st-group' }, h('h3', { class: 'st-group__title', text: 'Background' }), bg), () => { const b = page().background || {}; kind.set(b.type || 'solid'); bgColour.set(effectiveBackground(page()).color || b.color); });
 
     // view options persisted per person
     const tog = (label, iconName, key, extra) => { const t = toggleButton({ label, iconName, text: label, pressed: !!ctx.settings[key], onChange: (v) => { ctx.saveSetting({ [key]: v }); } }); if (extra) extra(t); return t; };
     const snap = tog('Snap to guides', 'move', 'snap'); const rulers = tog('Rulers', 'ruler', 'rulers'); const gridT = tog('Grid', 'grid', 'grid');
-    add(h('div', { class: 'st-group' }, h('h3', { class: 'st-group__title', text: 'View' }), h('div', { class: 'st-toggles' }, snap.el, rulers.el, gridT.el)), () => { snap.set(ctx.settings.snap !== false); rulers.set(!!ctx.settings.rulers); gridT.set(!!ctx.settings.grid); });
+    // Bleed and safe area: the print edge outside the page and the margin inside it, from this size's own definition.
+    const safeT = toggleButton({ label: 'Show bleed and safe area', iconName: 'crop', text: 'Bleed and safe area', pressed: false, onChange: (v) => ctx.safeArea && ctx.safeArea.set(v) });
+    const safeNote = h('p', { class: 'st-note' });
+    add(h('div', { class: 'st-group' }, h('h3', { class: 'st-group__title', text: 'View' }), h('div', { class: 'st-toggles' }, snap.el, rulers.el, gridT.el, safeT.el), safeNote), () => {
+        snap.set(ctx.settings.snap !== false); rulers.set(!!ctx.settings.rulers); gridT.set(!!ctx.settings.grid);
+        const d = ctx.safeArea && ctx.safeArea.describe();
+        safeT.el.disabled = !d; safeT.set(!!d && ctx.safeArea.on);
+        if (!d) { safeNote.textContent = 'This size has no bleed or safe area defined.'; return; }
+        const u = d.top === d.bottom && d.left === d.right && d.top === d.left ? Math.round(d.top) + ' px' : 'varies by side';
+        safeNote.textContent = `Safe area: keep text inside ${u} of the edge.${d.bleed ? ' Bleed: ' + Math.round(d.bleed) + ' px past the edge for printing.' : ''}`;
+    });
     add(h('p', { class: 'st-note', id: 'st-gridnote' }), () => {});
 
     // guides

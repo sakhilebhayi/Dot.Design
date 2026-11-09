@@ -87,10 +87,17 @@ test('the toolbar avoids covering a neighbouring label when another side is clea
     const p = placeToolbar({ frame, bar, bounds, others: [label] });
     assert.notEqual(p.side, 'above');
     assert.equal(p.covered, 0);
-    // when every side covers something the earlier candidate is kept (no flip-flopping for small differences)
-    const around = [label, { x: 300, y: 360, w: 120, h: 30 }, { x: 510, y: 250, w: 100, h: 100 }, { x: 190, y: 250, w: 100, h: 100 }];
-    const q = placeToolbar({ frame, bar, bounds, others: around });
-    assert.ok(['above', 'below', 'right', 'left', 'inside'].includes(q.side));
+    // a label that only covers one end of the frame's top edge: the bar slides to the other end instead of leaving the edge
+    const wide = { x: 200, y: 250, w: 400, h: 100 };
+    const cornerLabel = { x: 200, y: 180, w: 90, h: 30 };
+    const q = placeToolbar({ frame: wide, bar, bounds, others: [cornerLabel] });
+    assert.equal(q.side, 'above');
+    assert.equal(q.covered, 0);
+    assert.ok(q.x >= cornerLabel.x + cornerLabel.w || q.x + bar.w <= cornerLabel.x);
+    // when every side covers something, the one that hides least wins and the bar stays in the stage
+    const around = [label, { x: 280, y: 360, w: 300, h: 60 }, { x: 510, y: 200, w: 100, h: 250 }, { x: 150, y: 200, w: 140, h: 250 }];
+    const r = placeToolbar({ frame, bar, bounds, others: around });
+    assert.ok(r.x >= 6 && r.x + bar.w <= bounds.w - 6 && r.y >= 6 && r.y + bar.h <= bounds.h - 6);
 });
 
 test('neighbours exclude the selection, hidden elements and page-sized backdrops', () => {
@@ -98,7 +105,7 @@ test('neighbours exclude the selection, hidden elements and page-sized backdrops
     const list = [rect({ id: 'bd', x: 0, y: 0, width: 1000, height: 800 }), rect({ id: 'a', x: 100, y: 100, width: 50, height: 50 }), rect({ id: 'b', x: 200, y: 100, width: 50, height: 50, hidden: true }), rect({ id: 'c', x: 300, y: 100, width: 50, height: 50 })];
     const r = neighbourRects(list, ['a'], (x, y) => ({ x: x / 2, y: y / 2 }), page);
     assert.equal(r.length, 1);
-    assert.deepEqual(r[0], { x: 150, y: 50, w: 25, h: 25 });
+    assert.deepEqual(r[0], { x: 146, y: 46, w: 33, h: 33 }, 'the element on screen, plus 4 px of room');
 });
 
 // ---- text boxes against their text ------------------------------------------------------------------

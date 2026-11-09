@@ -4,10 +4,15 @@
  * and files, and pan/zoom for a read-only viewer (the engine's own input is off
  * for them). Overlays are children of the engine root with pointer-events off.
  */
+import { applyMatrix, elementMatrix, multiply } from '../doc/geometry.js';
+import { find, parentMatrix } from '../doc/tree.js';
 import { hitTest } from '../engine/selection.js';
 import { DND_TYPE, insert } from './insert.js';
 import { activePage } from './describe.js';
-import { h, icon, setVars, throttleFrame } from './dom.js';
+import { h, icon, setVars, svgEl, throttleFrame } from './dom.js';
+import { measurerFor } from './measure.js';
+import { userKey } from './shell.js';
+import { extentOf } from './text-fit.js';
 import { drawRuler } from './ruler.js';
 import { displayUnit, toPx } from './units.js';
 
@@ -34,7 +39,15 @@ export function createStage(ctx, shell) {
     const rulerV = h('canvas', { class: 'st-ruler st-ruler--v', attrs: { 'aria-hidden': 'true' } });
     const rulerCorner = h('div', { class: 'st-ruler__corner', attrs: { 'aria-hidden': 'true' } });
     const guideLine = h('div', { class: 'st-guideline', hidden: true, attrs: { 'aria-hidden': 'true' } });
-    root.append(grid, crops);
+    // Bleed and safe area (Pro): the print edge outside the page and the margin inside it, from the format catalog.
+    const safe = h('div', { class: 'st-safe', hidden: true, attrs: { 'aria-hidden': 'true', 'data-studio-ignore': '' } }, h('span', { class: 'st-safe__bleed' }), h('span', { class: 'st-safe__safe' }));
+    // The text extent: where the words really are inside a text box (a dashed guide in Pro, the unused part hatched in Simple).
+    const extentSvg = svgEl('svg', { class: 'st-extent', 'aria-hidden': 'true', 'data-studio-ignore': '' });
+    extentSvg.append(svgEl('defs', {}), svgEl('path', { class: 'st-extent__empty', 'fill-rule': 'evenodd' }), svgEl('path', { class: 'st-extent__edge' }));
+    const hatch = svgEl('pattern', { id: 'st-hatch', width: 7, height: 7, patternUnits: 'userSpaceOnUse', patternTransform: 'rotate(45)' });
+    hatch.append(svgEl('line', { x1: 0, y1: 0, x2: 0, y2: 7, class: 'st-extent__hatch' }));
+    extentSvg.firstChild.append(hatch);
+    root.append(grid, crops, safe, extentSvg);
     wrap.append(rulerCorner, rulerH, rulerV, emptyCard, dropHint, guideLine);
 
     // ---- geometry that follows the viewport -----------------------------------------------------
@@ -50,7 +63,66 @@ export function createStage(ctx, shell) {
         if (showGrid) { const gs = gridSizeFor(r.page) * r.zoom; setVars(grid, { x: r.x + 'px', y: r.y + 'px', w: r.w + 'px', h: r.h + 'px', gs: gs + 'px' }); }
         paintRulers(r);
         paintEmpty(r);
+        paintSafe(r);
+        paintExtent();
     });
+
+    // ---- bleed and safe area ----------------------------------------------------------------------
+    const SAFE_KEY = userKey(ctx, 'safe-area');
+    let safeOn = false;
+    try { safeOn = localStorage.getItem(SAFE_KEY) === '1'; } catch (e) { /* storage blocked */ }
+    const fmt = () => (ctx.config.formats || []).find((f) => f.key === ctx.config.project.format_key) || null;
+    const safeInfo = () => {
+        const f = fmt();
+        if (!f) return null;
+        const sp = f.safe_px || {};
+        const insets = { top: +sp.top || 0, right: +sp.right || 0, bottom: +sp.bottom || 0, left: +sp.left || 0 };
+        const bleed = +f.bleed_px || 0;
+        if (!bleed && !Object.values(insets).some((v) => v > 0)) return null;
+        return { insets, bleed, label: f.label };
+    };
+    function paintSafe(r) {
+        const info = safeInfo();
+        const show = safeOn && ctx.mode === 'pro' && !!info;
+        safe.hidden = !show;
+        if (!show) return;
+        const z = r.zoom;
+        setVars(safe, { x: r.x + 'px', y: r.y + 'px', w: r.w + 'px', h: r.h + 'px', bl: info.bleed * z + 'px', st: info.insets.top * z + 'px', sr: info.insets.right * z + 'px', sb: info.insets.bottom * z + 'px', sl: info.insets.left * z + 'px' });
+        safe.dataset.bleed = info.bleed ? '1' : '0';
+    }
+    ctx.safeArea = {
+        available: () => !!safeInfo(),
+        get on() { return safeOn; },
+        describe() { const i = safeInfo(); return i ? { bleed: i.bleed, ...i.insets, label: i.label } : null; },
+        set(v) { safeOn = !!v; try { localStorage.setItem(SAFE_KEY, safeOn ? '1' : '0'); } catch (e) { /* storage blocked */ } layout(); ctx.emit('safearea', { on: safeOn }); },
+    };
+
+    // ---- the text extent ----------------------------------------------------------------------------
+    function paintExtent() {
+        const sel = ctx.selection();
+        const st = studio.getState();
+        const e = sel.count === 1 && sel.kind === 'text' && !st.editingId && !ctx.readOnly ? sel.el : null;
+        const [empty, edge] = [extentSvg.querySelector('.st-extent__empty'), extentSvg.querySelector('.st-extent__edge')];
+        const off = () => { empty.removeAttribute('d'); edge.removeAttribute('d'); extentSvg.dataset.on = '0'; };
+        if (!e || !(e.text || '').trim()) { off(); return; }
+        let ex;
+        try { ex = extentOf(e, measurerFor(ctx)); } catch (err) { off(); return; }
+        const pro = ctx.mode === 'pro';
+        const slackH = e.height - ex.h; const slackW = e.width - ex.w;
+        const differs = slackH > Math.max(6, e.height * 0.08) || (pro && slackW > Math.max(6, e.width * 0.08));
+        const far = e.height >= ex.h * 1.5;
+        if (!(pro ? differs : far && differs)) { off(); return; }
+        const hit = find(activePage(st).elements, e.id);
+        if (!hit) { off(); return; }
+        const m = multiply(parentMatrix(hit.ancestors), elementMatrix({ ...e, flip_x: false, flip_y: false }));
+        const pt = (x, y) => { const p = applyMatrix(m, x, y); const q = studio.viewport.pageToScreen(p.x, p.y); return `${Math.round(q.x * 10) / 10},${Math.round(q.y * 10) / 10}`; };
+        const rectPath = (x, y, w, hh) => `M${pt(x, y)}L${pt(x + w, y)}L${pt(x + w, y + hh)}L${pt(x, y + hh)}Z`;
+        const text = rectPath(ex.x, ex.y, ex.w, ex.h);
+        extentSvg.dataset.on = '1';
+        extentSvg.dataset.mode = pro ? 'pro' : 'simple';
+        edge.setAttribute('d', pro ? text : '');
+        empty.setAttribute('d', pro ? '' : rectPath(0, 0, e.width, e.height) + text);
+    }
 
     function rulersOn() { return ctx.mode === 'pro' && !!ctx.settings.rulers; }
     function paintRulers(r) {
@@ -79,7 +151,7 @@ export function createStage(ctx, shell) {
             h('button', { class: 'lt-btn lt-btn--secondary lt-btn--sm', attrs: { type: 'button' }, onClick: () => ctx.openTab('uploads', { focus: true }) }, icon('image-plus'), 'Add a picture'),
             h('button', { class: 'lt-btn lt-btn--secondary lt-btn--sm', attrs: { type: 'button' }, onClick: () => ctx.openTab('templates', { focus: true }) }, icon('template'), 'Use a template')));
 
-    for (const ev of ['viewport', 'page', 'change', 'mode', 'settings']) ctx.on(ev, layout);
+    for (const ev of ['viewport', 'page', 'change', 'mode', 'settings', 'selection']) ctx.on(ev, layout);
     studio.on('text-edit', layout);
     new ResizeObserver(layout).observe(wrap);
     layout();

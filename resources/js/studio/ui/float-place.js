@@ -34,9 +34,14 @@ export function placeToolbar({ frame, bar, bounds, others = [], rotatable = true
     const clampX = (x) => Math.max(EDGE, Math.min(x, bounds.w - bar.w - EDGE));
     const clampY = (y) => Math.max(EDGE, Math.min(y, bounds.h - bar.h - EDGE));
     const above = frame.y - bar.h - (rotatable ? ROTATE_CLEAR : GAP);
+    const below = frame.y + frame.h + GAP + 8;
+    const alignStart = clampX(frame.x);
+    const alignEnd = clampX(frame.x + frame.w - bar.w);
+    const centred = clampX(cx - bar.w / 2);
+    // Along each edge the bar can be centred, or pushed to either end of the frame (to slip past a label that sits there).
     const candidates = [
-        { side: 'above', x: clampX(cx - bar.w / 2), y: above },
-        { side: 'below', x: clampX(cx - bar.w / 2), y: frame.y + frame.h + GAP + 8 },
+        { side: 'above', x: centred, y: above }, { side: 'above', x: alignEnd, y: above }, { side: 'above', x: alignStart, y: above },
+        { side: 'below', x: centred, y: below }, { side: 'below', x: alignEnd, y: below }, { side: 'below', x: alignStart, y: below },
         { side: 'right', x: frame.x + frame.w + GAP + 8, y: clampY(cy - bar.h / 2) },
         { side: 'left', x: frame.x - bar.w - GAP - 8, y: clampY(cy - bar.h / 2) },
     ];
@@ -51,10 +56,10 @@ export function placeToolbar({ frame, bar, bounds, others = [], rotatable = true
         scored.push({ ...c, covered });
     }
     if (scored.length) {
-        // The first candidate wins unless a later one hides clearly less (more than a quarter of the bar's area): tie-break on order.
+        // Least of the other elements hidden wins; a sliver (under 2% of the bar's area) counts as nothing; ties keep the earlier candidate.
+        const bucket = (c) => Math.floor(c.covered / (bar.w * bar.h * 0.02));
         let best = scored[0];
-        const slack = bar.w * bar.h * 0.25;
-        for (const c of scored.slice(1)) if (c.covered + slack < best.covered) best = c;
+        for (const c of scored.slice(1)) if (bucket(c) < bucket(best)) best = c;
         return best;
     }
     // Nothing clear: sit inside the stage along the edge that is farthest from the frame's centre, so the frame stays reachable.
@@ -76,7 +81,8 @@ export function neighbourRects(elements, selectedIds, toScreen, page) {
             return toScreen(e.x + e.width / 2 + dx * Math.cos(rad) - dy * Math.sin(rad), e.y + e.height / 2 + dx * Math.sin(rad) + dy * Math.cos(rad));
         });
         const xs = pts.map((p) => p.x); const ys = pts.map((p) => p.y);
-        out.push({ x: Math.min(...xs), y: Math.min(...ys), w: Math.max(...xs) - Math.min(...xs), h: Math.max(...ys) - Math.min(...ys) });
+        // a little breathing room: a bar that only grazes a label still reads as covering it
+        out.push(grow({ x: Math.min(...xs), y: Math.min(...ys), w: Math.max(...xs) - Math.min(...xs), h: Math.max(...ys) - Math.min(...ys) }, 4));
     }
     return out;
 }
