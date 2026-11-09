@@ -27,7 +27,7 @@ class DesignTemplate extends Model
     protected $fillable = [
         'slug', 'name', 'description', 'source', 'team_id', 'user_id', 'status', 'category', 'kind',
         'industries', 'purposes', 'styles', 'platforms', 'objectives', 'format_key', 'width', 'height',
-        'pages', 'slots', 'popularity', 'uses', 'version', 'content_hash', 'published_at',
+        'pages', 'slots', 'page_count', 'popularity', 'uses', 'version', 'content_hash', 'published_at',
     ];
 
     protected $casts = [

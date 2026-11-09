@@ -83,6 +83,19 @@ return [
         'brochure' => 'Brochure',
     ],
 
+    // Where a template kind is filed when someone saves their own design as a template.
+    'kind_categories' => [
+        'instagram-post' => 'social', 'instagram-story' => 'social', 'facebook-post' => 'social', 'facebook-cover' => 'social',
+        'linkedin-post' => 'social', 'linkedin-banner' => 'social', 'x-post' => 'social', 'tiktok-cover' => 'social',
+        'youtube-thumbnail' => 'social', 'whatsapp-status' => 'social', 'pinterest-pin' => 'social',
+        'business-card' => 'identity', 'letterhead' => 'identity', 'email-signature' => 'identity', 'label' => 'identity',
+        'menu' => 'commercial', 'price-list' => 'commercial', 'voucher' => 'commercial', 'certificate' => 'commercial',
+        'report' => 'document', 'newsletter' => 'document', 'ebook' => 'document', 'presentation' => 'document', 'presentation-cover' => 'document',
+    ],
+
+    // Font keys offered in a brand kit when config/design_fonts.php (the engine's list) is not present.
+    'font_keys' => ['inter', 'dm-sans', 'poppins', 'montserrat', 'oswald', 'bebas-neue', 'anton', 'archivo-black', 'playfair-display', 'lora', 'merriweather', 'cormorant-garamond', 'fraunces', 'space-grotesk', 'caveat', 'pacifico', 'permanent-marker', 'jetbrains-mono'],
+
     // What a template is for (design_templates.purposes), matched against the brief's goal.
     'purposes' => [
         'advertise' => 'Advertise a business',

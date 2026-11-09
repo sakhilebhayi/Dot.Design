@@ -29,6 +29,7 @@ return new class extends Migration
             $table->unsignedInteger('height');
             $table->json('pages');
             $table->json('slots')->nullable();
+            $table->unsignedSmallInteger('page_count')->default(1);
             $table->unsignedSmallInteger('popularity')->default(0); // editorial weight 0-100
             $table->unsignedInteger('uses')->default(0);            // times instantiated (best effort, no personal data)
             $table->unsignedInteger('version')->default(1);
