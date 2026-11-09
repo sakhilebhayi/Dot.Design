@@ -6,6 +6,7 @@ use App\Models\BrandKit;
 use App\Models\DesignProject;
 use App\Models\DesignUserSetting;
 use App\Models\User;
+use App\Services\Design\Assistant\AssistantStatus;
 use App\Services\Integrations\Contracts\FileVault;
 use App\Services\Integrations\Contracts\NotificationGateway;
 use App\Support\Ui\Icons;
@@ -53,7 +54,7 @@ class EditorBoot
             'formats' => $this->formatList(),
             'settings' => $this->settings($user),
             'flags' => [
-                'ai' => trim((string) config('services.anthropic.api_key', '')) !== '',
+                'ai' => AssistantStatus::enabled(),
                 'filesVault' => $this->safely(fn () => app(FileVault::class)->enabled()),
                 'notify' => $this->safely(fn () => app(NotificationGateway::class)->enabled()),
             ],

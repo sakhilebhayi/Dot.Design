@@ -83,6 +83,20 @@ class StudioEditorPageTest extends TestCase
         $this->assertNull($boot['brand'], 'no kit exists yet');
     }
 
+    public function test_the_assistant_flag_in_the_boot_json_is_exactly_what_the_assistant_status_says(): void
+    {
+        [$user, $project] = $this->ownerWithProject();
+
+        foreach ([['', true], ['sk-test-not-real', true], ['sk-test-not-real', false], ['', false]] as [$key, $enabled]) {
+            config(['design_ai.api_key' => $key, 'design_ai.enabled' => $enabled, 'services.anthropic.api_key' => $key]);
+
+            $boot = $this->editorBoot($this->open($user, $project)->assertOk()->getContent());
+
+            $this->assertSame(\App\Services\Design\Assistant\AssistantStatus::enabled(), $boot['flags']['ai'], "key '{$key}', enabled ".var_export($enabled, true));
+            $this->assertSame($key !== '' && $enabled, $boot['flags']['ai']);
+        }
+    }
+
     public function test_the_workspace_default_brand_kit_is_included_and_a_linked_kit_wins(): void
     {
         [$user, $project] = $this->ownerWithProject();

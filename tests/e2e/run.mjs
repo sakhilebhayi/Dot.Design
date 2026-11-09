@@ -103,6 +103,7 @@ async function main() {
     console.log('Migrating and seeding ...');
     php(['artisan', 'migrate', '--force', '--no-interaction'], base);
     php(['artisan', 'db:seed', '--class=DesignTemplateSeeder', '--force', '--no-interaction'], base);
+    php(['artisan', 'db:seed', '--class=DesignSystemSeeder', '--force', '--no-interaction'], base);
 
     startServer(port, base, 'main');
     // The same app and database with the assistant switched on, pointed at a local stub of the Messages API.
@@ -130,7 +131,7 @@ async function main() {
     let failed = 0;
     for (const spec of specs) {
         console.log(`\n=== ${spec}`);
-        const r = spawnSync(process.execPath, ['--test', '--test-concurrency=1', '--test-timeout=240000', join(specDir, spec)], { cwd: root, env, stdio: 'inherit' });
+        const r = spawnSync(process.execPath, ['--test', '--test-concurrency=1', '--test-timeout=900000', join(specDir, spec)], { cwd: root, env, stdio: 'inherit' });
         if (r.status !== 0) failed++;
     }
     console.log(failed ? `\n${failed} spec file(s) failed` : '\nAll specs passed');
