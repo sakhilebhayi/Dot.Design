@@ -19,3 +19,6 @@ Schedule::command(ScanTokenDrift::class)
 // One signed, aggregate-only snapshot a day for Dot.Analytics. Does nothing until the url, secret and
 // company uuid are all configured; an Analytics outage only ever affects the queued job.
 Schedule::command('design:publish-metrics')->dailyAt('00:10')->timezone('UTC')->withoutOverlapping();
+
+// Old assistant proposals (design_ai_proposals) are pruned daily; see config design_ai.retention_days.
+Schedule::command('design:prune-ai-proposals')->dailyAt('03:30')->withoutOverlapping();
