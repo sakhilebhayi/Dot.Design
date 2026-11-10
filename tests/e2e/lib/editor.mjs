@@ -28,10 +28,22 @@ export async function serverDocument(page, projectId) {
     return page.evaluate(async (id) => (await fetch(`/design/projects/${id}/document`, { headers: { Accept: 'application/json' } })).json(), projectId);
 }
 
-/** Selection on the canvas by a real click at the element's centre. */
+/** Selection on the canvas by a real click at the element's centre. Waits until the page has stopped moving (the viewport
+ *  re-fits when panels open or hints close) and checks the engine really selected it, clicking again if the layout shifted. */
 export async function clickElement(page, id, opts = {}) {
-    const c = await centreOf(page, id);
-    await page.mouse.click(c.x, c.y, opts);
+    for (let attempt = 0; attempt < 4; attempt++) {
+        let box = await node(page, id).boundingBox();
+        for (let i = 0; i < 10; i++) {
+            await page.waitForTimeout(120);
+            const next = await node(page, id).boundingBox();
+            const still = Math.abs(next.x - box.x) < 0.5 && Math.abs(next.y - box.y) < 0.5 && Math.abs(next.width - box.width) < 0.5;
+            box = next;
+            if (still) break;
+        }
+        await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2, opts);
+        await page.waitForTimeout(150);
+        if ((await selection(page)).includes(id)) return;
+    }
 }
 
 /** Deep copy without null/undefined keys. */
