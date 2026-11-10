@@ -1,102 +1,61 @@
 <x-app-layout>
-<x-slot name="header">{{ $tokenSet->name }}</x-slot>
+<div class="lt-page">
+    <x-ds.page-header :title="$tokenSet->name" :sub="$tokenSet->description ?: 'No description.'">
+        <x-ds.tag kind="accent">v{{ $tokenSet->version }}</x-ds.tag>
+        <x-ds.button :href="route('design-system.token-sets.index')" variant="ghost" icon="arrow-left" size="sm">All token sets</x-ds.button>
+    </x-ds.page-header>
 
-<div class="page">
-
-    <div style="display:flex;align-items:center;justify-content:space-between;gap:0.75rem;flex-wrap:wrap;margin-bottom:0.5rem;">
-        <h1 style="font-family:'Syne',sans-serif;font-size:1.6rem;font-weight:800;color:var(--text);margin:0;">
-            {{ $tokenSet->name }}
-        </h1>
-        <span class="dot-badge dot-badge-accent">v{{ $tokenSet->version }}</span>
-    </div>
-    <p style="font-size:0.8rem;color:var(--text-dim);margin:0 0 2rem;">
-        {{ $tokenSet->description ?: 'No description.' }}
-    </p>
-
-    {{-- Tokens --}}
-    <div style="margin-bottom:2.5rem;">
-        <h2 style="font-family:'Syne',sans-serif;font-size:1rem;font-weight:700;color:var(--text);margin:0 0 1rem;">Tokens</h2>
-
+    <section aria-labelledby="tokens-title">
+        <h2 id="tokens-title" class="lt-section__title" style="margin-bottom: var(--lt-space-4);">Tokens</h2>
         @if ($tokenSet->tokens->isEmpty())
-            <div class="dot-card" style="border-style:dashed;padding:2rem;text-align:center;">
-                <span class="material-symbols-rounded" style="font-size:32px;color:var(--text-dim);display:block;margin-bottom:0.5rem;">sell</span>
-                <p style="color:var(--text-dim);font-size:0.82rem;margin:0;">No tokens in this set yet.</p>
-            </div>
+            <x-ds.empty title="No tokens in this set yet">An operator adds tokens one at a time. Each shows a live preview of its value.</x-ds.empty>
         @else
-            <div class="card-grid" style="--card-min:220px;gap:0.85rem;">
+            <ul class="lt-cardlist" style="--min: 13.5rem;">
                 @foreach ($tokenSet->tokens as $token)
-                    <div class="dot-card" style="padding:1rem;">
-                        @if ($token->category === 'color')
-                            <div style="height:52px;border-radius:8px;background:{{ $token->value }};border:1px solid var(--border-strong);margin-bottom:0.75rem;"></div>
-                        @elseif ($token->category === 'spacing')
-                            <div style="height:52px;border-radius:8px;background:rgba(127,127,127,0.08);border:1px solid var(--border);margin-bottom:0.75rem;display:flex;align-items:center;padding:0 0.75rem;">
-                                <div style="height:8px;border-radius:4px;background:#ec4899;width:{{ min((float) $token->value * 16, 100) }}%;max-width:100%;"></div>
-                            </div>
-                        @elseif ($token->category === 'type')
-                            <div style="height:52px;border-radius:8px;background:rgba(127,127,127,0.08);border:1px solid var(--border);margin-bottom:0.75rem;display:flex;align-items:center;justify-content:center;">
-                                <span style="font-family:'Syne',sans-serif;color:var(--text);font-size:{{ min((float) $token->value * 16, 32) }}px;line-height:1;">Aa</span>
-                            </div>
-                        @else
-                            <div style="height:52px;border-radius:8px;background:rgba(127,127,127,0.08);border:1px solid var(--border);margin-bottom:0.75rem;display:flex;align-items:center;justify-content:center;">
-                                <span class="material-symbols-rounded" style="font-size:22px;color:var(--text-dim);">bolt</span>
-                            </div>
-                        @endif
-
-                        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.2rem;">
-                            <div style="font-size:0.85rem;font-weight:600;color:var(--text);">{{ $token->name }}</div>
-                            <span class="dot-badge" style="background:rgba(127,127,127,0.1);color:var(--text-dim);">v{{ $token->version }}</span>
+                    <li class="lt-listcard">
+                        <div class="lt-tokenview lt-stage">
+                            @if ($token->category === 'color')
+                                <span class="lt-tokenview__color" style="background: {{ preg_match('/^#[0-9a-fA-F]{3,8}$/', (string) $token->value) ? $token->value : 'transparent' }};"></span>
+                            @elseif ($token->category === 'spacing')
+                                <span class="lt-tokenview__space" style="width: {{ min((float) $token->value * 16, 100) }}%;"></span>
+                            @elseif ($token->category === 'type')
+                                <span class="lt-tokenview__type" style="font-size: {{ min(max((float) $token->value * 16, 12), 40) }}px;">Aa</span>
+                            @else
+                                <x-ds.icon name="zap" class="lt-faint" size="lg" />
+                            @endif
                         </div>
-                        <div style="display:flex;align-items:center;justify-content:space-between;">
-                            <span style="font-size:0.7rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.06em;">{{ $token->category }}</span>
-                            <span class="metric-val" style="font-size:0.72rem;color:var(--text-muted);">{{ $token->value }}</span>
+                        <div class="lt-listcard__head">
+                            <h3 class="lt-h3" style="font-size: var(--lt-text-md);">{{ $token->name }}</h3>
+                            <x-ds.tag>v{{ $token->version }}</x-ds.tag>
                         </div>
-                    </div>
+                        <p class="lt-meta">{{ $token->category }}, <span class="lt-mono">{{ $token->value }}</span></p>
+                    </li>
                 @endforeach
-            </div>
+            </ul>
         @endif
-    </div>
+    </section>
 
-    {{-- Consuming platforms --}}
-    <div>
-        <h2 style="font-family:'Syne',sans-serif;font-size:1rem;font-weight:700;color:var(--text);margin:0 0 1rem;">Consuming Platforms</h2>
-
+    <section aria-labelledby="consumers-title" class="lt-section">
+        <h2 id="consumers-title" class="lt-section__title" style="margin-bottom: var(--lt-space-4);">Consuming platforms</h2>
         @if ($tokenSet->consumptionRecords->isEmpty())
-            <div class="dot-card" style="border-style:dashed;padding:2rem;text-align:center;">
-                <span class="material-symbols-rounded" style="font-size:32px;color:var(--text-dim);display:block;margin-bottom:0.5rem;">hub</span>
-                <p style="color:var(--text-dim);font-size:0.82rem;margin:0;">No consumers recorded yet.</p>
-            </div>
+            <x-ds.empty title="No consumers recorded yet">Platforms that pin this set are listed here with the version they use.</x-ds.empty>
         @else
-            <div class="dot-card table-scroll" tabindex="0" role="region" aria-label="Consuming platforms" style="padding:0.5rem;">
-                <table style="width:100%;border-collapse:collapse;font-size:0.83rem;color:var(--text-muted);">
-                    <thead>
-                        <tr style="text-align:left;border-bottom:1px solid var(--border);">
-                            <th style="padding:0.6rem 0.75rem;color:var(--text-dim);font-weight:600;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.06em;">Platform</th>
-                            <th style="padding:0.6rem 0.75rem;color:var(--text-dim);font-weight:600;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.06em;">Pinned version</th>
-                            <th style="padding:0.6rem 0.75rem;color:var(--text-dim);font-weight:600;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.06em;">Last synced</th>
-                            <th style="padding:0.6rem 0.75rem;color:var(--text-dim);font-weight:600;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.06em;">Status</th>
-                        </tr>
-                    </thead>
+            <div class="table-scroll lt-table-scroll" tabindex="0" role="region" aria-label="Consuming platforms">
+                <table class="lt-table">
+                    <thead><tr><th scope="col">Platform</th><th scope="col">Pinned version</th><th scope="col">Last synced</th><th scope="col">Status</th></tr></thead>
                     <tbody>
                         @foreach ($tokenSet->consumptionRecords as $record)
-                            <tr style="border-bottom:1px solid var(--border);">
-                                <td style="padding:0.6rem 0.75rem;color:var(--text);">{{ $record->platform_id }}</td>
-                                <td style="padding:0.6rem 0.75rem;">v{{ $record->pinned_version }}</td>
-                                <td style="padding:0.6rem 0.75rem;color:var(--text-dim);">{{ $record->last_synced_at?->diffForHumans() ?? 'never synced' }}</td>
-                                <td style="padding:0.6rem 0.75rem;">
-                                    @if(in_array($record->platform_id, $driftedPlatforms))
-                                        <span class="dot-badge" style="background:rgba(239,68,68,0.12);color:#ef4444;">Drifted</span>
-                                    @else
-                                        <span class="dot-badge" style="background:rgba(34,197,94,0.12);color:#22c55e;">Up to date</span>
-                                    @endif
-                                </td>
+                            <tr>
+                                <td>{{ $record->platform_id }}</td>
+                                <td class="lt-num">v{{ $record->pinned_version }}</td>
+                                <td class="lt-muted">{{ $record->last_synced_at?->diffForHumans() ?? 'never synced' }}</td>
+                                <td>@if (in_array($record->platform_id, $driftedPlatforms))<x-ds.tag kind="bad">Drifted</x-ds.tag>@else<x-ds.tag kind="ok">Up to date</x-ds.tag>@endif</td>
                             </tr>
                         @endforeach
                     </tbody>
                 </table>
             </div>
         @endif
-    </div>
-
+    </section>
 </div>
-
 </x-app-layout>

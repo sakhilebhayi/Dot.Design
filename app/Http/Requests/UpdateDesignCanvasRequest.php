@@ -2,7 +2,7 @@
 
 namespace App\Http\Requests;
 
-use App\Models\DesignAsset;
+use App\Services\Design\ProjectAssets;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\Exceptions\HttpResponseException;
@@ -117,17 +117,13 @@ class UpdateDesignCanvasRequest extends FormRequest
                 return;
             }
 
-            // Never trust an asset id from the client: it must be a row owned
-            // by the user who is saving (the model scope plus an explicit
-            // user_id check, so neither alone is load-bearing).
-            $owned = DesignAsset::query()
-                ->where('user_id', $this->user()->id)
-                ->whereIn('id', array_unique($assetIds))
-                ->pluck('id')->all();
+            // Never trust an asset id from the client: it must be one this user may place in this project (their own,
+            // one already on a page of the project, one filed under it, or a workspace brand asset).
+            $owned = app(ProjectAssets::class)->allowedForSave($this->user(), $this->route('project'), array_values(array_unique($assetIds)));
 
             foreach ($assetIds as $i => $id) {
                 if (! in_array($id, $owned, true)) {
-                    $validator->errors()->add("elements.{$i}.asset_id", 'That image is not one of your assets.');
+                    $validator->errors()->add("elements.{$i}.asset_id", 'That image is not available to you.');
                 }
             }
         }];

@@ -1,3 +1,5 @@
+> **Status (R-45, 2026-11-09): superseded by the dated audit in `docs/R45_A11Y.md`** (method, 384-state axe sweep, real-keyboard walkthrough, responsive, motion and focus checks, what was fixed, what is not done, what needs a person with a screen reader). This file stays as the original WCAG 2.2 checklist. Its section 8 (a `<canvas>` editor) is wrong: the editor draws SVG, and the canvas has a readable list of its elements instead (`D-1802`). Repeat the checks with `sh scripts/dev/a11y/run-all.sh`.
+
 # Accessibility Improvements
 
 > WCAG 2.2 AA compliance guide for Dot.Design. Each section is independently actionable.
@@ -212,7 +214,7 @@ Never use colour as the only visual differentiator.
 
 ## 8. Canvas Editor Accessibility
 
-The Fabric.js canvas (`<canvas>`) element is not accessible to screen readers by default. Implement a parallel accessible tree:
+**Corrected:** the editor does not use Fabric.js or a `<canvas>`; it renders each page as SVG with its own keyboard layer (`docs/R45_ENGINE.md`). The sketch below was written for the proposal and is kept as a statement of intent: a parallel accessible tree for the elements.
 
 ```html
 <div role="application" aria-label="Design canvas" aria-describedby="canvas-instructions">

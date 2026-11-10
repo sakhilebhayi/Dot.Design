@@ -3,6 +3,7 @@
 namespace App\Actions\Jetstream;
 
 use App\Models\Team;
+use App\Services\Privacy\AccountErasure;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Laravel\Jetstream\Contracts\DeletesTeams;
@@ -13,7 +14,7 @@ class DeleteUser implements DeletesUsers
     /**
      * Create a new action instance.
      */
-    public function __construct(protected DeletesTeams $deletesTeams) {}
+    public function __construct(protected DeletesTeams $deletesTeams, protected AccountErasure $erasure) {}
 
     /**
      * Delete the given user.
@@ -21,11 +22,16 @@ class DeleteUser implements DeletesUsers
     public function delete(User $user): void
     {
         DB::transaction(function () use ($user) {
+            // R-45: hand a workspace's designs to its owner, anonymise what the person said, remove the rest with its files.
+            $this->erasure->prepare($user);
             $this->deleteTeams($user);
             $user->deleteProfilePhoto();
             $user->tokens->each->delete();
             $user->delete();
         });
+
+        // For incident response and the data-subject record: the fact of the deletion, with the id only.
+        \Illuminate\Support\Facades\Log::info('security.account_deleted', ['user_id' => $user->id]);
     }
 
     /**

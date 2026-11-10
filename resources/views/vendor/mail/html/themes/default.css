@@ -16,8 +16,8 @@ body *:not(html):not(style):not(br):not(tr):not(code) {
 
 body {
     -webkit-text-size-adjust: none;
-    background-color: #faf9f5;
-    color: #565269;
+    background-color: #eceef0;
+    color: #464e56;
     height: 100%;
     line-height: 1.4;
     margin: 0;
@@ -34,7 +34,7 @@ blockquote {
 }
 
 a {
-    color: #d99a1f;
+    color: #0a6a91;
 }
 
 a img {
@@ -44,7 +44,7 @@ a img {
 /* Typography */
 
 h1 {
-    color: #221f2b;
+    color: #14181c;
     font-size: 19px;
     font-weight: bold;
     margin-top: 0;
@@ -86,7 +86,7 @@ img {
     -premailer-cellpadding: 0;
     -premailer-cellspacing: 0;
     -premailer-width: 100%;
-    background-color: #faf9f5;
+    background-color: #eceef0;
     margin: 0;
     padding: 0;
     width: 100%;
@@ -104,13 +104,13 @@ img {
 /* Header */
 
 .header {
-    background-color: #221f2b;
+    background-color: #14181c;
     padding: 32px 0;
     text-align: center;
 }
 
 .header a {
-    color: #faf9f5;
+    color: #eceef0;
     font-size: 19px;
     font-weight: bold;
     text-decoration: none;
@@ -132,9 +132,9 @@ img {
     -premailer-cellpadding: 0;
     -premailer-cellspacing: 0;
     -premailer-width: 100%;
-    background-color: #faf9f5;
-    border-bottom: 1px solid #faf9f5;
-    border-top: 1px solid #faf9f5;
+    background-color: #eceef0;
+    border-bottom: 1px solid #eceef0;
+    border-top: 1px solid #eceef0;
     margin: 0;
     padding: 0;
     width: 100%;
@@ -145,7 +145,7 @@ img {
     -premailer-cellspacing: 0;
     -premailer-width: 570px;
     background-color: #ffffff;
-    border-color: #e9e6dd;
+    border-color: #d9dde1;
     border-radius: 12px;
     border-width: 1px;
     box-shadow: 0 1px 3px 0 rgba(34, 31, 43, 0.08), 0 1px 2px -1px rgba(34, 31, 43, 0.08);
@@ -161,14 +161,14 @@ img {
 /* Subcopy */
 
 .subcopy {
-    border-top: 1px solid #e9e6dd;
+    border-top: 1px solid #d9dde1;
     margin-top: 25px;
     padding-top: 25px;
 }
 
 .subcopy p {
     font-size: 14px;
-    color: #565269;
+    color: #464e56;
 }
 
 /* Footer */
@@ -184,13 +184,13 @@ img {
 }
 
 .footer p {
-    color: #96925f;
+    color: #5e6670;
     font-size: 12px;
     text-align: center;
 }
 
 .footer a {
-    color: #96925f;
+    color: #5e6670;
     text-decoration: underline;
 }
 
@@ -205,13 +205,13 @@ img {
 }
 
 .table th {
-    border-bottom: 1px solid #e9e6dd;
+    border-bottom: 1px solid #d9dde1;
     margin: 0;
     padding-bottom: 8px;
 }
 
 .table td {
-    color: #565269;
+    color: #464e56;
     font-size: 15px;
     line-height: 18px;
     margin: 0;
@@ -247,12 +247,12 @@ img {
 
 .button-blue,
 .button-primary {
-    background-color: #d99a1f;
-    border-bottom: 8px solid #d99a1f;
-    border-left: 18px solid #d99a1f;
-    border-right: 18px solid #d99a1f;
-    border-top: 8px solid #d99a1f;
-    color: #faf9f5;
+    background-color: #0a6a91;
+    border-bottom: 8px solid #0a6a91;
+    border-left: 18px solid #0a6a91;
+    border-right: 18px solid #0a6a91;
+    border-top: 8px solid #0a6a91;
+    color: #eceef0;
 }
 
 .button-green,
@@ -278,18 +278,18 @@ img {
 /* Panels */
 
 .panel {
-    border-left: #d99a1f solid 4px;
+    border-left: #0a6a91 solid 4px;
     margin: 21px 0;
 }
 
 .panel-content {
-    background-color: #faf9f5;
-    color: #565269;
+    background-color: #eceef0;
+    color: #464e56;
     padding: 16px;
 }
 
 .panel-content p {
-    color: #565269;
+    color: #464e56;
 }
 
 .panel-item {

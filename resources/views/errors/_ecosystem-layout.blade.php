@@ -1,157 +1,81 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="scroll-smooth">
-    <head>
-        <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <title>{{ $code }} — @yield('title') · Dot.Design</title>
-        <meta name="robots" content="noindex">
-
-        @php
-            $faviconPath = null;
-            foreach (['favicon.ico', 'favicon-32x32.png', 'favicon-16x16.png'] as $faviconCandidate) {
-                if (file_exists(public_path($faviconCandidate))) {
-                    $faviconPath = $faviconCandidate;
-                    break;
-                }
-            }
-        @endphp
-        @if ($faviconPath)
-            <link rel="icon" href="{{ asset($faviconPath) }}">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <title>{{ $code }}: @yield('title') | Dot.Design</title>
+    <meta name="robots" content="noindex">
+    @foreach (['favicon.ico', 'favicon-32x32.png', 'favicon-16x16.png'] as $faviconCandidate)
+        @if (file_exists(public_path($faviconCandidate)))
+            <link rel="icon" href="{{ asset($faviconCandidate) }}">
+            @break
         @endif
-
-        <link rel="preconnect" href="https://fonts.googleapis.com">
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,500&family=Instrument+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-        <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
-
-        @php
-            $viteManifestPath = public_path('build/manifest.json');
-            $viteEntries = [];
-            if (file_exists($viteManifestPath)) {
-                $viteManifest = json_decode(file_get_contents($viteManifestPath), true) ?? [];
-                foreach (['resources/css/app.css', 'resources/js/app.js'] as $entry) {
-                    if (isset($viteManifest[$entry])) {
-                        $viteEntries[] = $entry;
-                    }
+    @endforeach
+    <script src="{{ asset('js/ds-theme.js') }}"></script>
+    @php
+        // Error pages must render even if the asset build is missing, so only ask Vite for entries the manifest has.
+        $viteManifestPath = public_path('build/manifest.json');
+        $viteEntries = [];
+        if (file_exists($viteManifestPath)) {
+            $viteManifest = json_decode(file_get_contents($viteManifestPath), true) ?? [];
+            foreach (['resources/css/app.css', 'resources/js/app.js'] as $entry) {
+                if (isset($viteManifest[$entry])) {
+                    $viteEntries[] = $entry;
                 }
             }
+        }
 
-            // Every Dot platform, pulled from the shared ecosystem registry
-            // (config/ecosystem.php, identical across all platforms) rather
-            // than a fixed hand-picked subset -- add a platform to the
-            // registry once and it shows up here automatically everywhere.
-            // Self-exclusion uses this generator-verified literal name
-            // rather than config('app.name'), since not every platform's
-            // .env reliably has APP_NAME set correctly.
-            $currentPlatformName = 'Dot.Design';
-            $discover = collect(config('ecosystem.platforms', []))
-                ->reject(fn ($p) => ($p['name'] ?? null) === $currentPlatformName)
-                ->reject(fn ($p) => ($p['active'] ?? true) === false)
-                ->reject(fn ($p, $k) => ($p['internal'] ?? false) === true || in_array($k, ['memory', 'brain', 'dopemine'], true))
-                ->values()
-                ->all();
-
-            $logoLightPath = null;
-            foreach (['images/logo-light.png', null] as $logoLightCandidate) {
-                if ($logoLightCandidate && file_exists(public_path($logoLightCandidate))) {
-                    $logoLightPath = $logoLightCandidate;
-                    break;
-                }
+        // Where to go next: at most three places that are useful from an error, never a directory of every platform.
+        $signedIn = false;
+        try { $signedIn = auth()->check(); } catch (\Throwable $e) { /* maintenance mode and early failures have no session */ }
+        $destinations = [];
+        if ($signedIn) {
+            foreach ([['design.projects.index', 'Your designs'], ['design.templates.index', 'Templates'], ['design.brand.index', 'Brand']] as [$routeName, $label]) {
+                if (Route::has($routeName)) { $destinations[] = ['url' => route($routeName), 'label' => $label]; }
             }
-        @endphp
-        @if (!empty($viteEntries))
-            @vite($viteEntries)
-        @endif
+        } elseif (Route::has('login')) {
+            $destinations[] = ['url' => route('login'), 'label' => 'Log in'];
+        }
+    @endphp
+    @if (! empty($viteEntries))
+        @vite($viteEntries)
+    @endif
+</head>
+<body>
+    <a class="lt-skip" href="#main">Skip to content</a>
+    <main id="main" class="lt-errorpage">
+        <div class="lt-errorpage__box">
+            <a href="/" class="lt-brand" aria-label="Dot.Design, home" style="padding-left: 0;">
+                <span class="lt-mark" role="img" aria-label="Dot.Design mark"></span>
+                <span class="lt-brand__name">Dot.Design</span>
+            </a>
 
-        <style>
-            :root {
-                --paper: #faf9f5;
-                --ink: #221f2b;
-                --ink-soft: #565269;
-                --chrome: #221f2b;
-                --chrome-soft: #221f2b;
-                --accent: #efb93a;
-                --accent-deep: #d99a1f;
-                --line: rgba(0,0,0,0.12);
-                --font-display: 'Fraunces', ui-serif, Georgia, serif;
-                --font-body: 'Instrument Sans', system-ui, sans-serif;
-                --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
-                --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
-            }
-            * { box-sizing: border-box; }
-            html { background: var(--paper); }
-            body { margin: 0; font-family: var(--font-body); background: var(--paper); color: #565269; min-height: 100dvh; display: flex; flex-direction: column; }
-            .font-display { font-family: var(--font-display); }
-            .font-mono { font-family: var(--font-mono); }
-            a { color: inherit; }
-            .press { transition: transform 160ms var(--ease-out); }
-            .press:active { transform: scale(0.97); }
-            .link-underline { background-image: linear-gradient(currentColor, currentColor); background-position: 0 100%; background-repeat: no-repeat; background-size: 0% 1px; transition: background-size 200ms var(--ease-out); }
-            @media (hover: hover) and (pointer: fine) {
-                .link-underline:hover { background-size: 100% 1px; }
-            }
-        </style>
-    </head>
-    <body>
-        <header style="background: var(--chrome);">
-            <nav style="max-width: 1400px; margin: 0 auto; padding: 14px 20px; display: flex; align-items: center; justify-content: space-between;">
-                <a href="/" class="press" style="display: flex; align-items: center; gap: 10px;">
-                    {{-- The header sits on --chrome, which is always a dark
-                         surface in this template regardless of whether the
-                         platform's overall theme is light or dark -- so the
-                         logo's ink-colored wordmark needs the dark-safe
-                         white-ink variant here, not the default asset. --}}
-                    <img src="{{ asset($logoLightPath ?? 'images/logo.png') }}" alt="Dot.Design" style="height: 40px; width: auto;">
-                </a>
-                <div style="display: flex; align-items: center; gap: 12px;">
-                    @auth
-                        <a href="{{ route('dashboard') }}" class="press" style="padding: 10px 20px; background: var(--accent); color: #221f2b; font-family: var(--font-display); font-weight: 600; font-size: 14px; border-radius: 999px; text-decoration: none;">Dashboard</a>
-                    @else
-                        @if (Route::has('login'))
-                            <a href="{{ route('login') }}" class="link-underline" style="color: rgba(255,255,255,0.85); font-size: 14px; text-decoration: none; padding-bottom: 1px;">Sign in</a>
-                        @endif
-                    @endauth
-                </div>
-            </nav>
-        </header>
-
-        <main style="flex: 1; display: flex; align-items: center; padding: 48px 20px;">
-            <div style="max-width: 640px; margin: 0 auto; width: 100%; text-align: center;">
-                <div style="display: inline-flex; align-items: center; justify-content: center; width: 88px; height: 88px; border-radius: 24px; background: rgba(0,0,0,0.04); margin-bottom: 28px;" aria-hidden="true">
-                    @yield('icon')
-                </div>
-
-                <p class="font-mono" style="font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-soft); margin: 0 0 10px;">Error {{ $code }}</p>
-                <h1 class="font-display" style="font-size: clamp(26px, 4vw, 34px); font-weight: 700; line-height: 1.2; margin: 0 0 14px; color: var(--ink);">@yield('title')</h1>
-                <p style="font-size: 16px; line-height: 1.6; color: var(--ink-soft); margin: 0 0 32px;">@yield('message')</p>
-
-                <div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 12px; margin-bottom: 56px;">
-                    @yield('actions')
-                </div>
-
-                @if (!empty($discover))
-                    <div style="border-top: 1px solid var(--line); padding-top: 28px; text-align: left;">
-                        <p class="font-mono" style="font-size: 12px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-soft); margin: 0 0 14px; text-align: center;">While you're here — the rest of the Dot Ecosystem ({{ count($discover) }})</p>
-                        <div style="display: flex; gap: 8px; overflow-x: auto; padding: 2px 2px 8px; scroll-snap-type: x proximity; -webkit-overflow-scrolling: touch;">
-                            @foreach ($discover as $platform)
-                                <a href="{{ $platform['url'] }}" class="press" style="flex: 0 0 auto; scroll-snap-align: start; display: flex; align-items: center; gap: 8px; padding: 7px 14px 7px 7px; background: #ffffff; border: 1px solid var(--line); border-radius: 999px; text-decoration: none; white-space: nowrap;">
-                                    <span class="material-symbols-rounded" aria-hidden="true" style="display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; border-radius: 50%; background: {{ $platform['accent'] ?? 'var(--accent)' }}; color: #ffffff; font-size: 16px; flex-shrink: 0;">{{ $platform['icon'] ?? 'apps' }}</span>
-                                    <span class="font-display" style="font-weight: 600; font-size: 13px; color: var(--ink);">{{ $platform['name'] }}</span>
-                                </a>
-                            @endforeach
-                        </div>
-                    </div>
-                @endif
+            <p class="lt-errorcode" aria-hidden="true">{{ $code }}</p>
+            <div style="display: grid; gap: var(--lt-space-3);">
+                <h1 class="lt-auth__title">@yield('title')</h1>
+                <p class="lt-empty__text" style="max-width: 46ch;">@yield('message')</p>
             </div>
-        </main>
 
-        <footer style="background: var(--chrome-soft); padding: 24px 20px;">
-            <div style="max-width: 1400px; margin: 0 auto; display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 16px;">
-                <p class="font-mono" style="font-size: 12px; color: rgba(255,255,255,0.6); margin: 0;">&copy; {{ date('Y') }} Dot.Design.</p>
-                @if (Route::has('contact'))
-                    <a href="{{ route('contact') }}" class="link-underline font-mono" style="font-size: 12px; color: rgba(255,255,255,0.6); text-decoration: none; padding-bottom: 1px;">Contact support</a>
-                @endif
+            <div class="lt-form__actions">
+                @yield('actions')
             </div>
-        </footer>
-    </body>
+
+            @if (! empty($destinations))
+                <nav aria-label="Other places to go" class="lt-errorpage__next">
+                    <p class="lt-small">Or go to</p>
+                    <ul>
+                        @foreach ($destinations as $destination)
+                            <li><a href="{{ $destination['url'] }}">{{ $destination['label'] }}</a></li>
+                        @endforeach
+                    </ul>
+                </nav>
+            @endif
+
+            <p class="lt-meta">&copy; {{ date('Y') }} Dot.Design
+                @if (Route::has('contact')) <a href="{{ route('contact') }}">Contact support</a> @endif
+            </p>
+        </div>
+    </main>
+</body>
 </html>

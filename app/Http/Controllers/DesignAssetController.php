@@ -22,7 +22,7 @@ class DesignAssetController extends Controller
     public function store(StoreDesignAssetRequest $request, AssetUploader $uploader): JsonResponse
     {
         try {
-            [$asset, $created] = $uploader->store($request->user(), $request->file('file'), $request->project());
+            [$asset, $created] = $uploader->store($request->user(), $request->file('file'), $request->project(), $request->libraryMeta());
         } catch (AssetRejected $e) {
             return response()->json([
                 'message' => $e->getMessage(),
@@ -54,17 +54,24 @@ class DesignAssetController extends Controller
         $disk = Storage::disk($asset->disk);
         abort_unless($disk->exists($asset->file_path), 404);
 
-        $response = $disk->response($asset->file_path, null, [
-            'Content-Type' => $mime,
+        // ?size=preview: the lighter WebP copy the editor canvas draws (falls back to the original when there is none).
+        $previewPath = $request->query('size') === 'preview' ? $asset->previewPath() : null;
+        $usePreview = $previewPath !== null && $disk->exists($previewPath);
+        $servedPath = $usePreview ? $previewPath : $asset->file_path;
+        $servedMime = $usePreview ? 'image/webp' : $mime;
+
+        $response = $disk->response($servedPath, null, [
+            'Content-Type' => $servedMime,
             'Content-Disposition' => 'inline',
             'X-Content-Type-Options' => 'nosniff',
             'Content-Security-Policy' => "default-src 'none'; sandbox",
+            'Cross-Origin-Resource-Policy' => 'same-origin',
             'Vary' => 'Cookie',
         ]);
 
         $response->setPrivate();
         $response->setMaxAge(3600);
-        $response->setEtag((string) ($asset->content_hash ?: sha1($asset->file_path)));
+        $response->setEtag(($usePreview ? 'p-' : '').(string) ($asset->content_hash ?: sha1($asset->file_path)));
         $response->isNotModified($request);
 
         return $response;
@@ -76,12 +83,14 @@ class DesignAssetController extends Controller
 
         // An image element points at the asset by id; deleting it would leave
         // the canvas with a hole (and the next autosave failing validation).
-        $placements = $asset->placements();
+        ['visible' => $placements, 'hidden' => $hidden] = $asset->placementsIncludingHidden();
 
-        if ($placements !== []) {
-            $first = $placements[0];
-            $more = count($placements) > 1 ? ' and '.(count($placements) - 1).' more page(s)' : '';
-            $message = "\"{$asset->name}\" is placed on {$first['project']}, Page {$first['page']}{$more}. Remove it from the canvas first.";
+        if ($placements !== [] || $hidden > 0) {
+            $first = $placements[0] ?? null;
+            $others = count($placements) - ($first ? 1 : 0) + $hidden;
+            $more = $others > 0 ? ($first ? ' and '.$others.' more page(s)' : ' on '.$others.' page(s) you cannot see') : '';
+            $where = $first ? "{$first['project']}, Page {$first['page']}" : 'a design in your workspace';
+            $message = "\"{$asset->name}\" is placed on {$where}{$more}. Remove it from the canvas first.";
 
             return $request->expectsJson()
                 ? response()->json(['message' => $message, 'placements' => $placements], 409)

@@ -1,22 +1,17 @@
+/* Order matters: tokens and base first, Tailwind's own defaults and utilities last so utilities can still override components. */
+@import './ds/tokens.css';
+@import './ds/base.css';
+@import './ds/vocab.css';
+@import './ds/components.css';
+@import './ds/controls.css';
+@import './ds/signal.css';
+@import './ds/a11y.css';
+@import './ds/shell.css';
+@import './ds/pages.css';
+@import './ds/landing.css';
+@import './ds/landing-fonts.css';
+@import './ds/legacy.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-[x-cloak] {
-    display: none;
-}
-
-/*
- * Reduced motion (WCAG 2.3.3): people who ask the system for less motion get none of it from
- * transitions, animations or smooth scrolling, whichever file or utility class declares them.
- */
-@media (prefers-reduced-motion: reduce) {
-    *,
-    *::before,
-    *::after {
-        animation-duration: 0.01ms !important;
-        animation-iteration-count: 1 !important;
-        transition-duration: 0.01ms !important;
-        scroll-behavior: auto !important;
-    }
-}

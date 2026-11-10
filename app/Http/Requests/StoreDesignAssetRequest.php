@@ -28,6 +28,9 @@ class StoreDesignAssetRequest extends FormRequest
         return [
             'file' => ['required', 'file', 'max:'.(int) config('design.assets.max_kilobytes'), 'mimetypes:image/jpeg,image/png,image/webp'],
             'project_id' => ['nullable', 'integer'],
+            'folder' => ['nullable', 'string', 'max:80', 'regex:/^[\p{L}\p{N} _\-\.&\/]+$/u'],
+            'tags' => ['nullable', 'array', 'max:20'],
+            'tags.*' => ['string', 'min:1', 'max:30', 'regex:/^[\p{L}\p{N} _\-]+$/u'],
         ];
     }
 
@@ -55,8 +58,20 @@ class StoreDesignAssetRequest extends FormRequest
 
             if ($this->project === null) {
                 $validator->errors()->add('project_id', 'That project could not be found.');
+            } elseif (! $this->user()->can('update', $this->project)) {
+                // Pictures are filed under a project only by people who can edit it.
+                $validator->errors()->add('project_id', 'You cannot add pictures to that project.');
             }
         }];
+    }
+
+    /** Folder and tags for the library, already trimmed and de-duplicated. @return array{folder: ?string, tags: ?list<string>} */
+    public function libraryMeta(): array
+    {
+        $folder = trim((string) $this->input('folder'));
+        $tags = collect((array) $this->input('tags'))->map(fn ($t) => trim((string) $t))->filter()->unique()->values()->all();
+
+        return ['folder' => $folder === '' ? null : $folder, 'tags' => $tags === [] ? null : $tags];
     }
 
     public function project(): ?DesignProject

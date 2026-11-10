@@ -23,35 +23,36 @@ name: Deploy to Production
 #   deploy  Every release after that: needs the checkout on this pipeline.
 #
 # What a run does, in order:
-#   1. CI gate (ci.yml): the test suite. (The Vite build is proved by step 2.)
-#   2. Builds the frontend on the runner (the host has no Node) and syncs it to
-#      public/build.incoming on the host. The guest layout (/login, /register)
-#      loads resources/css/app.css and resources/js/app.js through @vite, so a
-#      missing or incomplete manifest would 500 those pages ("Vite manifest not
-#      found", InfoDot 2026-10-17); the build step fails first if either entry
-#      is missing. The signed-in layout loads Tailwind from a CDN at runtime
-#      and does not use the manifest.
-#   3. On the host: rollback copy, maintenance mode, code to origin/main,
-#      composer install, production invariants (APP_DEBUG forced false; APP_ENV
-#      forced to production; a warning, not a change, for an http APP_URL), swap
-#      in the new public/build, keep the docroot's build/ in step, migrations,
-#      caches, back up.
+#   1. CI gate (ci.yml): the PHPUnit suite (includes the design:preflight tests), the JS suite plus the Vite build
+#      and manifest check, and the signed-in production-like smoke test (tests/Support/signed-in-smoke.sh).
+#   2. Builds the frontend on the runner (the host has no Node), proves the manifest against every @vite entry in
+#      the Blade views (scripts/ops/check-vite-manifest.mjs) and syncs it to public/build.incoming on the host.
+#      Pages load their CSS and JS through @vite, so a missing manifest entry would 500 that page ("Vite manifest
+#      not found", InfoDot 2026-10-17); the build step fails first. The editor, the guest pages and the signed-in
+#      layout all use the manifest. No script or font is loaded from a CDN at runtime.
+#   3. On the host: rollback copy of the files, a pg_dump of the database (before maintenance mode, so a failure
+#      leaves the site up), maintenance mode, code to origin/main, composer install, production invariants
+#      (APP_DEBUG forced false; APP_ENV forced to production; a warning, not a change, for an http APP_URL), swap
+#      in the new public/build, keep the docroot's copies of build/ AND of every other static folder (fonts, images,
+#      js, icons) in step, migrations, template seeding (design:seed-templates --check first; a refused template
+#      fails the deploy), caches, design:preflight (a failure leaves the site down with the reason), back up.
 #   4. Installs TWO cron lines through the shared crontab block, with its
 #      lock and verified read-back (first run: the account total grows by 2):
-#        schedule:run  every minute; routes/console.php schedules the daily
-#                      token-drift scan (withoutOverlapping) and (open PR #10)
-#                      design:publish-metrics, the daily Dot.Analytics snapshot,
-#                      at 00:10 UTC.
+#        schedule:run  every minute; routes/console.php schedules the daily token-drift scan, the daily
+#                      Dot.Analytics snapshot (design:publish-metrics, 00:10 UTC) and the daily pruning of old
+#                      assistant proposals (design:prune-ai-proposals, 03:30).
 #        queue:work --stop-when-empty --tries=3 --max-time=50  every minute, the
-#                      cPanel way (cron-driven, not a daemon), because
-#                      QUEUE_CONNECTION=database and open PR #10 queues
-#                      App\Jobs\SendAnalyticsSnapshot (retries after 1 and 5
-#                      minutes). Until that merges, or while ANALYTICS_* is unset,
-#                      the worker simply finds nothing to do. Nothing else in
-#                      Dot.Design is queued.
-#   5. Smoke check from the runner, like a browser: / and /login answer 200,
-#      the built CSS answers 200, /up answers 200, and a harmless POST /up (a
-#      405) does not return a debug page.
+#                      cPanel way (cron-driven, not a daemon), because QUEUE_CONNECTION=database. Queued work:
+#                      the Dot.Notify listener (App\Listeners\Integrations\SendDesignNotifications, only while
+#                      the integration is on) and App\Jobs\SendAnalyticsSnapshot. Everything uses the default
+#                      queue, so the worker needs no --queue argument. While those integrations are off the
+#                      worker simply finds nothing to do.
+#   5. Smoke check from the runner, like a browser: / , /login and /up answer 200; the built assets, the
+#      self-hosted fonts and one file of every static folder answer 200 (proves the docroot serves them);
+#      /design/new redirects to the login; a bogus /s/<token> answers the neutral 404 with no cookie; the security
+#      headers are present; a 9 MB POST is not refused by post_max_size (a warning, not a failure); and a
+#      harmless POST /up (a 405) does not return a debug page. The live host has no seeded user, so the
+#      signed-in pages are covered by the CI smoke job, not here.
 #
 # A failure after maintenance mode starts LEAVES the site down on purpose, with
 # the rollback copy's name in the log, rather than guessing at an automatic
@@ -82,6 +83,9 @@ on:
       migrate:
         description: 'adopt only: type "migrate" to also run pending migrations (a normal deploy always migrates)'
         required: false
+      skip_db_dump:
+        description: 'type "skip" to deploy WITHOUT the pre-migration pg_dump (only if the host has no pg_dump and you took your own dump)'
+        required: false
 
 concurrency:
   group: design-production-deploy
@@ -101,11 +105,13 @@ jobs:
     outputs:
       mode: ${{ steps.in.outputs.mode }}
       migrate: ${{ steps.in.outputs.migrate }}
+      skipdump: ${{ steps.in.outputs.skipdump }}
     steps:
       - id: in
         env:
           CONFIRM: ${{ github.event.inputs.confirm }}
           MIGRATE_INPUT: ${{ github.event.inputs.migrate }}
+          SKIP_DUMP_INPUT: ${{ github.event.inputs.skip_db_dump }}
           HAVE_HOST: ${{ secrets.DEPLOY_HOST != '' }}
           HAVE_USER: ${{ secrets.DEPLOY_USER != '' }}
           HAVE_KEY: ${{ secrets.DEPLOY_SSH_KEY != '' }}
@@ -132,6 +138,7 @@ jobs:
           else
             echo "migrate=no" >> "$GITHUB_OUTPUT"
           fi
+          if [ "$SKIP_DUMP_INPUT" = "skip" ]; then echo "skipdump=yes" >> "$GITHUB_OUTPUT"; else echo "skipdump=no" >> "$GITHUB_OUTPUT"; fi
 
   checks:
     name: CI gate
@@ -172,6 +179,9 @@ jobs:
               sys.exit(1)
           print('manifest entries present: resources/css/app.css, resources/js/app.js')
           PY
+          # Every @vite entry named in a Blade view is in the manifest, every manifest file exists, and no view that
+          # uses @vite names a resources/ path that is not a real entry (a comment did that to Dot.Auction's deploy).
+          node scripts/ops/check-vite-manifest.mjs
 
       - name: Set up SSH
         run: |
@@ -220,6 +230,7 @@ jobs:
               DEPLOY_PATH="$APP_PATH" \
               MODE="${{ needs.confirm.outputs.mode }}" \
               MIGRATE="${{ needs.confirm.outputs.migrate }}" \
+              SKIP_DB_DUMP="${{ needs.confirm.outputs.skipdump }}" \
               REPO_URL="$REPO_URL" \
               'bash -s' <<'DEPLOY'
           set -euo pipefail
@@ -239,6 +250,33 @@ jobs:
           ls -1t "$HOME"/dot-design-*.tgz | tail -n +4 | xargs -r rm -f
           echo "== Rollback copy: $BACKUP ($(du -h "$BACKUP" | cut -f1))  [restore: stop writes, tar xzf it over $DEPLOY_PATH]"
 
+          # ---- database rollback copy, BEFORE maintenance mode and before any migration
+          # The tar above holds no PostgreSQL data. R-45 adds 17 tables, columns and two backfills, so a restore point
+          # for the database is taken here, from the credentials in the host .env. Failing here leaves the live site
+          # on the previous release (maintenance mode has not started). Custom format: restore with
+          #   pg_restore --clean --if-exists --no-owner -d <database> <file>      (docs/R45_OPERATIONS.md)
+          envval() { { grep -E "^$1=" .env || true; } | tail -1 | cut -d= -f2- | sed -e 's/^"//' -e 's/"$//' -e "s/^'//" -e "s/'$//"; }
+          DBC="$(envval DB_CONNECTION)"
+          if [ "$DBC" = "pgsql" ]; then
+            if [ "$SKIP_DB_DUMP" = "yes" ]; then
+              echo "::warning::skip_db_dump=skip: NO database dump was taken by this run. Make sure you have your own."
+            elif ! command -v pg_dump >/dev/null 2>&1; then
+              echo "::error::pg_dump is not installed for this account, so no database restore point can be taken. Take your own dump, then run again with skip_db_dump=skip. The live site is untouched."; exit 1
+            else
+              DBDUMP="$HOME/dot-design-db-$MODE-$STAMP.dump"
+              if ! PGPASSWORD="$(envval DB_PASSWORD)" pg_dump --format=custom --no-owner --file="$DBDUMP" \
+                   --host="$(envval DB_HOST)" --port="$(envval DB_PORT)" --username="$(envval DB_USERNAME)" "$(envval DB_DATABASE)"; then
+                rm -f "$DBDUMP"
+                echo "::error::pg_dump failed (see above), so no database restore point exists. The live site is untouched. Fix the cause, or take your own dump and run again with skip_db_dump=skip."; exit 1
+              fi
+              chmod 600 "$DBDUMP"
+              ls -1t "$HOME"/dot-design-db-*.dump | tail -n +4 | xargs -r rm -f
+              echo "== Database restore point: $DBDUMP ($(du -h "$DBDUMP" | cut -f1))  [restore: pg_restore --clean --if-exists --no-owner -d <database> <file>]"
+            fi
+          else
+            echo "== Database is '$DBC', not pgsql: no pg_dump taken (a SQLite file is inside the rollback copy above)."
+          fi
+
           # ---- keep the application folder from being served over HTTP
           # 2026-10-20: platforms whose pipeline never wrote this file served their
           # app folder (~/<host>/<key>/, next to the docroot): the live SQLite
@@ -249,6 +287,7 @@ jobs:
           # `git reset --hard` below does not remove it; an existing .htaccess is kept
           # as .htaccess.before-guard. Skipped when this folder does not look like an
           # app folder under a docroot (then .htaccess here would be the site's own).
+          DOCROOT_IS_PUBLIC=0
           set +e
           # Once the subdomain's document root is <app>/public (the docroot move, InfoDot docs S-2e) the app
           # folder is not served at all, and a deny file in it would block the whole site: do not write one.
@@ -257,6 +296,7 @@ jobs:
           CURRENT_DOCROOT="$(uapi --output=json DomainInfo single_domain_data domain=design.infodot.co.za 2>/dev/null | sed -n 's/.*"documentroot" *: *"\([^"]*\)".*/\1/p' | head -1)"
           if [ -n "$APP_REAL" ] && { [ "$CURRENT_DOCROOT" = "$APP_REAL/public" ] || [ -f "$DEPLOY_PATH/.docroot-is-public" ]; }; then
             echo "== app-folder guard: skipped (the document root is $APP_REAL/public; the app folder is not served)"
+            DOCROOT_IS_PUBLIC=1
           elif [ "$DOCROOT" = "$HOME" ] || [ -e index.php ] || [ ! -f artisan ] || [ ! -f public/index.php ]; then
             echo "== app-folder guard: skipped ($APPDIR is not an app folder under a docroot)"
           elif [ -f .htaccess ] && grep -q 'Require all denied' .htaccess; then
@@ -391,11 +431,63 @@ jobs:
             echo "== docroot build/ did not exist; linked to $APPDIR/public/build"
           fi
 
+          # ---- the other static folders: public/fonts (55 editor fonts + the interface fonts), images, js, icons
+          # Same trap as build/: the docroot may hold COPIES of public/ files that git never refreshes (InfoDot R-17,
+          # the Dopemine pilot). Every top-level entry of public/ except the build folders, index.php, .htaccess, hot
+          # and storage is kept in step, so a new static folder is picked up without editing this workflow:
+          #   a folder  - missing in the docroot: linked to <app>/public/<name>; a symlink: left alone; a real folder:
+          #               rsync -a (adds and overwrites the files the app ships, DELETES nothing);
+          #   a file    - missing in the docroot: linked; present and equal or a symlink: left alone; present and
+          #               different: NOT overwritten (the docroot's copy may be hand-managed), a warning names it.
+          # Nothing under storage/ is ever synced: uploaded designs live on the private disk
+          # (storage/app/private/design-assets) and must never be reachable from the docroot.
+          if [ "$DOCROOT_IS_PUBLIC" = "1" ]; then
+            echo "== static folders: the document root is $APPDIR/public itself; nothing to sync"
+          else
+            for ENTRY in $(cd public && ls -A); do
+              case "$ENTRY" in
+                build|build.incoming|build.old|index.php|.htaccess|hot|storage|.gitignore|.DS_Store) continue ;;
+              esac
+              SRC="public/$ENTRY"; DST="$DOCROOT/$ENTRY"
+              if [ -d "$SRC" ] && [ ! -L "$SRC" ]; then
+                if [ -L "$DST" ]; then echo "== static $ENTRY/: docroot entry is a symlink; nothing to copy"
+                elif [ -d "$DST" ]; then
+                  rsync -a "$SRC/" "$DST/"
+                  echo "== static $ENTRY/: docroot is a real directory; mirrored from public/$ENTRY (nothing deleted)"
+                elif [ -e "$DST" ]; then echo "::warning::static $ENTRY: $DST exists and is not a directory; left alone"
+                else
+                  ln -s "$APPDIR/public/$ENTRY" "$DST"
+                  echo "== static $ENTRY/: did not exist in the docroot; linked to $APPDIR/public/$ENTRY"
+                fi
+              else
+                if [ -L "$DST" ]; then :
+                elif [ ! -e "$DST" ]; then
+                  ln -s "$APPDIR/public/$ENTRY" "$DST"
+                  echo "== static file $ENTRY: linked into the docroot"
+                elif ! cmp -s "$SRC" "$DST"; then echo "::warning::static file $ENTRY differs from $DST in the docroot and was NOT overwritten; compare them by hand"
+                fi
+              fi
+            done
+          fi
+
+          # ---- private storage the app writes to (never under the docroot)
+          mkdir -p storage/app/private/design-assets storage/framework/cache storage/framework/sessions storage/framework/views storage/logs bootstrap/cache
+
           # ---- database
           echo "== Pending migrations:"
           $PHP artisan migrate:status --pending 2>&1 | tail -25 || true
           if [ "$MIGRATE" = "yes" ]; then
             $PHP artisan migrate --force
+            # ---- reference data: the curated templates (idempotent upsert by slug). --check validates every
+            # definition and writes nothing; a refused template stops the deploy BEFORE anything is written.
+            if ! $PHP artisan design:seed-templates --check; then
+              echo "::error::design:seed-templates --check refused one or more templates (listed above). The site stays in maintenance mode. Fix the definition files and run again."; exit 1
+            fi
+            # The real seed exits non-zero only for a slug that someone saved as their own template; those are skipped
+            # (never overwritten) and reported. That is a data note, not a broken release, so it warns and goes on.
+            if ! $PHP artisan design:seed-templates; then
+              echo "::warning::design:seed-templates skipped one or more templates whose slug belongs to a saved template (see above). Rename the slug in the definition file."
+            fi
           else
             echo "== Migrations NOT run (takeover). Read the list above; the next confirm=deploy runs them, or re-run with migrate=migrate."
           fi
@@ -413,6 +505,18 @@ jobs:
           $PHP artisan route:cache
           $PHP artisan view:cache
           $PHP artisan event:cache
+          $PHP artisan schedule:list
+
+          # ---- the environment, the data and the build, judged by the app itself. FAIL lines stop the release with
+          # the site still in maintenance mode; WARN, INFO and OFF lines (optional integrations that are switched
+          # off) never do. Skipped on a takeover that did not migrate: the schema is knowingly behind then.
+          if [ "$MIGRATE" = "yes" ]; then
+            if ! $PHP artisan design:preflight; then
+              echo "::error::design:preflight reported FAIL lines (above). The site stays in maintenance mode on purpose. Fix the cause (usually .env or a PHP extension in cPanel) and run the workflow again; it brings the site back up itself. Rollback copy: $BACKUP."; exit 1
+            fi
+          else
+            echo "== design:preflight skipped: this takeover did not run migrations."
+          fi
 
           $PHP artisan up
           trap - ERR
@@ -522,6 +626,61 @@ jobs:
           else
             echo "No debug page on POST $SITE_URL/up ($(wc -c < "$WORK/probe.html" | tr -d ' ') bytes)"
           fi
+
+          # ---- signed-out behaviour that depends on the whole app being wired correctly
+          # /design/new is behind the sign-in: a guest is redirected to the login (a 200 would mean the auth
+          # middleware is gone, a 500 that routes are broken).
+          curl -s --max-time 30 -D "$WORK/h" -o /dev/null "$SITE_URL/design/new" || true
+          if head -1 "$WORK/h" | grep -qE ' 30[12] ' && grep -qi '^location:.*/login' "$WORK/h"; then echo "302 /design/new -> /login"; else echo "::error::/design/new did not redirect a guest to /login: $(head -1 "$WORK/h" | tr -d '\r')"; FAILED=1; fi
+          # A share link that does not exist answers the same plain 404 as an expired one, and sets no cookie (the
+          # public routes run without a session).
+          BOGUS="$(LC_ALL=C tr -dc 'A-Za-z0-9' < /dev/urandom | head -c 40)"
+          CODE=$(curl -s --max-time 30 -D "$WORK/h" -o "$WORK/b" -w '%{http_code}' "$SITE_URL/s/$BOGUS" || true)
+          if [ "$CODE" != "404" ]; then echo "::error::/s/<unknown token> answered ${CODE:-no response}, expected 404"; FAILED=1
+          elif grep -qi '^set-cookie:' "$WORK/h"; then echo "::error::/s/<unknown token> set a cookie; the public share routes must not start a session"; FAILED=1
+          elif grep -qiE 'stack trace|vendor/laravel' "$WORK/b"; then echo "::error::/s/<unknown token> leaks internals"; FAILED=1
+          else echo "404 /s/<unknown token>, no cookie, nothing leaked"; fi
+          # Security headers (config/security.php, SecurityHeaders middleware) on a guest page.
+          curl -s --max-time 30 -D "$WORK/h" -o /dev/null "$SITE_URL/login" || true
+          for HDR in x-content-type-options x-frame-options referrer-policy 'content-security-policy(-report-only)?'; do
+            if grep -Eqi "^$HDR:" "$WORK/h"; then echo "header $HDR present"; else echo "::error::header $HDR missing on /login"; FAILED=1; fi
+          done
+
+          # ---- fonts and the other static folders: prove the DOCROOT serves them (not just the app folder)
+          # A real font answers 200, is not an HTML page, and starts with the woff2 magic bytes.
+          FONTS="/fonts/design/inter/inter-400.woff2"
+          for F in $(cd public && ls fonts/ui/*.woff2 2>/dev/null); do FONTS="$FONTS /$F"; done
+          for F in $FONTS; do
+            CODE=$(curl -s --max-time 30 -D "$WORK/h" -o "$WORK/f" -w '%{http_code}' "$SITE_URL$F" || true)
+            CT=$(grep -i '^content-type:' "$WORK/h" | tail -1 | tr -d '\r' | tr '[:upper:]' '[:lower:]')
+            if [ "$CODE" = "200" ] && [ "$(head -c4 "$WORK/f")" = "wOF2" ] && ! echo "$CT" | grep -q 'text/html'; then echo "200 $SITE_URL$F (${CT#content-type: })"
+            else echo "::error::$SITE_URL$F answered ${CODE:-no response} / $CT / not a woff2 file: the docroot is not serving the fonts"; FAILED=1; fi
+          done
+          # One file from every static folder (and every static root file) the checkout ships.
+          for ENTRY in $(cd public && ls -A); do
+            case "$ENTRY" in build|build.incoming|build.old|index.php|.htaccess|hot|storage|.gitignore|.DS_Store) continue ;; esac
+            if [ -d "public/$ENTRY" ]; then PROBE="$ENTRY/$(cd "public/$ENTRY" && find . -type f ! -name 'LICEN*' ! -name '.*' | sort | head -1 | sed 's#^\./##')"; else PROBE="$ENTRY"; fi
+            CODE=$(curl -s --max-time 30 -o /dev/null -w '%{http_code}' "$SITE_URL/$PROBE" || true)
+            if [ "$CODE" = "200" ]; then echo "200 $SITE_URL/$PROBE"; else echo "::error::$SITE_URL/$PROBE answered ${CODE:-no response} (expected 200): the docroot does not serve public/$ENTRY"; FAILED=1; fi
+          done
+          # The private asset store must not be reachable from the web.
+          for P in storage/app/private/design-assets storage/app/private storage/app/private/design-assets/.gitignore; do
+            CODE=$(curl -s --max-time 15 -o /dev/null -w '%{http_code}' "$SITE_URL/$P" || true)
+            if [ "$CODE" = "200" ]; then echo "::error::$SITE_URL/$P answered 200: private storage is exposed"; FAILED=1; else echo "${CODE:-000} /$P (not served)"; fi
+          done
+
+          # ---- host requirement, not failures: cache headers and request-size limits
+          FIRST="$(python3 -c "import json; m=json.load(open('public/build/manifest.json')); print(sorted({v['file'] for v in m.values() if v.get('isEntry')})[0])")"
+          curl -sI --max-time 30 "$SITE_URL/build/$FIRST" > "$WORK/h" || true
+          CC=$(grep -i '^cache-control:' "$WORK/h" | tr -d '\r' | tail -1)
+          if echo "$CC" | grep -qi 'immutable' || echo "$CC" | grep -Eqi 'max-age=([0-9]{7,})'; then echo "hashed assets are cached long: ${CC#*: }"; else echo "::warning::/build/$FIRST is served with '${CC:-no cache-control}': hashed assets and fonts should be 'public, max-age=31536000, immutable' (docs/deployment.md, 'Cache headers'). Slower repeat visits, nothing broken."; fi
+          # An 8 MB upload needs post_max_size above 8 MB. /csp-report reads at most 8 KB and answers 204, and Laravel
+          # refuses an oversized body with 413 before the route runs, so this measures the real web stack.
+          head -c 9437184 /dev/zero > "$WORK/big"
+          CODE=$(curl -s --max-time 60 -o /dev/null -w '%{http_code}' -X POST -H 'Content-Type: application/csp-report' --data-binary @"$WORK/big" "$SITE_URL/csp-report" || true)
+          if [ "$CODE" = "413" ]; then echo "::warning::A 9 MB POST was refused with 413: post_max_size (or the web server's body limit) is below 9 MB, so images near the 8 MB limit cannot be uploaded. Set post_max_size and upload_max_filesize to 10M in cPanel, MultiPHP INI Editor."
+          else echo "9 MB POST not refused for size (answered ${CODE:-no response})"; fi
+
           rm -rf "$WORK"
           [ "$FAILED" -eq 0 ] || { echo "::error::Smoke check failed: the deploy is NOT healthy."; exit 1; }
           echo "== Smoke check passed."

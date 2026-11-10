@@ -8,9 +8,16 @@ return [
     'hsts_seconds' => (int) env('SECURITY_HSTS_SECONDS', 15552000),   // 180 days
 
     /*
-    | The Content-Security-Policy is sent in REPORT-ONLY mode: the browser reports what the policy would have blocked (to /csp-report) and blocks
-    | nothing. Setting this to false would ENFORCE the same policy, which still allows 'unsafe-inline' and 'unsafe-eval'; only do that after the
-    | logged reports have been reviewed.
+    | The Content-Security-Policy is ENFORCED, with a fresh nonce per response (see App\Http\Middleware\SecurityHeaders). Set this to true
+    | only to fall back to report-only while a violation is being investigated: the browser then reports what the policy would
+    | have blocked (to /csp-report) and blocks nothing.
     */
-    'csp_report_only' => (bool) env('SECURITY_CSP_REPORT_ONLY', true),
+    'csp_report_only' => (bool) env('SECURITY_CSP_REPORT_ONLY', false),
+
+    /*
+    | Sign-in throttles beyond Fortify's per-account-and-address rule: attempts per address per minute (spraying many accounts) and
+    | per account per hour across all addresses (many addresses at one account).
+    */
+    'login_per_ip_per_minute' => (int) env('SECURITY_LOGIN_PER_IP_PER_MINUTE', 20),
+    'login_per_account_per_hour' => (int) env('SECURITY_LOGIN_PER_ACCOUNT_PER_HOUR', 60),
 ];

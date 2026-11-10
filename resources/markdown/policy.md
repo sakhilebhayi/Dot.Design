@@ -8,10 +8,10 @@ BluePin Inc is the responsible party for the personal information Dot.Design pro
 
 ## 2. What we collect
 
-- **Account information** — your name, email address, and password (stored as a salted hash, never in plain text), via your Dot Ecosystem account.
-- **Projects and content you create** — the design projects, canvases, text, shapes, images, and icons you create or upload while using Dot.Design.
-- **AI generation requests** — prompts you submit when asking Dot.Design's AI to generate imagery or suggest a layout, and the resulting output.
-- **Technical information** — IP address, browser and device information, and session activity, collected automatically for security and to keep you signed in.
+- **Account information**: your name, email address, and password (stored as a salted hash, never in plain text), via your Dot Ecosystem account.
+- **Projects and content you create**: the design projects, canvases, text, shapes, images, and icons you create or upload while using Dot.Design.
+- **AI generation requests**: prompts you submit when asking Dot.Design's AI to generate imagery or suggest a layout, and the resulting output.
+- **Technical information**: IP address, browser and device information, and session activity, collected automatically for security and to keep you signed in.
 
 ## 3. Why we process your information
 

@@ -1,3 +1,5 @@
+> **Status (R-45, 2026-11-09): proposal, largely overtaken.** The onboarding, create flow, brief, templates, Simple and Pro modes, shortcuts and empty states it asks for were built differently; see `docs/R45_UI_CREATE.md`, `docs/R45_UI_EDITOR.md` and `docs/R45_BUSINESS.md`. Treat the rest as ideas, not as a description.
+
 # UX Improvements
 
 > User-experience upgrades for Dot.Design. Each section addresses a distinct workflow — implement independently.

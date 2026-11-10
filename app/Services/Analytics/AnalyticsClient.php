@@ -61,7 +61,8 @@ class AnalyticsClient
             $timestamp = (string) now()->timestamp;
             $timeout = (int) config('analytics.timeout', 5);
 
-            $response = Http::timeout($timeout)
+            $response = Http::withoutRedirecting()
+                ->timeout($timeout)
                 ->connectTimeout($timeout)
                 ->acceptJson()
                 ->withHeaders([

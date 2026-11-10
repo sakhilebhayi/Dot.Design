@@ -2,11 +2,15 @@
 
 namespace Tests\Feature;
 
+use App\Models\User;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
 
 class EcosystemErrorPagesTest extends TestCase
 {
+    use RefreshDatabase;
+
     #[DataProvider('errorCodes')]
     public function test_error_page_renders_branded_content(int $code, string $expectedHeading): void
     {
@@ -15,7 +19,8 @@ class EcosystemErrorPagesTest extends TestCase
         $response->assertStatus($code);
         $response->assertSee($expectedHeading);
         $response->assertSee('Dot.Design', false);
-        $response->assertSee('the rest of the Dot Ecosystem', false);
+        $response->assertDontSee('the rest of the Dot Ecosystem', false);
+        $this->assertLessThanOrEqual(1, substr_count($response->getContent(), 'class="lt-btn'), 'one primary action');
     }
 
     public static function errorCodes(): array
@@ -28,6 +33,13 @@ class EcosystemErrorPagesTest extends TestCase
             '500 server error' => [500, 'Something went wrong on our end'],
             '503 unavailable' => [503, "We'll be right back"],
         ];
+    }
+
+    public function test_a_missing_design_for_a_signed_in_person_offers_home_not_the_start_page(): void
+    {
+        $user = User::factory()->withPersonalTeam()->create();
+
+        $this->actingAs($user)->get('/design/projects/999999')->assertNotFound()->assertSee('Back to Home')->assertDontSee('Go to the start page');
     }
 
     protected function setUp(): void

@@ -1,0 +1,46 @@
+/* Create flow: pieces the Start screen, the guided brief and the template browser share. Tokens only (--lt-*), no literal colours. */
+
+/* a design drawn into a proof frame */
+.lt-frame > svg { display: block; width: 100%; height: 100%; }
+.lt-frame.is-drawn { background: var(--lt-paper); }
+.lt-frame.is-failed::after { content: "Preview unavailable"; position: absolute; inset: 0; display: grid; place-items: center; padding: var(--lt-space-2); text-align: center; font-size: var(--lt-text-xs); color: var(--lt-paper-ink-2); }
+
+/* a stage tile: neutral grey ground, one frame at true proportions, centred */
+.cf-stage { display: grid; place-items: center; background: var(--lt-stage); padding: var(--lt-space-4); min-width: 0; }
+.cf-stage > .lt-frame { width: min(100%, calc(var(--fit, 9rem) * var(--w) / var(--h))); max-width: 100%; transition: transform var(--lt-dur-2) var(--lt-ease); }
+
+/* selected tiles: a 2px accent outline and a tick, never colour alone */
+.cf-pick { position: relative; }
+.cf-pick[aria-pressed="true"], .cf-pick[aria-checked="true"], .cf-pick[aria-current="true"] { box-shadow: 0 0 0 2px var(--lt-accent); }
+.cf-pick[aria-pressed="true"]::before, .cf-pick[aria-checked="true"]::before { content: ""; position: absolute; z-index: 2; top: var(--lt-space-2); right: var(--lt-space-2); width: 1.25rem; height: 1.25rem; border-radius: 50%; background: var(--lt-accent); }
+.cf-pick[aria-pressed="true"]::after, .cf-pick[aria-checked="true"]::after { content: ""; position: absolute; z-index: 3; top: var(--lt-space-2); right: var(--lt-space-2); width: 1.25rem; height: 1.25rem; background: var(--lt-accent-ink);
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m7 12.5 3.2 3.2L17 9'/%3E%3C/svg%3E") center / 100% no-repeat; mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m7 12.5 3.2 3.2L17 9'/%3E%3C/svg%3E") center / 100% no-repeat; }
+
+/* skeleton lines */
+.cf-line { display: block; height: 0.8rem; margin-top: var(--lt-space-2); }
+.cf-line--short { width: 60%; }
+
+/* swatches in a row */
+.cf-swatches { display: inline-flex; gap: 3px; flex: none; }
+.cf-swatch { width: 1rem; height: 1rem; border-radius: var(--lt-radius-1); background: var(--c, var(--lt-panel-sunk)); box-shadow: inset 0 0 0 1px rgb(20 24 28 / 0.25); }
+
+/* a labelled radio row (colour choice) */
+.cf-choice { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: var(--lt-space-3); padding: var(--lt-space-3) var(--lt-space-4); border-radius: var(--lt-radius-2); box-shadow: inset 0 0 0 1px var(--lt-edge); cursor: pointer; transition: background-color var(--lt-dur-1) var(--lt-ease); }
+.cf-choice:hover { background: var(--lt-panel-sunk); }
+.cf-choice:has(input:checked) { box-shadow: inset 0 0 0 2px var(--lt-accent); background: var(--lt-accent-wash); }
+.cf-choice:has(input:focus-visible) { outline: 2px solid var(--lt-focus); outline-offset: 2px; }
+.cf-choice__text { display: grid; gap: 2px; min-width: 0; }
+.cf-choice__label { font-weight: 600; font-size: var(--lt-text-md); }
+
+/* the switch itself is the ds control (.lt-switch); this is the labelled row in the template dialog */
+.cf-switch { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: start; gap: var(--lt-space-3); cursor: pointer; padding: var(--lt-space-3) 0; }
+.cf-switch__text { display: grid; gap: 2px; min-width: 0; }
+.cf-switch__label { font-weight: 600; font-size: var(--lt-text-md); }
+
+.cf-ok { color: var(--lt-ok); }
+.cf-quiet { color: var(--lt-ink-2); max-width: 46ch; }
+.cf-req { font-weight: 400; color: var(--lt-ink-3); }
+.cf-create-status:empty { display: none; }
+.cf-create-status { margin-block: var(--lt-space-3); }
+
+@media (prefers-reduced-motion: reduce) { .cf-stage > .lt-frame { transition: none; } }

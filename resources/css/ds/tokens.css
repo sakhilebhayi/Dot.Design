@@ -1,0 +1,180 @@
+/*
+ * The Light Table: design tokens (see DESIGN.md at the repo root for the rationale and contrast table).
+ * Names are the contract in docs/R45_ARCHITECTURE.md section 7. Light "paper" is the default; dark is chosen
+ * by data-theme="dark" on <html> (stored choice) or by prefers-color-scheme when nothing is stored.
+ * The stage (--lt-stage) is a pure neutral grey in both themes, so colour on the canvas is judged true.
+ */
+@font-face {
+    font-family: "Atkinson Hyperlegible Next";
+    src: url("/fonts/ui/atkinson-hyperlegible-next-latin-wght.woff2") format("woff2");
+    font-weight: 200 800;
+    font-style: normal;
+    font-display: swap;
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+    font-family: "Bricolage Grotesque";
+    src: url("/fonts/ui/bricolage-grotesque-latin-wght.woff2") format("woff2");
+    font-weight: 200 800;
+    font-style: normal;
+    font-display: swap;
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+:root {
+    color-scheme: light;
+
+    /* surfaces */
+    --lt-ground: #eceef0;        /* the rail and the table the sheet sits on */
+    --lt-panel: #fafbfb;         /* the working sheet, panels, menus */
+    --lt-panel-sunk: #f0f2f3;    /* inputs, wells, ruled strips */
+    --lt-stage: #d6d6d6;         /* canvas surround: neutral grey, no tint */
+    --lt-paper: #ffffff;         /* a design page: always white until the design says otherwise */
+    --lt-paper-ink: #14181c;     /* text and marks drawn on a design page, in both themes */
+    --lt-paper-ink-2: #4a5159;
+
+    /* ink */
+    --lt-ink: #14181c;
+    --lt-ink-2: #464e56;
+    --lt-ink-3: #5e6670;
+
+    /* rules and control edges */
+    --lt-rule: #d9dde1;          /* decoration only */
+    --lt-rule-strong: #b7bdc4;   /* decoration only */
+    --lt-edge: #7f8890;          /* control boundaries (3:1 on every surface) */
+
+    /* colour: one hue for selection, links and progress, plus status */
+    --lt-accent: #0a6a91;
+    --lt-accent-ink: #ffffff;
+    --lt-accent-wash: #dceef6;
+    --lt-ok: #1b6e3a;
+    --lt-ok-wash: #e3f2e8;
+    --lt-warn: #8a5400;
+    --lt-warn-wash: #fbeed5;
+    --lt-bad: #b3261e;
+    --lt-bad-wash: #fbe5e3;
+    --lt-focus: #0a6a91;
+    /* the product's own yellow, taken from the logo: a signal for a primary action's focus, a confirmation, a first-time moment. Always filled, never text on paper. */
+    --lt-signal: #f1c82d;
+    --lt-signal-ink: #14181c;
+    --lt-signal-wash: #fdf2c4;
+
+    /* the filled primary button is ink on paper, not the accent */
+    --lt-btn: #14181c;
+    --lt-btn-ink: #fafbfb;
+    --lt-btn-hover: #2c343b;
+
+    /* overlay */
+    --lt-scrim: rgb(14 18 22 / 0.5);
+    --lt-shadow-float: 0 1px 2px rgb(14 18 22 / 0.08), 0 12px 32px -8px rgb(14 18 22 / 0.22);
+
+    /* shape */
+    --lt-radius-1: 3px;   /* keys, tags, swatches */
+    --lt-radius-2: 6px;   /* controls */
+    --lt-radius-3: 10px;  /* menus, dialogs */
+
+    /* space (4px base) */
+    --lt-space-1: 4px;
+    --lt-space-2: 8px;
+    --lt-space-3: 12px;
+    --lt-space-4: 16px;
+    --lt-space-5: 24px;
+    --lt-space-6: 32px;
+    --lt-space-7: 48px;
+    --lt-space-8: 72px;
+
+    /* type */
+    --lt-font-ui: "Atkinson Hyperlegible Next", ui-sans-serif, system-ui, -apple-system, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    --lt-font-display: "Bricolage Grotesque", "Atkinson Hyperlegible Next", ui-sans-serif, system-ui, sans-serif;
+    --lt-font-mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+    --lt-text-xs: 0.75rem;
+    --lt-text-sm: 0.8125rem;
+    --lt-text-md: 0.875rem;
+    --lt-text-lg: 1rem;
+    --lt-text-xl: 1.25rem;
+    --lt-text-2xl: 1.75rem;
+    --lt-text-3xl: 2.5rem;
+
+    /* motion: short, exponential ease-out, always behind prefers-reduced-motion */
+    --lt-ease: cubic-bezier(0.16, 1, 0.3, 1);
+    --lt-dur-1: 120ms;
+    --lt-dur-2: 200ms;
+    --lt-dur-3: 320ms;
+
+    /* layout */
+    --lt-rail-w: 15rem;
+    --lt-bar-h: 3.5rem;
+    --lt-tabbar-h: 3.5rem;
+    --lt-page-max: 80rem;
+    --lt-gutter: 1.5rem;
+}
+
+/* dark theme: chosen explicitly */
+:root[data-theme="dark"] {
+    color-scheme: dark;
+    --lt-ground: #0e1012;
+    --lt-panel: #16191c;
+    --lt-panel-sunk: #101214;
+    --lt-stage: #2a2a2a;
+    --lt-paper: #ffffff;
+    --lt-ink: #eceef0;
+    --lt-ink-2: #b6bcc3;
+    --lt-ink-3: #939aa2;
+    --lt-rule: #262b30;
+    --lt-rule-strong: #3a4147;
+    --lt-edge: #6e767f;
+    --lt-accent: #5cc3ee;
+    --lt-accent-ink: #04202c;
+    --lt-accent-wash: #0f2b38;
+    --lt-ok: #5fcb85;
+    --lt-ok-wash: #12281a;
+    --lt-warn: #e2ae4a;
+    --lt-warn-wash: #2b2210;
+    --lt-bad: #ff8a80;
+    --lt-bad-wash: #331816;
+    --lt-focus: #5cc3ee;
+    --lt-signal: #f1c82d;
+    --lt-signal-ink: #14181c;
+    --lt-signal-wash: #2c2510;
+    --lt-btn: #eceef0;
+    --lt-btn-ink: #14181c;
+    --lt-btn-hover: #ffffff;
+    --lt-scrim: rgb(0 0 0 / 0.62);
+    --lt-shadow-float: 0 1px 2px rgb(0 0 0 / 0.5), 0 14px 36px -8px rgb(0 0 0 / 0.7);
+}
+
+/* dark theme: followed from the system when the visitor has not chosen */
+@media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]):not([data-theme="dark"]) {
+        color-scheme: dark;
+        --lt-ground: #0e1012;
+        --lt-panel: #16191c;
+        --lt-panel-sunk: #101214;
+        --lt-stage: #2a2a2a;
+        --lt-paper: #ffffff;
+        --lt-ink: #eceef0;
+        --lt-ink-2: #b6bcc3;
+        --lt-ink-3: #939aa2;
+        --lt-rule: #262b30;
+        --lt-rule-strong: #3a4147;
+        --lt-edge: #6e767f;
+        --lt-accent: #5cc3ee;
+        --lt-accent-ink: #04202c;
+        --lt-accent-wash: #0f2b38;
+        --lt-ok: #5fcb85;
+        --lt-ok-wash: #12281a;
+        --lt-warn: #e2ae4a;
+        --lt-warn-wash: #2b2210;
+        --lt-bad: #ff8a80;
+        --lt-bad-wash: #331816;
+        --lt-focus: #5cc3ee;
+        --lt-signal: #f1c82d;
+        --lt-signal-ink: #14181c;
+        --lt-signal-wash: #2c2510;
+        --lt-btn: #eceef0;
+        --lt-btn-ink: #14181c;
+        --lt-btn-hover: #ffffff;
+        --lt-scrim: rgb(0 0 0 / 0.62);
+        --lt-shadow-float: 0 1px 2px rgb(0 0 0 / 0.5), 0 14px 36px -8px rgb(0 0 0 / 0.7);
+    }
+}

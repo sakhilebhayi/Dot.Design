@@ -10,11 +10,13 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Tests\Support\ImageFixtures;
+use Tests\Support\ReadsEditorBoot;
 use Tests\TestCase;
 
 class DesignImageElementTest extends TestCase
 {
     use ImageFixtures;
+    use ReadsEditorBoot;
     use RefreshDatabase;
 
     protected function setUp(): void
@@ -277,10 +279,10 @@ class DesignImageElementTest extends TestCase
 
         $this->save($user, $project, $canvas, [$this->image($placeholder->id)])->assertOk();
 
-        $html = $this->actingAs($user)->get(route('design.projects.show', $project))->assertOk()->getContent();
-        $this->assertStringContainsString('Placeholder (no AI provider connected)', $html);
+        $boot = $this->editorBoot($this->actingAs($user)->get(route('design.projects.show', $project))->assertOk()->getContent());
         // the editor is handed the placed asset's details so it can draw and label it
-        $this->assertStringContainsString('"placeholder":true', str_replace(' ', '', html_entity_decode($html)));
+        $this->assertTrue($boot['assets'][$placeholder->id]['placeholder']);
+        $this->assertSame('Placeholder (no AI provider connected)', $boot['assets'][$placeholder->id]['placeholder_label']);
     }
 
     // ── the editor receives what it needs to draw placed images ─────────
@@ -295,8 +297,8 @@ class DesignImageElementTest extends TestCase
         $asset = $this->uploadAsset($user, 7, $otherProject);
         $this->save($user, $project, $canvas, [$this->image($asset->id)])->assertOk();
 
-        $html = html_entity_decode($this->actingAs($user)->get(route('design.projects.show', $project))->assertOk()->getContent());
+        $boot = $this->editorBoot($this->actingAs($user)->get(route('design.projects.show', $project))->assertOk()->getContent());
 
-        $this->assertStringContainsString(route('design.assets.file', $asset), str_replace('\\/', '/', $html));
+        $this->assertSame(route('design.assets.file', $asset), $boot['assets'][$asset->id]['url']);
     }
 }

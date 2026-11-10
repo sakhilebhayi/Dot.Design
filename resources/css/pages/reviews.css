@@ -1,0 +1,26 @@
+/* Review inbox: rows, not cards. A thumbnail on the stage grey, the design's name, who and when, the status, one action. */
+.rv-list { display: grid; margin-top: var(--lt-space-5); }
+.rv-row { display: grid; grid-template-columns: 5.5rem minmax(0, 1fr) auto; align-items: center; gap: var(--lt-space-4); padding: var(--lt-space-4) var(--lt-space-3); border-bottom: 1px solid var(--lt-rule); min-width: 0; }
+.rv-row:hover { background: var(--lt-panel-sunk); }
+/* the thumbnail slot has one fixed size, so a tall story and a wide banner take the same room and nothing can overlap its neighbours */
+.rv-row__stage { display: grid; place-items: center; width: 5.5rem; height: 4.5rem; padding: var(--lt-space-2); background: var(--lt-stage); overflow: hidden; }
+.rv-row__stage .lt-frame { --fit: 3.5rem; width: min(100%, calc(var(--fit) * var(--w) / var(--h))); max-height: 100%; height: auto; box-shadow: 0 0 0 1px var(--lt-rule-strong); }
+.rv-row__stage .lt-frame img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.rv-row__main { min-width: 0; display: grid; gap: 2px; }
+.rv-row__name { font-weight: 600; font-size: var(--lt-text-md); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rv-row__name:hover { text-decoration: underline; text-underline-offset: 0.2em; }
+.rv-row__who { font-size: var(--lt-text-sm); color: var(--lt-ink-2); }
+.rv-row__age { margin-left: var(--lt-space-2); color: var(--lt-ink-3); font-size: var(--lt-text-xs); }
+.rv-row__note { font-size: var(--lt-text-sm); color: var(--lt-ink-2); overflow-wrap: anywhere; }
+.rv-row__end { display: flex; align-items: center; gap: var(--lt-space-3); justify-content: flex-end; white-space: nowrap; }
+.rv-row__note { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.rv-empty { margin-top: var(--lt-space-6); }
+@media (max-width: 52rem) {
+    .rv-row { grid-template-columns: 4.5rem minmax(0, 1fr); align-items: start; gap: var(--lt-space-3); padding-inline: 0; }
+    .rv-row__end { grid-column: 1 / -1; justify-content: space-between; white-space: normal; flex-wrap: wrap; }
+    .rv-row__stage { width: 4.5rem; height: 4rem; }
+    .rv-row__stage .lt-frame { --fit: 3rem; }
+}
+@media (max-width: 40rem) {
+    .lt-tabs .lt-tab { font-size: var(--lt-text-sm); padding-inline: var(--lt-space-2); }
+}

@@ -1,0 +1,13 @@
+/* Activity: a filter strip and a plain list of sentences, newest first. */
+.ac-filters { display: grid; grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr)); gap: var(--lt-space-3) var(--lt-space-4); align-items: end; margin: var(--lt-space-5) 0; }
+.ac-filters__end { display: flex; gap: var(--lt-space-2); align-items: center; }
+.ac-list { display: grid; }
+.ac-row { display: grid; grid-template-columns: 9rem minmax(0, 1fr) auto; gap: var(--lt-space-4); align-items: baseline; padding: var(--lt-space-3) var(--lt-space-2); border-bottom: 1px solid var(--lt-rule); }
+.ac-row__when { font-size: var(--lt-text-xs); color: var(--lt-ink-3); font-variant-numeric: tabular-nums; }
+.ac-row__text { font-size: var(--lt-text-md); overflow-wrap: anywhere; }
+.ac-row__link { font-size: var(--lt-text-sm); color: var(--lt-accent); text-underline-offset: 0.2em; }
+.ac-row__link:hover { text-decoration: underline; }
+.ac-more { margin-top: var(--lt-space-5); }
+@media (max-width: 40rem) {
+    .ac-row { grid-template-columns: minmax(0, 1fr); gap: var(--lt-space-1); }
+}

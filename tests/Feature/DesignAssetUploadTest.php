@@ -11,11 +11,13 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Storage;
 use Tests\Support\ImageFixtures;
+use Tests\Support\ReadsEditorBoot;
 use Tests\TestCase;
 
 class DesignAssetUploadTest extends TestCase
 {
     use ImageFixtures;
+    use ReadsEditorBoot;
     use RefreshDatabase;
 
     protected function setUp(): void
@@ -371,10 +373,17 @@ class DesignAssetUploadTest extends TestCase
 
     public function test_guests_cannot_upload(): void
     {
+        // R-45: a fetch() caller (Accept: application/json) now gets a JSON 401 it can act on instead of a redirect to the
+        // sign-in page's HTML; a plain browser request still gets the redirect (see test_guests_are_redirected_for_a_browser_request).
         $this->postJson(route('design.assets.store'), ['file' => UploadedFile::fake()->createWithContent('a.png', $this->imageBytes('png'))])
-            ->assertRedirect(route('login'));
+            ->assertUnauthorized();
 
         $this->assertSame([], $this->storedFiles());
+    }
+
+    public function test_guests_are_redirected_for_a_browser_request(): void
+    {
+        $this->post(route('design.assets.store'), [])->assertRedirect(route('login'));
     }
 
     public function test_a_request_with_no_file_is_a_422_not_a_500(): void
@@ -597,25 +606,27 @@ class DesignAssetUploadTest extends TestCase
         $this->upload($user, $this->distinctPng(52), 'in-another-project.png', ['project_id' => $otherProject->id]);
         $this->upload($other, $this->distinctPng(53), 'belongs-to-someone-else.png');
 
-        $html = $this->actingAs($user)->get(route('design.projects.show', $project))->assertOk()->getContent();
+        $boot = $this->editorBoot($this->actingAs($user)->get(route('design.projects.show', $project))->assertOk()->getContent());
+        $names = collect($boot['assets'])->pluck('name')->all();
 
-        $this->assertStringContainsString('in-this-project.png', $html);
-        $this->assertStringContainsString('in-the-library.png', $html);
-        $this->assertStringNotContainsString('in-another-project.png', $html);
-        $this->assertStringNotContainsString('belongs-to-someone-else.png', $html);
+        $this->assertContains('in-this-project.png', $names);
+        $this->assertContains('in-the-library.png', $names);
+        $this->assertNotContains('in-another-project.png', $names);
+        $this->assertNotContains('belongs-to-someone-else.png', $names);
     }
 
-    public function test_the_panel_exposes_the_real_upload_form_and_quota_instead_of_claiming_uploads_are_missing(): void
+    public function test_the_editor_is_given_the_real_upload_and_library_routes_instead_of_claiming_uploads_are_missing(): void
     {
         $user = $this->user();
         $project = $this->project($user);
 
         $html = $this->actingAs($user)->get(route('design.projects.show', $project))->assertOk()->getContent();
+        $boot = $this->editorBoot($html);
 
         $this->assertStringNotContainsString('Direct uploads are not available', $html);
-        $this->assertStringContainsString(route('design.assets.store'), $html);
-        $this->assertStringContainsString('JPG, PNG or WebP', $html);
-        $this->assertStringContainsString('SVG is not accepted', $html);
+        $this->assertSame(route('design.assets.store', [], false), $boot['urls']['design.assets.store']);
+        $this->assertSame(route('design.assets.index', [], false), $boot['urls']['design.assets.index']);
+        $this->assertSame('/design/assets/{asset}', $boot['urls']['design.assets.destroy']);
     }
 
     public function test_ai_placeholders_are_filed_under_the_project_and_stay_labelled(): void
@@ -628,8 +639,8 @@ class DesignAssetUploadTest extends TestCase
         $this->assertSame($project->id, $asset->design_project_id);
         $this->assertNull($asset->disk);
 
-        $html = $this->actingAs($user)->get(route('design.projects.show', $project))->getContent();
-        $this->assertStringContainsString('Placeholder (no AI provider connected)', $html);
+        $boot = $this->editorBoot($this->actingAs($user)->get(route('design.projects.show', $project))->getContent());
+        $this->assertSame('Placeholder (no AI provider connected)', $boot['assets'][$asset->id]['placeholder_label']);
         // the placeholder is never presented as an upload
         $this->actingAs($user)->get(route('design.assets.file', $asset))->assertNotFound();
     }

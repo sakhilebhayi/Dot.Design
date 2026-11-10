@@ -11,7 +11,7 @@ use App\Http\Controllers\DesignProjectController;
 use App\Http\Controllers\DesignTokenController;
 use App\Http\Controllers\TokenConsumptionRecordController;
 use App\Http\Controllers\TokenSetController;
-use App\Models\AiGenerationLog;
+use App\Http\Middleware\RefuseBearerTokens;
 use App\Models\DesignAsset;
 use App\Models\DesignCanvas;
 use App\Models\DesignProject;
@@ -59,12 +59,13 @@ Route::get('/cookies', function () {
 })->name('cookies');
 
 Route::middleware([
+    RefuseBearerTokens::class,
     'auth:sanctum',
     config('jetstream.auth_session'),
     'verified',
 ])->group(function () {
     Route::get('/dashboard', function () {
-        // DesignProject/DesignAsset/AiGenerationLog all apply HasUserScope
+        // DesignProject and DesignAsset apply their workspace scope
         // (see app/Models/Concerns/HasUserScope.php), so every query below
         // is already scoped to the authenticated user at the model level --
         // the explicit where('user_id', ...) calls this closure used to
@@ -76,7 +77,6 @@ Route::middleware([
         $recentProjects = DesignProject::where('created_at', '>=', now()->subDays(30))->count();
         $totalCanvases = DesignCanvas::whereHas('project')->count();
         $totalAssets = DesignAsset::count();
-        $aiGenerations = AiGenerationLog::count();
 
         $projects = DesignProject::withCount(['canvases'])
             ->latest()
@@ -86,14 +86,9 @@ Route::middleware([
             ->limit(8)
             ->get();
 
-        $generationsByProvider = AiGenerationLog::selectRaw('provider, count(*) as total')
-            ->groupBy('provider')
-            ->pluck('total', 'provider');
-
         return view('dashboard', compact(
             'totalProjects', 'recentProjects', 'totalCanvases',
-            'totalAssets', 'aiGenerations', 'projects', 'recentAssets',
-            'generationsByProvider'
+            'totalAssets', 'projects', 'recentAssets'
         ));
     })->name('dashboard');
 
@@ -109,7 +104,6 @@ Route::middleware([
         Route::get('projects', [DesignProjectController::class, 'index'])->name('projects.index');
         Route::get('projects/create', [DesignProjectController::class, 'create'])->name('projects.create');
         Route::post('projects', [DesignProjectController::class, 'store'])->name('projects.store');
-        Route::get('projects/{project}', [DesignProjectController::class, 'show'])->name('projects.show');
         Route::delete('projects/{project}', [DesignProjectController::class, 'destroy'])->name('projects.destroy');
 
         Route::post('projects/{project}/canvases', [DesignCanvasController::class, 'store'])->name('projects.canvases.store');
@@ -125,6 +119,11 @@ Route::middleware([
         Route::get('assets/{asset}/file', [DesignAssetController::class, 'file'])->name('assets.file');
         Route::delete('assets/{asset}', [DesignAssetController::class, 'destroy'])->name('assets.destroy');
     });
+
+    // R-45 studio routes (docs/R45_ARCHITECTURE.md section 6): one file per owner so parallel work does not collide.
+    foreach (['backend', 'business', 'collab', 'ai', 'output', 'integrations', 'editorui', 'privacy', 'ppages'] as $studioRoutes) {
+        require __DIR__.'/studio/'.$studioRoutes.'.php';
+    }
 
     // Design-token / component-library domain (MVP scaffold).
     // Deliberately global/shared -- not scoped to the current user or team.
@@ -166,6 +165,9 @@ Route::middleware([
         });
     });
 });
+
+// R-45 public studio routes (share-link viewer, public previews): no auth group, own throttling inside the file.
+require __DIR__.'/studio/public.php';
 
 // Public sign-up is closed (accounts are created by InfoDot at first sign-in). Keep the named route so any link or
 // invitation email that points at it lands on the login page instead of failing.

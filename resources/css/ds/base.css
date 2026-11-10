@@ -1,0 +1,88 @@
+/* Reset and element defaults. Tailwind preflight is switched off in tailwind.config.js; this file replaces it. */
+*, ::before, ::after { box-sizing: border-box; border-width: 0; border-style: solid; border-color: var(--lt-rule); }
+html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; tab-size: 4; scroll-padding-top: 5rem; }
+body { margin: 0; }
+h1, h2, h3, h4, h5, h6, p, figure, blockquote, dl, dd, pre { margin: 0; }
+h1, h2, h3, h4, h5, h6 { font-size: inherit; font-weight: inherit; }
+ul, ol, menu { list-style: none; margin: 0; padding: 0; }
+img, svg, video, canvas, iframe { display: block; max-width: 100%; }
+img, video { height: auto; }
+button, input, select, textarea, optgroup { font: inherit; color: inherit; letter-spacing: inherit; margin: 0; }
+button, [type="button"], [type="submit"], [type="reset"] { appearance: button; background: none; cursor: pointer; }
+button:disabled { cursor: not-allowed; }
+a { color: inherit; text-decoration: inherit; }
+table { border-collapse: collapse; border-color: inherit; text-indent: 0; }
+hr { border-top-width: 1px; height: 0; color: inherit; }
+textarea { resize: vertical; }
+[hidden]:where(:not([hidden="until-found"])) { display: none !important; }
+[x-cloak] { display: none !important; }
+summary { cursor: pointer; }
+
+html {
+    font-family: var(--lt-font-ui);
+    font-size: 100%;
+    background: var(--lt-ground);
+    color: var(--lt-ink);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+}
+body {
+    font-size: var(--lt-text-md);
+    line-height: 1.5;
+    background: var(--lt-ground);
+    color: var(--lt-ink);
+    min-height: 100vh;
+    min-height: 100dvh;
+    overflow-x: clip;
+}
+html { overflow-x: clip; }
+
+/* type roles */
+.lt-display { font-family: var(--lt-font-display); font-weight: 600; letter-spacing: -0.025em; line-height: 1.02; text-wrap: balance; }
+.lt-h1 { font-family: var(--lt-font-display); font-weight: 600; font-size: var(--lt-text-2xl); letter-spacing: -0.02em; line-height: 1.12; text-wrap: balance; }
+.lt-h2 { font-family: var(--lt-font-display); font-weight: 600; font-size: var(--lt-text-xl); letter-spacing: -0.015em; line-height: 1.2; text-wrap: balance; }
+.lt-h3 { font-weight: 600; font-size: var(--lt-text-lg); line-height: 1.3; }
+.lt-body { font-size: var(--lt-text-md); }
+.lt-small { font-size: var(--lt-text-sm); color: var(--lt-ink-2); }
+.lt-meta { font-size: var(--lt-text-xs); color: var(--lt-ink-3); }
+.lt-num { font-variant-numeric: tabular-nums lining-nums; }
+.lt-mono { font-family: var(--lt-font-mono); font-size: 0.92em; }
+.lt-muted { color: var(--lt-ink-2); }
+.lt-faint { color: var(--lt-ink-3); }
+.lt-measure { max-width: 62ch; }
+
+/* browser surfaces carry the design too */
+::selection { background: var(--lt-accent); color: var(--lt-accent-ink); }
+:focus { outline: none; }
+:focus-visible { outline: 2px solid var(--lt-focus); outline-offset: 2px; border-radius: var(--lt-radius-1); }
+:where(input, select, textarea):focus-visible { outline-offset: 0; border-radius: var(--lt-radius-2); }
+a:not([class]) { text-decoration: underline; text-underline-offset: 0.18em; text-decoration-thickness: 1px; text-decoration-color: color-mix(in srgb, currentColor 40%, transparent); }
+a:not([class]):hover { text-decoration-color: currentColor; }
+* { scrollbar-width: thin; scrollbar-color: var(--lt-rule-strong) transparent; }
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-thumb { background: var(--lt-rule-strong); border-radius: 10px; border: 2px solid transparent; background-clip: content-box; }
+input::placeholder, textarea::placeholder { color: var(--lt-ink-3); opacity: 1; }
+input[type="checkbox"], input[type="radio"] { accent-color: var(--lt-accent); } /* drawn in controls.css; accent-color stays as the fallback */
+::-webkit-calendar-picker-indicator { filter: var(--lt-picker-filter, none); }
+:root[data-theme="dark"] { --lt-picker-filter: invert(0.85); }
+
+.lt-skip { position: absolute; left: var(--lt-space-3); top: -4rem; z-index: 100; padding: var(--lt-space-2) var(--lt-space-4); background: var(--lt-btn); color: var(--lt-btn-ink); border-radius: var(--lt-radius-2); font-weight: 600; transition: top var(--lt-dur-1) var(--lt-ease); }
+.lt-skip:focus { top: var(--lt-space-3); }
+.lt-sr { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+
+/* the one authored motion: pages arrive, menus open. Everything else is feedback. */
+@keyframes lt-rise { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+@keyframes lt-spin { to { transform: rotate(360deg); } }
+@keyframes lt-sheen { to { background-position: -200% 0; } }
+@keyframes lt-breathe { 0%, 100% { opacity: 0.35; } 50% { opacity: 1; } }
+@keyframes lt-grow { from { transform: scaleX(0.06); } to { transform: scaleX(0.92); } }
+
+@media (prefers-reduced-motion: reduce) {
+    *, ::before, ::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+}

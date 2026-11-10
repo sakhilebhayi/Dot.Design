@@ -1,4 +1,8 @@
+> **Status (R-45, 2026-11-09): proposal, not a description of the system.** Several sections assume things that do not exist: Livewire canvas components, Fabric.js, Redis, Horizon and Meilisearch. The shared host runs the database cache and a cron-driven queue worker; the editor is plain ES modules. Measured budgets and what was actually optimised are in `docs/R45_ARCHITECTURE.md` section 4 and the performance notes under `docs/R45_*.md` when present. Section 9 below is corrected; the others are unverified ideas.
+
 # Performance Improvements
+
+> **Measured state (R-45):** see `docs/R45_PERF.md`. This file is the earlier list of ideas (it still mentions Livewire, Fabric, Scout and Redis, none of which the studio uses); where the two disagree, R45_PERF.md is right.
 
 > Performance upgrades for Dot.Design. Each section is independently applicable and safe to implement incrementally.
 
@@ -333,30 +337,7 @@ Alternatively, use `DB_PERSISTENT=true` if PgBouncer is unavailable — this reu
 
 ## 9. Front-end Bundle Size
 
-**Current:** `resources/js/app.js` is empty. As Fabric.js and Alpine plugins are added, monitor bundle size.
-
-**Targets:**
-- Initial JS bundle: < 200 KB gzipped
-- CSS bundle: < 50 KB gzipped
-
-**Strategies:**
-- Tree-shake Fabric.js: import only used modules (`import { Canvas, Text, Rect } from 'fabric/es'`).
-- Code-split the canvas editor — load it only on canvas routes via dynamic `import()`.
-- Remove `@tailwindcss/typography` plugin if prose content is minimal (saves ~25 KB CSS).
-
-```js
-// vite.config.js — enable manual chunk splitting
-build: {
-    rollupOptions: {
-        output: {
-            manualChunks: {
-                fabric: ['fabric'],
-                vendor: ['alpinejs'],
-            },
-        },
-    },
-},
-```
+**Corrected (R-45):** there is no Fabric.js and no Alpine plugin bundle. The editor is vanilla ES modules built by Vite into one entry per page (`vite.config.js`), with shared chunks; `npm run build` prints the sizes and `scripts/ops/check-vite-manifest.mjs` proves every `@vite` entry is built. The editor entry (`resources/js/studio/main.js`) is the large one (about 465 kB raw, 154 kB gzip at the time of writing). Fonts are self-hosted woff2 loaded lazily per family used by a page (`public/fonts/design/`, 55 files, 1.3 MB in total), not part of the bundle.
 
 ---
 

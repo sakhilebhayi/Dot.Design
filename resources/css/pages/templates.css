@@ -1,0 +1,77 @@
+/* The template browser. Tokens only (--lt-*). */
+@import './create-shared.css';
+
+.cf-tpl { display: grid; gap: var(--lt-space-4); }
+.cf-tpl__loading { padding: var(--lt-space-5) 0; }
+.cf-tabs { margin-bottom: var(--lt-space-1); }
+.cf-tab__n { margin-left: var(--lt-space-2); font-size: var(--lt-text-xs); font-weight: 500; color: var(--lt-ink-3); font-variant-numeric: tabular-nums; }
+.cf-workspace { margin-top: var(--lt-space-2); }
+.cf-workspace[hidden] { display: none; }
+
+.cf-toolbar { display: flex; align-items: center; gap: var(--lt-space-3); flex-wrap: wrap; }
+.cf-toolbar__search { flex: 1 1 16rem; max-width: 26rem; }
+.cf-toolbar__sort { margin-left: auto; min-width: 9.5rem; }
+.cf-filters { display: flex; flex-wrap: wrap; gap: var(--lt-space-2); flex: 1 1 100%; order: 3; }
+.cf-filter { width: auto; min-width: 8.5rem; max-width: 14rem; min-height: 2.25rem; font-size: var(--lt-text-sm); }
+.cf-filters-toggle { display: none; }
+@media (max-width: 48rem) {
+    .cf-filters-toggle { display: inline-flex; }
+    .cf-filters { display: none; }
+    .cf-filters.is-open { display: grid; grid-template-columns: 1fr 1fr; }
+    .cf-filter { max-width: none; width: 100%; }
+    .cf-toolbar__search { max-width: none; flex-basis: 100%; }
+    .cf-toolbar__sort { margin-left: 0; flex: 1; }
+}
+.cf-chips-on { display: flex; flex-wrap: wrap; gap: var(--lt-space-2); align-items: center; }
+.cf-chips-on[hidden] { display: none; }
+.cf-count { min-height: 1.25rem; font-variant-numeric: tabular-nums; }
+
+.cf-tgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(13.5rem, 1fr)); gap: var(--lt-space-5) var(--lt-space-4); align-items: start; }
+@media (max-width: 40rem) { .cf-tgrid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--lt-space-5) var(--lt-space-3); } }
+.cf-tcard { position: relative; display: grid; gap: var(--lt-space-3); min-width: 0; align-content: start; }
+.cf-tcard__open { display: block; width: 100%; padding: 0; text-align: left; border-radius: var(--lt-radius-1); }
+.cf-tcard__stage { display: grid; place-items: center; height: 16rem; padding: var(--lt-space-3); background: var(--lt-stage); transition: background-color var(--lt-dur-2) var(--lt-ease); }
+.cf-tcard__frame { --fit: 14.25rem; width: min(100%, calc(var(--fit) * var(--w) / var(--h))); max-width: 100%; max-height: 100%; transition: transform var(--lt-dur-2) var(--lt-ease); }
+.cf-tcard__sk { width: 55%; height: 85%; }
+.cf-tcard__open:hover .cf-tcard__frame, .cf-tcard__open:focus-visible .cf-tcard__frame { transform: translateY(-3px); }
+.cf-tcard__open:focus-visible { outline-offset: 3px; }
+.cf-tcard__meta { display: grid; gap: 2px; min-width: 0; justify-items: start; }
+.cf-tcard__name { font-weight: 600; font-size: var(--lt-text-md); overflow-wrap: anywhere; }
+.cf-tcard__sub { font-size: var(--lt-text-xs); color: var(--lt-ink-3); }
+.cf-tcard__meta .lt-tag { margin-top: var(--lt-space-1); }
+@media (max-width: 40rem) { .cf-tcard__stage { height: 11.5rem; padding: var(--lt-space-3); } .cf-tcard__frame { --fit: 8.5rem; } }
+
+/* page flip on hover, focus and touch */
+.cf-flip { position: absolute; left: 50%; top: calc(16rem - 3rem); transform: translateX(-50%); display: inline-flex; align-items: center; gap: var(--lt-space-1); padding: 2px; border-radius: 999px; background: var(--lt-panel); box-shadow: 0 0 0 1px var(--lt-rule-strong), var(--lt-shadow-float); opacity: 0; transition: opacity var(--lt-dur-1) var(--lt-ease); }
+.cf-tcard:hover .cf-flip, .cf-tcard:focus-within .cf-flip { opacity: 1; }
+@media (hover: none) { .cf-flip { opacity: 1; } }
+@media (max-width: 40rem) { .cf-flip { top: calc(11.5rem - 3rem); } }
+.cf-flip .lt-icon-btn { width: 2rem; height: 2rem; border-radius: 50%; }
+.cf-flip__n { min-width: 2.75rem; text-align: center; font-size: var(--lt-text-xs); font-weight: 600; font-variant-numeric: tabular-nums; color: var(--lt-ink); }
+
+.cf-more-wrap { display: grid; justify-items: center; margin-top: var(--lt-space-6); }
+
+/* detail dialog */
+.lt-dialog__box.cf-detail { width: min(70rem, 100%); }
+.cf-detail .lt-dialog__body { color: var(--lt-ink); padding-bottom: var(--lt-space-5); }
+.cf-detail__loading { display: grid; gap: var(--lt-space-3); padding: var(--lt-space-6) 0; max-width: 20rem; }
+.cf-detail__grid { display: grid; gap: var(--lt-space-5); grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 56rem) { .cf-detail__grid { grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: var(--lt-space-6); } .cf-detail__preview { position: sticky; top: 0; align-self: start; } }
+.cf-detail__preview { display: grid; gap: var(--lt-space-3); min-width: 0; }
+.cf-detail__stage { display: grid; place-items: center; background: var(--lt-stage); padding: var(--lt-space-5); min-height: 20rem; }
+.cf-detail__frame { --fit: min(26rem, 52vh); width: min(100%, calc(var(--fit) * var(--w) / var(--h))); max-width: 100%; }
+.cf-detail__note { min-height: 1.1rem; }
+.cf-pages { display: flex; gap: var(--lt-space-2); overflow-x: auto; padding: var(--lt-space-1); }
+.cf-pages__btn { display: grid; place-items: center; width: 5rem; height: 5rem; padding: var(--lt-space-2); background: var(--lt-stage); border-radius: var(--lt-radius-1); }
+.cf-pages__btn[aria-current="true"] { box-shadow: 0 0 0 2px var(--lt-accent); }
+.cf-pages__frame { width: min(100%, calc(3.6rem * var(--w) / var(--h))); max-height: 100%; }
+.cf-detail__side { display: grid; gap: var(--lt-space-4); align-content: start; min-width: 0; }
+.cf-detail__desc { color: var(--lt-ink-2); max-width: 56ch; }
+.cf-facts { display: grid; gap: var(--lt-space-2); font-size: var(--lt-text-sm); }
+.cf-facts > div { display: grid; grid-template-columns: 4.5rem minmax(0, 1fr); gap: var(--lt-space-3); }
+.cf-facts dt { color: var(--lt-ink-3); }
+.cf-facts dd { color: var(--lt-ink); font-variant-numeric: tabular-nums; }
+.cf-slots { display: flex; flex-wrap: wrap; gap: var(--lt-space-1); margin-top: var(--lt-space-2); }
+.cf-fill { display: grid; gap: var(--lt-space-3); padding-top: var(--lt-space-4); border-top: 1px solid var(--lt-rule); }
+.cf-pics { margin-top: calc(-1 * var(--lt-space-1)); }
+.cf-fill__actions { display: flex; flex-wrap: wrap; gap: var(--lt-space-2); position: sticky; bottom: calc(-1 * var(--lt-space-5)); z-index: 2; padding: var(--lt-space-3) 0 var(--lt-space-5); margin-bottom: calc(-1 * var(--lt-space-5)); background: var(--lt-panel); }

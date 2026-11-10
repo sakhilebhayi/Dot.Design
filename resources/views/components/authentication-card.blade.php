@@ -1,15 +1,28 @@
-<div class="relative min-h-screen flex flex-col sm:justify-center items-center pt-6 sm:pt-0 overflow-hidden">
-    {{-- Same hero photo as welcome.blade.php (colorful 3D generative-art shapes, Hirzul Maulana),
-    with the same dark-ink scrim treatment the hero itself already proves works on this brand. --}}
-    <div class="absolute inset-0 bg-cover bg-center" style="background-image: url('https://images.unsplash.com/photo-1751644332113-2004a1b143f1?q=80&w=2400&auto=format&fit=crop');"></div>
-    <div class="absolute inset-0" style="background: radial-gradient(ellipse 68% 62% at 50% 40%, rgba(34,31,43,0.9) 0%, rgba(34,31,43,0.68) 45%, rgba(34,31,43,0.35) 74%, rgba(34,31,43,0.12) 100%);"></div>
-    <div class="absolute inset-0" style="background: linear-gradient(180deg, rgba(34,31,43,0.6) 0%, transparent 18%, transparent 74%, rgba(34,31,43,0.5) 100%);"></div>
-
-    <div class="relative z-10">
-        {{ $logo }}
+{{-- Sign-in shell: the form on the sheet, a proof table beside it. The picture is three real library templates (or, if the artwork was never built, the real logo on a proof sheet). --}}
+<div class="lt-auth">
+    <div class="lt-auth__table" aria-hidden="true">
+        @php($art = \App\Support\Ui\LandingArt::manifest())
+        @if (isset($art['close-instagram-post'], $art['close-poster'], $art['close-presentation']))
+            {{-- real library templates drawn by the editor's renderer (scripts/landing/build-art.mjs), not a picture of nothing --}}
+            <div class="lt-auth__trio">
+                @foreach (['instagram-post', 'poster', 'presentation'] as $key)
+                    <span class="lt-frame lt-crop lp-art" style="--w: {{ $art['close-'.$key]['width'] }}; --h: {{ $art['close-'.$key]['height'] }};">{!! \App\Support\Ui\LandingArt::svg('close-'.$key) !!}</span>
+                @endforeach
+            </div>
+        @else
+            <span class="lt-frame lt-crop lt-auth__sheet" style="--w: 4; --h: 3; --crop-len: 14px; --crop-gap: 10px;"><x-ds.logo /></span>
+        @endif
     </div>
-
-    <div class="relative z-10 w-full sm:max-w-md mt-6 px-6 py-4 bg-[var(--panel)] border border-[var(--line)] rounded-2xl shadow-[0_30px_60px_-30px_rgba(0,0,0,0.5)] overflow-hidden">
-        {{ $slot }}
-    </div>
+    <main id="main" class="lt-auth__main" tabindex="-1">
+        <div class="lt-auth__box">
+            <a href="{{ url('/') }}" class="lt-brand" aria-label="Dot.Design, home" style="padding-left: 0;">
+                <span class="lt-mark" role="img" aria-label="Dot.Design mark"></span>
+                <span class="lt-brand__name">Dot.Design</span>
+            </a>
+            {{ $slot }}
+        </div>
+        <p class="lt-auth__foot">
+            <a href="{{ route('terms.show') }}">Terms</a> &nbsp; <a href="{{ route('policy.show') }}">Privacy</a> &nbsp; <a href="{{ route('cookies') }}">Cookies</a>
+        </p>
+    </main>
 </div>

@@ -29,6 +29,9 @@ class AppServiceProvider extends ServiceProvider
         // before it renders the page: a failing query turns the answer into a 500 (the exception text is never shown).
         Event::listen(DiagnosingHealth::class, fn () => DB::select('select 1'));
 
+        // Sign-in, lockout and credential-change lines for incident response (docs/R45_PRIVACY.md).
+        Event::subscribe(\App\Listeners\LogSecurityEvents::class);
+
         // Per user (falling back to IP), answered as JSON because the only
         // caller is the editor's fetch() upload.
         RateLimiter::for('design-uploads', fn (Request $request) => Limit::perMinute((int) config('design.assets.uploads_per_minute'))
