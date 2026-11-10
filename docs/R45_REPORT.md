@@ -93,6 +93,20 @@ Final trunk before deployment: PHP 1,669 tests (1,662 pass, 7 skipped, same 7 si
 
 Real screen-reader and device testing; a Firefox and Safari pass; vector illustration tools and components; a real animation easing editor; stock imagery through a licensed provider; Analytics metric names for Design; background removal only if a supported service appears; MP4 via a server worker if the host ever allows; more template variety and seasonal packs; brand-update readability check on existing designs.
 
-## 15. Deployment
+## 15. Deployment (2026-11-10)
 
-See the section appended after the production deploy (or the PR description).
+- PR sakhilebhayi/Dot.Design#30 squash-merged as `c6c8eda`. Deploy run 42753682756: CI gate green, release put in place, 17 R-45 migrations ran, 64 templates seeded, preflight passed; the smoke step then stopped on its own script bug (`tr | head` under `pipefail`, SIGPIPE) before the share-link and header checks. The site was up and serving the release throughout.
+- Fix PR sakhilebhayi/Dot.Design#31 (`4b30e9f`), redeploy run 42754421641: every job green, including the full smoke check.
+- Live checks done by the coordinator on https://design.infodot.co.za: landing page renders real template artwork with no console errors; `/login` 200; self-hosted font served as `font/woff2`; an unknown share link answers 404; signed-in pages redirect to login; enforced nonce CSP, HSTS, `X-Frame-Options: DENY` and a referrer policy present.
+- Preflight findings on the live host: PHP 8.4.27, all required extensions, upload and post limits 512M, memory 512M, caches built, 33 migrations applied. Two warnings: **the live database is SQLite, not PostgreSQL** (the PostgreSQL suite still passes, so a move is possible later; backups must copy the SQLite file), and **mail goes to the log** (password-reset mail is not delivered until a mailer is configured).
+- Not verified live: a signed-in session on production (needs a real InfoDot sign-in), the assistant (no API key set, so it shows its honest off state), integrations (all off until the owner steps in docs/R45_INTEGRATIONS.md are done), the scheduler's first run, backups on the host.
+
+### Owner steps
+1. Sign in through InfoDot and open Start, a template and the editor once on production.
+2. Set `ANTHROPIC_API_KEY` (and optionally `DESIGN_AI_MODEL`) to switch the assistant on; read the cost caps in docs/R45_AI.md first.
+3. Configure a real mailer (password resets).
+4. Add the backup cron line (marker `# design-backup`, docs/R45_OPERATIONS.md) and run the restore drill once.
+5. Decide whether to move the live database to PostgreSQL.
+6. Integrations: Dot.Files must list `design` in its platform secrets; Notify and InfoDot membership need their secrets (docs/R45_INTEGRATIONS.md).
+7. Update the privacy policy to name the AI provider transfer (docs/R45_PRIVACY.md section 10).
+8. Grant the first platform operator: `php artisan design:operator <email>`.
