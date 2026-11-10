@@ -142,10 +142,22 @@ async function main() {
         console.log(`\n=== ${spec}`);
         // Asynchronous on purpose: the stubs (Messages API, Dot.Files) live in THIS process and must keep answering while a spec runs.
         const code = await new Promise((res) => {
-            const child = spawn(process.execPath, ['--test', '--test-concurrency=1', '--test-timeout=900000', join(specDir, spec)], { cwd: root, env, stdio: 'inherit' });
+            const child = spawn(process.execPath, ['--test', '--test-force-exit', '--test-concurrency=1', '--test-timeout=900000', join(specDir, spec)], { cwd: root, env, stdio: 'inherit' });
             child.on('exit', (c) => res(c));
             child.on('error', () => res(1));
         });
+        if (code !== 0) failed++;
+    }
+    // The production-like signed-in smoke (cached config and routes, built assets, APP_ENV=production, its own database). Skipped when a
+    // spec filter is given or with --skip-smoke.
+    if (!filter && !args.includes('--skip-smoke') && existsSync(join(root, 'tests/Support/signed-in-smoke.sh'))) {
+        console.log('\n=== signed-in-smoke.sh');
+        const smokePort = await freePort(0);
+        const code = await new Promise((res) => {
+            const child = spawn('bash', [join(root, 'tests/Support/signed-in-smoke.sh')], { cwd: root, env: { ...process.env, PORT: String(smokePort) }, stdio: 'inherit' });
+            child.on('exit', (c) => res(c)); child.on('error', () => res(1));
+        });
+        console.log(code === 0 ? 'signed-in smoke passed' : `signed-in smoke FAILED (exit ${code})`);
         if (code !== 0) failed++;
     }
     console.log(failed ? `\n${failed} spec file(s) failed` : '\nAll specs passed');

@@ -77,7 +77,7 @@ export async function exportFile(page, { tab = 'PNG', scale = null, pages = null
             if (on !== (n === scale)) await chip.click();
         }
     }
-    if (pdfMode === 'picture') await page.getByText('PDF (as pictures)').click();
+    if (pdfMode === 'picture') await page.getByRole('radio', { name: /PDF \(as pictures\)/ }).check({ force: true });
     if (bleed) await page.getByRole('radio', { name: `${bleed} mm`, exact: true }).click();
     if (marks) await page.getByRole('switch', { name: /Crop marks/ }).check();
     await page.getByRole('button', { name: 'Prepare file' }).click();

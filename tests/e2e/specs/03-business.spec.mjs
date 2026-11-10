@@ -43,7 +43,7 @@ test('business: brand, design, share, comment, review, approve, stale, export, i
 
     await step(op, 'share with the workspace', async () => {
         await openShare(op);
-        await op.getByText('Everyone in Acme Bakers').click();
+        await op.getByRole('radio', { name: /Everyone in Acme Bakers/ }).check({ force: true }); // a radio card: the real input sits over its label
         await op.getByText(/Saved|updated|Everyone in Acme Bakers can open/).first().waitFor({ timeout: 8000 }).catch(() => {});
         await op.waitForFunction((id) => true, projectId);
         await op.waitForTimeout(800);

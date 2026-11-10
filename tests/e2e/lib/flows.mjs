@@ -12,7 +12,7 @@ export async function designFromBrief(page, { what = 'Winter pie special', busin
     if (logoPath) {
         await page.locator('input[type=file]').first().setInputFiles(logoPath);
         await page.getByText(/was added and selected|was already in your uploads/).waitFor();
-        if (useKit) await page.getByText('Use my brand kit').click();
+        if (useKit) await page.getByRole('radio', { name: /Use my brand kit/ }).check({ force: true });
     }
     await next();
     await page.locator('button', { hasText: style }).click(); await next();

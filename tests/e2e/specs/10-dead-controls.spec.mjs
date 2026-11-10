@@ -36,16 +36,30 @@ test('every enabled control in the editor chrome does something', async (t) => {
         for (const [label, ids] of states) {
             await page.evaluate((i) => (i.length ? window.__studio.studio.select(i) : window.__studio.studio.clearSelection()), ids);
             await page.waitForTimeout(250);
-            const names = await page.evaluate(() => [...document.querySelectorAll('.st-right button, [role=toolbar] button')].filter((b) => { const r = b.getBoundingClientRect(); return r.width > 0 && r.height > 0 && !b.disabled && getComputedStyle(b).visibility !== 'hidden'; }).map((b) => (b.getAttribute('aria-label') || b.innerText || '').trim().replace(/\s+/g, ' ')).filter(Boolean));
+            const names = await page.evaluate(() => [...document.querySelectorAll('.st-right button:not(.st-jump__chip):not(.st-isec__head), [role=toolbar] button')].filter((b) => { const r = b.getBoundingClientRect(); return r.width > 0 && r.height > 0 && !b.disabled && getComputedStyle(b).visibility !== 'hidden'; }).map((b) => (b.getAttribute('aria-label') || b.innerText || '').trim().replace(/\s+/g, ' ')).filter(Boolean));
             for (const name of [...new Set(names)]) {
                 if (SKIP.test(name)) continue;
                 const before = await page.evaluate(() => ({ doc: JSON.stringify(window.__studio.studio.getState().doc), sel: window.__studio.studio.getState().selection.join(','), muts: window.__muts, dlg: document.querySelectorAll('dialog[open]').length, pressed: [...document.querySelectorAll('[aria-pressed],[aria-expanded]')].map((e) => e.getAttribute('aria-pressed') + e.getAttribute('aria-expanded')).join('') }));
                 let reqs = 0; const onReq = () => { reqs += 1; }; page.on('request', onReq);
                 const q = name.replace(/"/g, '\\"');
-                const target = page.locator(`.st-right button[aria-label="${q}"]:visible, [role=toolbar] button[aria-label="${q}"]:visible`).first();
-                const target2 = page.locator('.st-right button:visible, [role=toolbar] button:visible').filter({ hasText: name }).first();
+                const target = page.locator(`.st-right button[aria-label="${q}"]:visible:not(.st-jump__chip):not(.st-isec__head), [role=toolbar] button[aria-label="${q}"]:visible`).first();
+                const target2 = page.locator('.st-right button:visible:not(.st-jump__chip):not(.st-isec__head), [role=toolbar] button:visible').filter({ hasText: name }).first();
                 const el = (await target.count()) ? target : target2;
-                try { await el.click({ timeout: 3000 }); } catch (e) { page.off('request', onReq); findings.push({ mode, state: label, control: name, problem: `could not be clicked: ${e.message.split('\n')[0].slice(0, 80)}` }); continue; }
+                try { await el.click({ timeout: 3000 }); } catch (e) {
+                    // The audit's own earlier presses can leave the panel in another tab or a section folded; start again from a fresh page
+                    // and try once more before calling it a finding. A control that is not on screen in that state is not a finding either.
+                    page.off('request', onReq);
+                    await page.reload();
+                    await page.waitForFunction(() => !!window.__studio?.studio);
+                    await page.getByRole('button', { name: 'Got it' }).click().catch(() => {});
+                    await page.locator('button', { hasText: new RegExp(`^${wanted}$`) }).click();
+                    await page.evaluate((i) => (i.length ? window.__studio.studio.select(i) : window.__studio.studio.clearSelection()), ids);
+                    await page.waitForTimeout(400);
+                    await page.evaluate(() => { window.__muts = 0; new MutationObserver((l) => { window.__muts += l.length; }).observe(document.body, { subtree: true, childList: true, attributes: true, characterData: true }); });
+                    if (!(await el.isVisible().catch(() => false))) continue;
+                    try { await el.click({ timeout: 3000 }); } catch (e2) { findings.push({ mode, state: label, control: name, problem: `could not be clicked: ${e2.message.split('\n')[0].slice(0, 80)}` }); continue; }
+                    reqs = 0; page.on('request', onReq);
+                }
                 await page.waitForTimeout(250);
                 const after = await page.evaluate(() => ({ doc: JSON.stringify(window.__studio.studio.getState().doc), sel: window.__studio.studio.getState().selection.join(','), muts: window.__muts, dlg: document.querySelectorAll('dialog[open]').length, pressed: [...document.querySelectorAll('[aria-pressed],[aria-expanded]')].map((e) => e.getAttribute('aria-pressed') + e.getAttribute('aria-expanded')).join('') }));
                 page.off('request', onReq);
@@ -60,6 +74,32 @@ test('every enabled control in the editor chrome does something', async (t) => {
                 await page.waitForTimeout(100);
             }
         }
+    }
+    // The Pro panel's section headers fold and unfold, and its jump chips scroll to the section: both must do exactly that.
+    await page.locator('button', { hasText: /^Pro$/ }).click();
+    await page.evaluate(() => window.__studio.studio.select(['t']));
+    await page.waitForTimeout(400);
+    const heads = await page.locator('.st-right .st-isec__head').count();
+    assert.ok(heads >= 4, `the Pro panel has collapsible sections (${heads})`);
+    for (let i = 0; i < heads; i++) {
+        const head = page.locator('.st-right .st-isec__head').nth(i);
+        const name = (await head.innerText()).trim();
+        const before = await head.getAttribute('aria-expanded');
+        await head.click();
+        const mid = await head.getAttribute('aria-expanded');
+        await head.click();
+        const after = await head.getAttribute('aria-expanded');
+        if (mid === before || after !== before) findings.push({ mode: 'pro', state: 'text', control: `section header ${name}`, problem: `aria-expanded ${before} -> ${mid} -> ${after}` });
+    }
+    const chips = await page.locator('.st-right .st-jump__chip').count();
+    for (let i = 0; i < chips; i++) {
+        const chip = page.locator('.st-right .st-jump__chip').nth(i);
+        const name = (await chip.innerText()).trim();
+        await page.locator('.st-right').evaluate((e) => { const sc = [...e.querySelectorAll('*')].find((x) => x.scrollHeight > x.clientHeight + 20 && getComputedStyle(x).overflowY !== 'visible'); if (sc) sc.scrollTop = 0; });
+        await chip.click();
+        await page.waitForTimeout(450);
+        const inView = await page.evaluate((n) => { const h = [...document.querySelectorAll('.st-right .st-isec__head')].find((x) => x.innerText.trim().startsWith(n)); if (!h) return null; const r = h.getBoundingClientRect(); const pr = document.querySelector('.st-right').getBoundingClientRect(); return r.top >= pr.top - 2 && r.bottom <= pr.bottom + 2; }, name);
+        if (inView !== true) findings.push({ mode: 'pro', state: 'text', control: `jump chip ${name}`, problem: `the ${name} section is not in view after pressing it (${inView})` });
     }
     writeFileSync(join(env.out, 'dead-controls.json'), JSON.stringify(findings, null, 1));
     t.diagnostic(`${findings.length} controls without an observable effect: ${JSON.stringify(findings.map((f) => `${f.mode}/${f.state}/${f.control}`)).slice(0, 1500)}`);

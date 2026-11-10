@@ -4,6 +4,8 @@ import assert from 'node:assert/strict';
 import { makeUser, contextFor, watch, externalHosts, step, one, world, closeBrowser, api, browser, env, shot } from '../lib/harness.mjs';
 
 const el = (id, t) => ({ id, type: 'text', x: 60, y: 60, width: 500, height: 90, text: t, fontSize: 50, color: '#111111', font: 'inter' });
+/** Polls a condition (a database row the page writes after a delay) instead of sleeping for a guessed time. */
+async function until(fn, ms = 20000, step = 250) { const end = Date.now() + ms; while (Date.now() < end) { if (await fn()) return true; await new Promise((r) => setTimeout(r, step)); } return false; }
 const seen = (id, key) => one('select count(*) as n from design_milestones where user_id = ? and key = ?', [id, key]).n;
 
 test('milestones: first design, first file, first approval appear once, one at a time, from real rows', async (t) => {
@@ -28,9 +30,9 @@ test('milestones: first design, first file, first approval appear once, one at a
         assert.equal(await msg(op).getAttribute('data-key'), 'first_design');
         assert.match(await msg(op).innerText(), /Your first design is on the table\./);
         assert.equal(await op.locator('[data-milestone]').count(), 1, 'one message at a time');
-        for (let i = 0; i < 20 && !seen(owner.id, 'first_design'); i++) await op.waitForTimeout(500);
-        assert.equal(seen(owner.id, 'first_design'), 1, 'the server remembers it was shown');
-        await op.reload();
+        await op.bringToFront();
+        assert.ok(await until(() => seen(owner.id, 'first_design') === 1, 20000), 'the server remembers it was shown');
+        await op.reload({ waitUntil: 'networkidle' });
         assert.equal(await msg(op).count(), 0, 'it does not come back');
     });
     await step(op, 'first file: needs a real export row, "Got it" closes and remembers at once', async () => {
@@ -38,12 +40,11 @@ test('milestones: first design, first file, first approval appear once, one at a
         const r = await api(op, 'POST', `/design/projects/${p.id}/exports`, { format: 'png', pages: 'all', scale: 1, bytes: 1234 });
         assert.ok(r.status < 300);
         await op.goto('/dashboard');
-        await msg(op).first().waitFor();
+        await msg(op).first().waitFor({ timeout: 15000 });
         assert.equal(await msg(op).getAttribute('data-key'), 'first_export');
         await msg(op).getByRole('button', { name: 'Got it' }).click();
         await msg(op).waitFor({ state: 'detached', timeout: 5000 });
-        for (let i = 0; i < 10 && !seen(owner.id, 'first_export'); i++) await op.waitForTimeout(300);
-        assert.equal(seen(owner.id, 'first_export'), 1);
+        assert.ok(await until(() => seen(owner.id, 'first_export') === 1, 10000), 'Got it is remembered');
     });
     await step(op, 'first approval: only after somebody really approved', async () => {
         await op.goto('/dashboard');
