@@ -634,7 +634,7 @@ jobs:
           if head -1 "$WORK/h" | grep -qE ' 30[12] ' && grep -qi '^location:.*/login' "$WORK/h"; then echo "302 /design/new -> /login"; else echo "::error::/design/new did not redirect a guest to /login: $(head -1 "$WORK/h" | tr -d '\r')"; FAILED=1; fi
           # A share link that does not exist answers the same plain 404 as an expired one, and sets no cookie (the
           # public routes run without a session).
-          BOGUS="$(LC_ALL=C tr -dc 'A-Za-z0-9' < /dev/urandom | head -c 40)"
+          BOGUS="$(python3 -c 'import secrets; print(secrets.token_hex(20))')"  # no tr|head pipe: under pipefail it dies of SIGPIPE
           CODE=$(curl -s --max-time 30 -D "$WORK/h" -o "$WORK/b" -w '%{http_code}' "$SITE_URL/s/$BOGUS" || true)
           if [ "$CODE" != "404" ]; then echo "::error::/s/<unknown token> answered ${CODE:-no response}, expected 404"; FAILED=1
           elif grep -qi '^set-cookie:' "$WORK/h"; then echo "::error::/s/<unknown token> set a cookie; the public share routes must not start a session"; FAILED=1
