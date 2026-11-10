@@ -134,10 +134,15 @@ test('version history: save, change, restore, and the editor shows the restored 
     await openEditor(page, p.id);
     await page.getByRole('button', { name: 'Got it' }).click().catch(() => {});
     await step(page, 'name a version, then change the design', async () => {
-        await page.getByRole('tab', { name: 'History' }).click();
+        const tab = page.getByRole('tab', { name: 'History' });
+        if ((await tab.getAttribute('aria-selected')) !== 'true') await tab.click(); // the rail tab toggles its panel
+        // the panel is a lazily loaded chunk: wait until the real panel has replaced the "Opening" stub before typing
+        await page.getByPlaceholder('For example: Sent to printer').waitFor({ timeout: 20000 });
         await page.getByPlaceholder('For example: Sent to printer').fill('First draft');
+        const saved = page.waitForResponse((r) => r.request().method() === 'POST' && /\/versions$/.test(new URL(r.url()).pathname), { timeout: 30000 });
         await page.getByRole('button', { name: /Save this version/ }).first().click();
-        await page.getByText('First draft').first().waitFor({ timeout: 10000 });
+        assert.equal((await saved).status(), 201, 'the version was stored');
+        await page.getByText('First draft').first().waitFor({ timeout: 20000 });
         await exec(page, 'text.edit', { id: 'h', text: 'Version two' });
         await waitSaved(page);
     });

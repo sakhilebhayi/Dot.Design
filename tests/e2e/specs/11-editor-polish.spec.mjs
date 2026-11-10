@@ -121,7 +121,9 @@ test('desktop: opens on the page, a text inspector that fits, a toolbar that sta
         await page.locator('.st-elsec[data-section=shapes]').waitFor();
         assert.ok((await page.locator('.st-elsec .st-group__title').count()) >= 3);
         await page.getByRole('button', { name: 'Add circle', exact: true }).click();
-        await page.getByRole('tab', { name: 'Elements' }).click().catch(() => {});
+        // the rail tab toggles its panel: press it only when the panel is closed
+        const elementsTab = page.getByRole('tab', { name: 'Elements' });
+        if ((await elementsTab.getAttribute('aria-selected')) !== 'true') await elementsTab.click();
         await page.locator('.st-elsec--recent').waitFor({ state: 'visible' });
         assert.equal(await page.locator('.st-recent .st-tile').count(), 1, 'the circle is under Recently used');
         await page.getByRole('searchbox', { name: 'Search elements' }).fill('zzzz-nothing');

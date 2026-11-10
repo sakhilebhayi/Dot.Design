@@ -28,10 +28,22 @@ export async function serverDocument(page, projectId) {
     return page.evaluate(async (id) => (await fetch(`/design/projects/${id}/document`, { headers: { Accept: 'application/json' } })).json(), projectId);
 }
 
-/** Selection on the canvas by a real click at the element's centre. */
+/** Selection on the canvas by a real click at the element's centre. Waits until the page has stopped moving (the viewport
+ *  re-fits when panels open or hints close) and checks the engine really selected it, clicking again if the layout shifted. */
 export async function clickElement(page, id, opts = {}) {
-    const c = await centreOf(page, id);
-    await page.mouse.click(c.x, c.y, opts);
+    for (let attempt = 0; attempt < 4; attempt++) {
+        let box = await node(page, id).boundingBox();
+        for (let i = 0; i < 10; i++) {
+            await page.waitForTimeout(120);
+            const next = await node(page, id).boundingBox();
+            const still = Math.abs(next.x - box.x) < 0.5 && Math.abs(next.y - box.y) < 0.5 && Math.abs(next.width - box.width) < 0.5;
+            box = next;
+            if (still) break;
+        }
+        await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2, opts);
+        await page.waitForTimeout(150);
+        if ((await selection(page)).includes(id)) return;
+    }
 }
 
 /** Deep copy without null/undefined keys. */
@@ -77,7 +89,7 @@ export async function exportFile(page, { tab = 'PNG', scale = null, pages = null
             if (on !== (n === scale)) await chip.click();
         }
     }
-    if (pdfMode === 'picture') await page.getByText('PDF (as pictures)').click();
+    if (pdfMode === 'picture') await page.getByRole('radio', { name: /PDF \(as pictures\)/ }).check({ force: true });
     if (bleed) await page.getByRole('radio', { name: `${bleed} mm`, exact: true }).click();
     if (marks) await page.getByRole('switch', { name: /Crop marks/ }).check();
     await page.getByRole('button', { name: 'Prepare file' }).click();
@@ -95,7 +107,14 @@ export async function closeDialog(page) {
 
 /** Types into a labelled inspector number field and commits it. */
 export async function setField(page, label, value) {
-    const f = page.getByLabel(label, { exact: true }).first();
-    await f.fill(String(value));
-    await f.press('Enter');
+    // The inspector redraws when the selection changes; a value typed into a field that is replaced a moment later is lost.
+    // Type, commit, and check what the field shows; try again if it does not show the value.
+    for (let attempt = 0; attempt < 4; attempt++) {
+        const f = page.getByLabel(label, { exact: true }).first();
+        await f.fill(String(value));
+        await f.press('Enter');
+        await page.waitForTimeout(120);
+        const shown = parseFloat(await page.getByLabel(label, { exact: true }).first().inputValue());
+        if (Math.abs(shown - Number(value)) < 0.011) return;
+    }
 }

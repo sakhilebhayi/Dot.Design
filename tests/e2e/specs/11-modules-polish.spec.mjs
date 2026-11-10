@@ -5,7 +5,7 @@
 //   - the review bar is a strip above the page, comment pins do not overlap each other, one can be outlined, all can be hidden
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { makeUser, contextFor, watch, step, world, openEditor, api } from '../lib/harness.mjs';
+import { makeUser, contextFor, watch, step, world, openEditor, api, closeBrowser } from '../lib/harness.mjs';
 import { exportFile, exec, closeDialog, elementsOf } from '../lib/editor.mjs';
 import { readStream } from '../lib/files.mjs';
 import { decodePng } from '../lib/png.mjs';
@@ -178,3 +178,4 @@ test('modules polish: locale-safe numbers, controls, vector PDF, print boxes, re
     assert.deepEqual(log.errors, [], 'owner console is clean');
     assert.deepEqual(rlog.errors, [], 'reviewer console is clean');
 });
+test.after(closeBrowser);

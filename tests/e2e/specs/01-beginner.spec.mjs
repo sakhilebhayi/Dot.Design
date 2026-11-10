@@ -38,7 +38,7 @@ test('beginner: start screen to downloaded PNG', async (t) => {
         await page.getByLabel(/phone/i).first().fill(PHONE); await next();
         await page.locator('input[type=file]').first().setInputFiles(fx.logo);
         await page.getByText(/was added and selected|was already in your uploads/).waitFor();
-        await page.getByText('Use my brand kit').click();
+        await page.getByRole('radio', { name: /Use my brand kit/ }).check({ force: true });
         await next();
         await page.locator('button', { hasText: 'Plenty of space, simple and easy to read' }).click(); await next();
         await page.locator('button', { hasText: 'Link-style or image post' }).click();
