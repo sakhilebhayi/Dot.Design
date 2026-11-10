@@ -6,7 +6,7 @@ Owner brief 2026-11-09 ("Complete Product Transformation: The Ultimate Business 
 
 Dot.Design is now a working business design studio: guided and professional creation over one editable document model, 64 genuinely editable templates, a Brand Studio with opt-in updates, PNG/JPG/PDF (vector text)/SVG/GIF/WebM export, animation, smart resize, an honest assistant, workspace collaboration (share links, comments, review/approval, version history), security hardening and a deploy pipeline with preflight and smoke checks.
 
-Independent estimate (two blind critics, screenshots only, before the polish wave): overall 6.3 and 5.8 out of 10, described as "honest, coherent, quiet and trustworthy; competent, not yet distinctive"; both listed concrete craft defects, which the polish wave then addressed (section 6). A second jury result is recorded in section 6 if it was run. These are estimates from screenshots, not measurements of market fit.
+Independent estimate (two blind critics, screenshots only, before the polish wave): overall 6.3 and 5.8 out of 10, described as "honest, coherent, quiet and trustworthy; competent, not yet distinctive"; both listed concrete craft defects, which the polish wave then addressed (section 6). No second jury was run before release. These are estimates from screenshots, not measurements of market fit.
 
 It is not a replacement for professional tools: Pro mode is a capable layout and typography editor, not a vector illustration suite (no pen tool, boolean operations, components or constraints). It is built for the business owner who needs a good result fast, with depth for a designer who wants control.
 
@@ -54,7 +54,7 @@ Real-time multi-cursor co-editing (a shared cPanel host cannot run a WebSocket s
 
 New identity "The Light Table" (docs/R45_DS.md, DESIGN.md): colour-true neutral stage, crop marks, ruler rules and mono dimension labels, swatch chips, warm signal yellow from the logo for focus and success moments; Bricolage Grotesque and Atkinson Hyperlegible Next self-hosted, 18 user-facing design fonts self-hosted, no external hosts at runtime; light, dark and system themes; first-design, first-download and first-approval messages once per user.
 
-Outside jury 1 (two blind critics, 92 screenshots): 6.3 and 5.8. Convergent defects fixed afterwards: invisible switch track, wrong template prefill, text box sizing and overflow, review bar over the artboard, pins over text, blank thumbnails, review-inbox overlap, native selects, "5,0" number format, long Simple inspector, toolbar covering labels, ambiguous mode toggle, crowded top bar, truncated phone rail, tablet using the phone layout, layers without eye/lock, unsorted icon grid, clipped kit logo, double logo on login, empty landing hero (now real templates drawn by the editor's renderer), raster-only PDF (now vector text), empty "Add a picture" boxes (now designed placeholders in previews). Jury 2 result: see the end of this section if recorded.
+Outside jury 1 (two blind critics, 92 screenshots): 6.3 and 5.8. Convergent defects fixed afterwards: invisible switch track, wrong template prefill, text box sizing and overflow, review bar over the artboard, pins over text, blank thumbnails, review-inbox overlap, native selects, "5,0" number format, long Simple inspector, toolbar covering labels, ambiguous mode toggle, crowded top bar, truncated phone rail, tablet using the phone layout, layers without eye/lock, unsorted icon grid, clipped kit logo, double logo on login, empty landing hero (now real templates drawn by the editor's renderer), raster-only PDF (now vector text), empty "Add a picture" boxes (now designed placeholders in previews). A second jury was not run before release; the after-state is evidenced by the polish screenshots in docs/R45_screens/polish-*/ and the automated checks, not by a re-score.
 
 ## 7. Design and motion skills
 
@@ -78,7 +78,7 @@ See docs/R45_SECURITY.md (findings by severity with tests) and R45_PRIVACY.md (P
 
 ## 12. Tests
 
-Final trunk before deployment: PHP 1,669 tests (1,662 pass, 7 skipped, same 7 since baseline of 329), JS 784, end-to-end 12 spec files driving real Chrome (beginner, professional, business, animation and resize, assistant on and off, reliability, every-route sweep as five roles, integration seams, dead-control audit, polish checks), axe sweep 384 states, signed-in production-like smoke (about 90 checks), PostgreSQL suite. Pint and static route/config/view/event caching pass.
+Final trunk before deployment: PHP 1,669 tests (1,662 pass, 7 skipped, same 7 since baseline of 329), JS 784, end-to-end 14 spec files driving real Chrome (two consecutive fully green runs on the final tree) (beginner, professional, business, animation and resize, assistant on and off, reliability, every-route sweep as five roles, integration seams, dead-control audit, polish checks), axe sweep 384 states, signed-in production-like smoke (about 90 checks), PostgreSQL suite. Pint and static route/config/view/event caching pass.
 
 ## 13. Outstanding production risks
 
