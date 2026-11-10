@@ -28,8 +28,17 @@ export function world(cmd, data = {}) {
 
 /** Read-only SQL (the app writes through its own connection; WAL is not used, so reads see committed data). */
 export function sql(query, params = []) {
-    const db = new DatabaseSync(env.db, { readOnly: true });
-    try { return db.prepare(query).all(...params); } finally { db.close(); }
+    // The app writes while a spec reads (SQLite in rollback-journal mode locks readers during a write): wait, then retry.
+    let last;
+    for (let attempt = 0; attempt < 8; attempt++) {
+        const db = new DatabaseSync(env.db, { readOnly: true });
+        try { db.exec('PRAGMA busy_timeout = 5000'); return db.prepare(query).all(...params); } catch (e) {
+            last = e;
+            if (!/locked|busy/i.test(String(e.message))) throw e;
+        } finally { db.close(); }
+        Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 250 * (attempt + 1));
+    }
+    throw last;
 }
 export const one = (q, p) => sql(q, p)[0] ?? null;
 

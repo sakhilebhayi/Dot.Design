@@ -95,7 +95,14 @@ export async function closeDialog(page) {
 
 /** Types into a labelled inspector number field and commits it. */
 export async function setField(page, label, value) {
-    const f = page.getByLabel(label, { exact: true }).first();
-    await f.fill(String(value));
-    await f.press('Enter');
+    // The inspector redraws when the selection changes; a value typed into a field that is replaced a moment later is lost.
+    // Type, commit, and check what the field shows; try again if it does not show the value.
+    for (let attempt = 0; attempt < 4; attempt++) {
+        const f = page.getByLabel(label, { exact: true }).first();
+        await f.fill(String(value));
+        await f.press('Enter');
+        await page.waitForTimeout(120);
+        const shown = parseFloat(await page.getByLabel(label, { exact: true }).first().inputValue());
+        if (Math.abs(shown - Number(value)) < 0.011) return;
+    }
 }
