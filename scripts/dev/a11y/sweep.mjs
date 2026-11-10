@@ -55,6 +55,9 @@ try {
                     await s.open(ctx);
                     await c.sleep(s.settle ?? 500);
                     if (s.after) await s.after(ctx);
+                    // judge the settled page: a drawer or a menu that is still sliding in is not the state a person works in
+                    await c.eval('Promise.race([Promise.all(document.getAnimations().map((a) => a.finished.catch(() => {}))), new Promise((r) => setTimeout(r, 3000))])');
+                    await c.sleep(150);
                     await c.eval('typeof axe') !== 'object' && await c.injectAxe();
                     const res = await c.eval(`axe.run({ include: [document], exclude: ${JSON.stringify(ARTWORK)} }, { runOnly: { type: 'tag', values: ${JSON.stringify(AXE_TAGS)} }, resultTypes: ['violations', 'incomplete'] }).then(r => ({
                         v: r.violations.map(v => ({ id: v.id, impact: v.impact, help: v.help, nodes: v.nodes.length, sample: v.nodes.slice(0, 3).map(n => ({ target: n.target.join(' '), html: n.html.slice(0, 140), why: (n.any.concat(n.all, n.none)[0] || {}).message, related: ((n.any.concat(n.all, n.none)[0] || {}).relatedNodes || []).slice(0, 2).map((x) => x.html.slice(0, 100)) })) })),
