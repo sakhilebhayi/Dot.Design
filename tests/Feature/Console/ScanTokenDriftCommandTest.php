@@ -45,7 +45,7 @@ class ScanTokenDriftCommandTest extends TestCase
     {
         $tokenSet = $this->makeTokenSet(2);
         $tokenSet->consumptionRecords()->create([
-            'platform_id' => 'dot.billing',
+            'platform_id' => 'dot.finance',
             'pinned_version' => 2,
         ]);
 

@@ -120,7 +120,7 @@ class TokenSetTest extends TestCase
             'version' => 1,
         ]);
         $tokenSet->consumptionRecords()->create([
-            'platform_id' => 'dot.billing',
+            'platform_id' => 'dot.finance',
             'pinned_version' => 1,
         ]);
 

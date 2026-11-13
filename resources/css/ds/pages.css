@@ -1,5 +1,45 @@
 /* Page-level compositions: home, designs list, forms, auth, errors, landing. */
 
+/* home: the arrival. The real logo, a welcome, what the studio is for and the one primary action, beside the latest design as a
+   proof on the stage. The page's own lt-rise is the only motion; nothing here animates on its own. */
+.lt-arrive { margin-bottom: var(--lt-space-7); }
+.lt-arrive__top { display: flex; align-items: center; justify-content: space-between; gap: var(--lt-space-4); }
+.lt-arrive__logo { width: 10.5rem; margin: calc(-1 * var(--lt-space-3)) 0 calc(-1 * var(--lt-space-3)) calc(-1 * var(--lt-space-4)); } /* the artwork carries its own clear space */
+.lt-arrive__logo img { width: 100%; height: auto; }
+.lt-arrive__back { display: flex; align-items: center; gap: var(--lt-space-5); font-size: var(--lt-text-md); font-weight: 600; }
+.lt-arrive__back a { display: inline-flex; align-items: center; gap: var(--lt-space-2); min-height: 2rem; color: var(--lt-ink-2); border-radius: var(--lt-radius-1); }
+.lt-arrive__back a:hover { color: var(--lt-ink); text-decoration: underline; text-underline-offset: 0.2em; }
+.lt-arrive__back svg { color: var(--lt-ink-3); }
+.lt-arrive__table { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--lt-space-6); align-items: center; padding: var(--lt-space-5) 0 var(--lt-space-6); }
+.lt-arrive__text { min-width: 0; max-width: 34rem; }
+.lt-arrive__title { font-size: var(--lt-text-3xl); letter-spacing: -0.035em; overflow-wrap: break-word; }
+.lt-arrive__welcome { margin-top: var(--lt-space-5); font-size: var(--lt-text-xl); font-weight: 600; line-height: 1.35; text-wrap: balance; }
+.lt-arrive__lead { margin-top: var(--lt-space-2); font-size: var(--lt-text-lg); line-height: 1.55; color: var(--lt-ink-2); max-width: 30rem; text-wrap: pretty; }
+.lt-arrive__action { margin-top: var(--lt-space-6); }
+.lt-arrive__action .lt-btn { min-height: 3.25rem; padding: 0 var(--lt-space-6); font-size: var(--lt-text-lg); }
+.lt-arrive__action .lt-btn svg { width: 1.125rem; height: 1.125rem; }
+.lt-arrive__proof { min-width: 0; }
+.lt-contact.lt-contact--proof { grid-template-rows: clamp(15rem, 34vw, 23rem) auto; }
+.lt-contact--proof .lt-contact__stage { padding: var(--lt-space-6); }
+.lt-contact--proof .lt-contact__stage .lt-frame { --fit: clamp(11rem, 28vw, 18rem); }
+.lt-contact--proof .lt-contact__name { font-size: var(--lt-text-lg); white-space: normal; }
+.lt-contact--proof[data-empty-state] .lt-contact__name::after { content: none; } /* not a link: the tile overlay must not cover the template link */
+.lt-arrive__mark { position: absolute; inset: 0; display: grid; place-items: center; color: var(--lt-paper-ink-2); }
+.lt-arrive__empty { font-size: var(--lt-text-md); color: var(--lt-ink-2); max-width: 44ch; }
+.lt-arrive__empty a { color: var(--lt-accent); text-decoration: underline; text-underline-offset: 0.2em; }
+.lt-arrive__more { text-decoration: underline; text-underline-offset: 0.2em; }
+@media (min-width: 60rem) {
+    .lt-arrive__table { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: var(--lt-space-7); padding: var(--lt-space-6) 0 var(--lt-space-7); }
+    .lt-contact--proof .lt-contact__stage { padding: var(--lt-space-7); }
+    .lt-arrive__title { font-size: calc(var(--lt-text-3xl) * 1.5); } /* one and a half steps of the largest app size, still under the landing display size */
+}
+@media (max-width: 40rem) {
+    .lt-arrive__logo { width: 8rem; }
+    .lt-arrive__back { gap: var(--lt-space-4); }
+    .lt-arrive__back a { min-height: 2.75rem; }
+    .lt-arrive__action .lt-btn { width: 100%; }
+}
+
 /* home: start strip */
 .lt-start { display: flex; align-items: stretch; gap: var(--lt-space-1); overflow-x: auto; padding-bottom: var(--lt-space-2); scroll-snap-type: x proximity; margin-inline: calc(-1 * var(--lt-space-3)); padding-inline: var(--lt-space-3); }
 .lt-start > * { scroll-snap-align: start; flex: none; }

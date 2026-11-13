@@ -340,6 +340,8 @@ A 4px base. Spacing scale 4, 8, 12, 16, 24, 32, 48, 72. On desktop the shell is 
 
 Below 56rem the rail is replaced by a slim top bar and a bottom tab bar (Home, Designs, Templates, Brand and a More sheet). Touch targets are 44px on coarse pointers and phones. Nothing scrolls the page horizontally at 390, 768 or 1440; wide things (the format strip, tables) scroll inside their own region.
 
+Home is the one signed-in page that opens differently: it is where people arrive from InfoDot, so it leads with the original logo, a welcome from the person's own name and workspace, one headline, and the single primary action of the page (Start a design), beside the latest design drawn as a proof on the stage (a blank sheet with a registration mark when there is none). The links back to InfoDot and its Platforms page sit at the top right of that block. Everything else on Home is secondary and looks it.
+
 The signature layout move is the contact strip: recent designs shown on neutral stage tiles, each frame at its true aspect ratio, name and size beneath, with crop marks that open slightly on hover.
 
 ## Elevation & Depth
