@@ -131,6 +131,10 @@ a.lt-contact:hover .lt-contact__stage .lt-frame, a.lt-contact:focus-visible .lt-
 .lt-errorpage__next { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--lt-space-2) var(--lt-space-4); }
 .lt-errorpage__next ul { display: flex; flex-wrap: wrap; gap: var(--lt-space-2) var(--lt-space-5); margin: 0; padding: 0; list-style: none; }
 .lt-errorpage__next a { font-weight: 600; font-size: var(--lt-text-md); }
+/* A workspace switch is a POST, so it is a button; it reads as the same quiet link as its neighbours. */
+.lt-errorpage__next button { font: inherit; font-weight: 600; font-size: var(--lt-text-md); color: inherit; background: none; border: 0; padding: 0; cursor: pointer; text-align: start; overflow-wrap: anywhere; text-decoration: underline; text-underline-offset: 0.18em; text-decoration-thickness: 1px; text-decoration-color: color-mix(in srgb, currentColor 40%, transparent); }
+.lt-errorpage__next button:hover { text-decoration-color: currentColor; }
+@media (pointer: coarse), (max-width: 40rem) { .lt-errorpage__next button { min-height: 2.75rem; } }
 .lt-errorcode { font-family: var(--lt-font-display); font-weight: 700; font-size: clamp(4rem, 14vw, 7.5rem); letter-spacing: -0.05em; line-height: 0.9; color: var(--lt-ink); }
 
 /* prose (policy pages) */

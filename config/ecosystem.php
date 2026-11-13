@@ -75,4 +75,21 @@ return [
         'provision' => (bool) env('INFODOT_PROVISION_USERS', true),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Company entitlement (R-50)
+    |--------------------------------------------------------------------------
+    | InfoDot decides which companies hold this platform. While a person is
+    | signed in, the studio asks InfoDot (same secret as redeem) whether their
+    | current company still holds it, and keeps the answer for ten minutes.
+    | Only InfoDot's explicit "no" refuses anyone: an outage, a missing secret
+    | or an unexpected answer lets the person carry on. Set the flag to false
+    | to stop asking altogether.
+    */
+
+    'entitlement' => [
+        'check' => (bool) env('DESIGN_ENTITLEMENT_CHECK', true),
+        'timeout' => (int) env('DESIGN_ENTITLEMENT_TIMEOUT', 3),
+    ],
+
 ];

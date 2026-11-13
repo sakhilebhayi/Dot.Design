@@ -21,6 +21,10 @@ use Laravel\Jetstream\Jetstream;
  *   someone in InfoDot removes their access here at their next sign-in.
  * - The company InfoDot says is active becomes the person's current team.
  * - Personal teams are never linked or removed.
+ * - R-50: InfoDot marks each company with `entitled`. Only a company marked exactly `true` is created, updated or made
+ *   current here. One marked otherwise is left exactly as it is (nothing created, renamed, attached or detached) and
+ *   cannot be the person's current company. An answer without the key (an InfoDot from before R-50) is treated as it
+ *   always was: absence is not a refusal.
  */
 class SyncTeamsFromInfoDot
 {
@@ -29,26 +33,67 @@ class SyncTeamsFromInfoDot
      */
     public function __invoke(User $user, array $identity): void
     {
-        $listed = collect($identity['teams'] ?? [])
+        $named = collect($identity['teams'] ?? [])
             ->filter(fn ($t) => is_array($t) && filled($t['uuid'] ?? null) && ! ($t['personal'] ?? false))
             ->keyBy('uuid');
 
-        DB::transaction(function () use ($user, $listed, $identity) {
+        $listed = $named->filter(fn ($t) => self::admits($t));
+        $withheld = $named->keys()->diff($listed->keys())->map(fn ($uuid) => (string) $uuid)->all();
+
+        DB::transaction(function () use ($user, $listed, $named, $withheld, $identity) {
             foreach ($listed as $uuid => $info) {
                 $this->apply($user, (string) $uuid, $info);
                 $this->forgetCachedTeams($user);
             }
 
-            $this->revoke($user, $listed->keys()->all());
+            // Membership follows what InfoDot LISTS, entitled or not: a company without the platform is left alone, not revoked.
+            $this->revoke($user, $named->keys()->map(fn ($uuid) => (string) $uuid)->all());
             $this->forgetCachedTeams($user);
 
             $active = $identity['current_team_uuid'] ?? null;
-            $team = $active ? Team::where('infodot_team_uuid', $active)->first() : null;
+            $team = $active && $listed->has($active) ? Team::where('infodot_team_uuid', $active)->first() : null;
 
             if ($team && $user->belongsToTeam($team)) {
                 $user->switchTeam($team);
+            } else {
+                $this->leaveWithheldCompany($user, $listed->keys()->all(), $withheld);
             }
         });
+    }
+
+    /**
+     * Whether InfoDot's entry for a company lets it in: `entitled` exactly true, or no such key at all.
+     *
+     * @param  array<array-key, mixed>  $team
+     */
+    public static function admits(array $team): bool
+    {
+        return ! array_key_exists('entitled', $team) || $team['entitled'] === true;
+    }
+
+    /**
+     * A company that does not hold the platform cannot stay the person's current one: move them to an entitled company
+     * they belong to here, or else to their personal workspace.
+     *
+     * @param  list<array-key>  $entitled
+     * @param  list<string>  $withheld
+     */
+    private function leaveWithheldCompany(User $user, array $entitled, array $withheld): void
+    {
+        $current = $user->currentTeam;
+
+        if (! $current instanceof Team || ! in_array((string) $current->infodot_team_uuid, $withheld, true)) {
+            return;
+        }
+
+        $entitled = array_map('strval', $entitled);
+        $teams = $user->allTeams();
+        $next = $teams->first(fn ($team) => in_array((string) $team->infodot_team_uuid, $entitled, true))
+            ?? $teams->first(fn ($team) => $team->personal_team && $team->user_id === $user->id);
+
+        if ($next) {
+            $user->switchTeam($next);
+        }
     }
 
     /** Membership checks read relations cached on the model; reload after changing them. */
