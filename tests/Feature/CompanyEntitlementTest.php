@@ -371,6 +371,33 @@ class CompanyEntitlementTest extends TestCase
         $this->assertSame(['Kept As It Is'], DesignProject::withoutGlobalScopes()->pluck('name')->all());
     }
 
+    public function test_an_autosave_that_worked_is_refused_once_the_cached_answer_expires_and_infodot_says_no(): void
+    {
+        // The studio has no Livewire component behind sign-in (Livewire is only on Jetstream's exempt account pages);
+        // its live channel is the JSON save endpoints, so that is the channel proved here.
+        Http::fake([self::readUrl(self::ACME) => Http::sequence()
+            ->push(self::holds(self::ACME, true, 'active'))
+            ->push(self::holds(self::ACME, false, 'suspended'))]);
+
+        $user = $this->memberOf(self::ACME);
+        $project = DesignProject::create(['user_id' => $user->id, 'name' => 'Before', 'type' => 'poster', 'width' => 800, 'height' => 600, 'unit' => 'px']);
+        $this->actingAs($user);
+
+        $this->putJson('/design/projects/'.$project->id, ['name' => 'Saved While Held'])->assertOk();
+        $this->assertSame('Saved While Held', DesignProject::withoutGlobalScopes()->find($project->id)->name);
+
+        $this->travel(CompanyEntitlement::KEEP_ANSWER + 1)->seconds();
+
+        $this->putJson('/design/projects/'.$project->id, ['name' => 'Saved After Refusal'])
+            ->assertStatus(403)
+            ->assertJsonPath('reason', 'platform_not_held')
+            ->assertJsonMissingPath('data')
+            ->assertDontSee('Saved After Refusal');
+        $this->postJson('/design/projects/'.$project->id.'/pages', [])->assertStatus(403);
+
+        $this->assertSame('Saved While Held', DesignProject::withoutGlobalScopes()->find($project->id)->name, 'data unchanged');
+    }
+
     #[DataProvider('failures')]
     public function test_any_failure_lets_the_person_carry_on_and_is_logged_once(callable $infodot): void
     {
