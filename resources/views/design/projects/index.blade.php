@@ -17,10 +17,7 @@
         <form method="GET" action="{{ route('design.projects.index') }}" role="search" class="lt-toolbar__search">
             @foreach (['type', 'status'] as $keep)@if ($listing[$keep])<input type="hidden" name="{{ $keep }}" value="{{ $listing[$keep] }}">@endif @endforeach
             @if ($listing['sort'] !== 'recent')<input type="hidden" name="sort" value="{{ $listing['sort'] }}">@endif
-            <div class="lt-input-wrap">
-                <x-ds.icon name="search" />
-                <input type="search" name="q" value="{{ $listing['q'] }}" class="lt-input" placeholder="Search designs" aria-label="Search designs" autocomplete="off">
-            </div>
+            <x-dot.filter-search name="q" :value="$listing['q']" placeholder="Search designs" label="Search designs" />
         </form>
 
         <div class="lt-toolbar__filters" role="group" aria-label="Filter by type">

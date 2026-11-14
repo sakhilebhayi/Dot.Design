@@ -328,7 +328,9 @@ class StudioBrandUiTest extends TestCase
         foreach ([route('design.brand.index'), route('design.brand.edit', $kit->id), route('design.brand.updates'), route('design.settings')] as $url) {
             $html = $this->get($url)->assertOk()->getContent();
             $this->assertDoesNotMatchRegularExpression('#<script(?![^>]*type="application/json")(?![^>]*\bsrc=)[^>]*>#', $html, "no inline script on $url");
-            $this->assertDoesNotMatchRegularExpression('#(src|href)="https?://(?!127\.0\.0\.1|localhost|[a-z]+\.localhost)#', $html, "no external host on $url");
+            // The platform switcher's links to InfoDot are anchors a person follows, not something the page loads.
+            $loads = preg_replace('#(<a\b[^>]*?)\bhref="'.preg_quote(rtrim((string) config('ecosystem.platforms.infodot.url'), '/'), '#').'/[^"]*"#', '$1', $html);
+            $this->assertDoesNotMatchRegularExpression('#(src|href)="https?://(?!127\.0\.0\.1|localhost|[a-z]+\.localhost)#', $loads, "no external host on $url");
             $this->assertSame(1, preg_match_all('#<h1[ >]#', $html), "one h1 on $url");
             $this->assertStringNotContainsString('—', strip_tags($html), "no em dash in visible text on $url");
             $this->assertStringNotContainsString('–', strip_tags($html), "no en dash in visible text on $url");

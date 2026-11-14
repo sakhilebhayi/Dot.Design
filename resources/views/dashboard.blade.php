@@ -13,7 +13,6 @@
     $brandUpdated = \App\Support\Ui\ProjectCard::brandUpdatedIds($recent);
     $milestone = app(\App\Support\Ui\Milestones::class)->pending($user);
     $firstName = trim((string) \Illuminate\Support\Str::of((string) $user?->name)->trim()->before(' '));
-    $infodot = rtrim((string) config('ecosystem.platforms.infodot.url'), '/');
     request()->attributes->set('page_title', 'Home'); // the browser tab keeps the name the navigation uses
 @endphp
 <x-app-layout>
@@ -24,12 +23,6 @@
     <header class="lt-arrive">
         <div class="lt-arrive__top">
             <x-ds.logo class="lt-arrive__logo" alt="Dot.Design" loading="eager" />
-            @if ($infodot !== '')
-                <nav class="lt-arrive__back" aria-label="Dot ecosystem">
-                    <a href="{{ $infodot }}/home"><x-ds.icon name="arrow-left" size="sm" />InfoDot</a>
-                    <a href="{{ $infodot }}/platforms"><x-ds.icon name="layout-grid" size="sm" />Platforms</a>
-                </nav>
-            @endif
         </div>
 
         <div class="lt-arrive__table">

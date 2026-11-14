@@ -162,7 +162,7 @@
             <div role="tabpanel" id="sz-panel-sizes" aria-labelledby="sz-sizes" class="lt-tabpanel cf-picker__panel">
                 <div class="cf-picker__search">
                     <label for="size-search" class="lt-sr">Search sizes</label>
-                    <div class="lt-input-wrap"><x-ds.icon name="search" /><input id="size-search" type="search" class="lt-input" placeholder="Search, for example A4 or story" autocomplete="off" data-cf-size-search></div>
+                    <x-dot.filter-search name="size" id="size-search" placeholder="Search, for example A4 or story" label="Search sizes" data-cf-size-search />
                 </div>
                 <form method="POST" action="{{ route('design.projects.store') }}" class="cf-picker__list" data-cf-size-list>
                     @csrf

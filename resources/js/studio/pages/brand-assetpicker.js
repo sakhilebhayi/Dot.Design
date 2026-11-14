@@ -39,7 +39,7 @@ export function pickAsset({ boot, title = 'Choose a picture' }) {
 
         const status = el('p', { class: 'lt-small', role: 'status', 'aria-live': 'polite' });
         const grid = el('div', { class: 'br-imgs', role: 'list' });
-        const search = el('input', { type: 'search', class: 'lt-input', placeholder: 'Search your pictures', 'aria-label': 'Search your pictures', maxlength: 100 });
+        const search = el('input', { type: 'search', class: 'dsr-filter', placeholder: 'Search your pictures', 'aria-label': 'Search your pictures', maxlength: 100 });
         const file = el('input', { type: 'file', accept: ACCEPT, hidden: true, 'aria-label': 'Upload a picture' });
         let timer = null;
 

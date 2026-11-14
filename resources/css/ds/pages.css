@@ -6,10 +6,6 @@
 .lt-arrive__top { display: flex; align-items: center; justify-content: space-between; gap: var(--lt-space-4); }
 .lt-arrive__logo { width: 10.5rem; margin: calc(-1 * var(--lt-space-3)) 0 calc(-1 * var(--lt-space-3)) calc(-1 * var(--lt-space-4)); } /* the artwork carries its own clear space */
 .lt-arrive__logo img { width: 100%; height: auto; }
-.lt-arrive__back { display: flex; align-items: center; gap: var(--lt-space-5); font-size: var(--lt-text-md); font-weight: 600; }
-.lt-arrive__back a { display: inline-flex; align-items: center; gap: var(--lt-space-2); min-height: 2rem; color: var(--lt-ink-2); border-radius: var(--lt-radius-1); }
-.lt-arrive__back a:hover { color: var(--lt-ink); text-decoration: underline; text-underline-offset: 0.2em; }
-.lt-arrive__back svg { color: var(--lt-ink-3); }
 .lt-arrive__table { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--lt-space-6); align-items: center; padding: var(--lt-space-5) 0 var(--lt-space-6); }
 .lt-arrive__text { min-width: 0; max-width: 34rem; }
 .lt-arrive__title { font-size: var(--lt-text-3xl); letter-spacing: -0.035em; overflow-wrap: break-word; }
@@ -35,8 +31,6 @@
 }
 @media (max-width: 40rem) {
     .lt-arrive__logo { width: 8rem; }
-    .lt-arrive__back { gap: var(--lt-space-4); }
-    .lt-arrive__back a { min-height: 2.75rem; }
     .lt-arrive__action .lt-btn { width: 100%; }
 }
 
