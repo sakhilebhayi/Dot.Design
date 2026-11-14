@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Auth;
 use App\Actions\Ecosystem\ProvisionUserFromInfoDot;
 use App\Actions\Ecosystem\SyncTeamsFromInfoDot;
 use App\Http\Controllers\Controller;
+use App\Http\Middleware\EnsureCompanyEntitled;
 use App\Models\User;
 use App\Services\InfoDot\IdentityClient;
 use App\Services\InfoDot\InfoDotUnavailable;
@@ -148,6 +149,10 @@ class EcosystemAuthController extends Controller
             return $refusal;
         }
 
+        if ($identity) {
+            $this->rememberPersonalAnswer($identity);
+        }
+
         $user = $identity ? $provision($identity) : null;
 
         if ($user && $identity) {
@@ -157,6 +162,24 @@ class EcosystemAuthController extends Controller
         }
 
         return $user;
+    }
+
+    /**
+     * R-50: what InfoDot said about the person's personal workspace for this platform (its `entitled` value) is kept in
+     * the session, so the signed-in area can refuse the local personal team when it is exactly false. An answer with no
+     * such key remembers nothing (and clears anything left from an earlier sign-in).
+     *
+     * @param  array<string, mixed>  $identity
+     */
+    private function rememberPersonalAnswer(array $identity): void
+    {
+        $personal = collect($identity['teams'] ?? [])->first(fn ($team) => is_array($team) && ($team['personal'] ?? false) && array_key_exists('entitled', $team));
+
+        if (is_array($personal) && is_bool($personal['entitled'])) {
+            session()->put(EnsureCompanyEntitled::PERSONAL_KEY, $personal['entitled']);
+        } else {
+            session()->forget(EnsureCompanyEntitled::PERSONAL_KEY);
+        }
     }
 
     /**

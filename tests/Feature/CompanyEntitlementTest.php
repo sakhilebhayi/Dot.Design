@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Http\Middleware\EnsureCompanyEntitled;
 use App\Models\DesignProject;
 use App\Models\Team;
 use App\Models\User;
@@ -225,6 +226,80 @@ class CompanyEntitlementTest extends TestCase
         $this->assertAuthenticated();
         $this->assertNull(Team::where('infodot_team_uuid', self::ACME)->first());
         $this->assertTrue(User::where('email', 'ann@acme.test')->firstOrFail()->currentTeam->personal_team);
+    }
+
+    // ---------------------------------------------------------------- personal workspace (individuals hold the free core only)
+
+    private function personalRow(array $extra): array
+    {
+        return ['id' => 3, 'uuid' => self::PERSONAL, 'name' => "Ann's Team", 'personal' => true, 'role' => 'owner'] + $extra;
+    }
+
+    /** Sign in as a person in a company that holds the platform, then move to their local personal team. */
+    private function signedInThenInPersonalTeam(array $personalExtra): User
+    {
+        $this->redeemAnswers('ann@acme.test', [
+            $this->personalRow($personalExtra),
+            $this->company(self::ACME, 'Acme Ltd', 'owner', ['entitled' => true, 'access' => null]),
+        ], self::ACME);
+        $this->signIn()->assertRedirect(route('dashboard'));
+
+        $user = User::where('email', 'ann@acme.test')->firstOrFail();
+        $user->switchTeam($user->allTeams()->firstWhere('personal_team', true));
+        Http::swap(new Factory);
+        Http::fake();
+
+        // The sign-in request's in-memory user still holds its old current team; the next page sees the stored one.
+        $this->actingAs($user->fresh());
+
+        return $user->fresh();
+    }
+
+    public function test_a_personal_workspace_remembered_as_not_entitled_is_refused_and_offers_the_entitled_company(): void
+    {
+        $user = $this->signedInThenInPersonalTeam(['entitled' => false, 'access' => 'no_personal_access']);
+        $project = DesignProject::create(['user_id' => $user->id, 'name' => 'Personal Secret Poster', 'type' => 'poster', 'width' => 800, 'height' => 600, 'unit' => 'px']);
+
+        $this->get('/dashboard')
+            ->assertStatus(403)
+            ->assertSee('Dot.Design needs a company that has switched it on')
+            ->assertSee('https://infodot.test/platforms/design', false)
+            ->assertSee('Acme Ltd')
+            ->assertDontSee('Personal Secret Poster');
+        $this->getJson('/design/projects/'.$project->id.'/document')->assertStatus(403)->assertJsonPath('reason', 'platform_not_held');
+
+        $this->assertNotNull(DesignProject::withoutGlobalScopes()->find($project->id), 'nothing is deleted');
+        Http::assertNothingSent();
+    }
+
+    public function test_a_personal_workspace_remembered_as_entitled_carries_on(): void
+    {
+        $this->signedInThenInPersonalTeam(['entitled' => true, 'access' => null]);
+
+        $this->get('/dashboard')->assertOk();
+        Http::assertNothingSent();
+    }
+
+    public function test_a_personal_workspace_with_nothing_remembered_carries_on(): void
+    {
+        $this->signedInThenInPersonalTeam([]);
+
+        $this->assertNull(session(EnsureCompanyEntitled::PERSONAL_KEY));
+        $this->get('/dashboard')->assertOk();
+        Http::assertNothingSent();
+    }
+
+    public function test_the_refused_personal_workspace_can_switch_to_the_company_and_exempt_routes_stay_open(): void
+    {
+        $this->signedInThenInPersonalTeam(['entitled' => false, 'access' => 'no_personal_access']);
+        $acme = Team::where('infodot_team_uuid', self::ACME)->firstOrFail();
+
+        $this->get('/user/profile')->assertOk();
+        $this->get('/cookies')->assertOk();
+
+        Http::fake([self::readUrl(self::ACME) => Http::response(self::holds(self::ACME, true, 'active'))]);
+        $this->put(route('current-team.update'), ['team_id' => $acme->id])->assertRedirect();
+        $this->get('/dashboard')->assertOk();
     }
 
     // ---------------------------------------------------------------- during a session

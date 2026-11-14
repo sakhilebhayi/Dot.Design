@@ -43,6 +43,12 @@ final class EntitlementRefusal
         }, null);
     }
 
+    /** The person is in a workspace that is not a company (individuals hold the free core only). */
+    public static function needsCompany(): self
+    {
+        return new self('company', 'Dot.Design needs a company that has switched it on', 'Dot.Design is for companies. Nothing in your personal workspace has been changed or removed. Switch to a company that has Dot.Design, or ask a company owner or admin to switch it on in InfoDot.');
+    }
+
     private static function worded(string $kind, ?string $company): self
     {
         $for = filled($company) ? $company : 'your company';
@@ -83,6 +89,7 @@ final class EntitlementRefusal
     {
         return $user->allTeams()
             ->reject(fn ($team) => $team->id === $user->current_team_id)
+            ->reject(fn ($team) => $this->kind === 'company' && ($team->personal_team || ! filled($team->infodot_team_uuid)))
             ->reject(fn ($team) => filled($team->infodot_team_uuid) && ($entitlement->known((string) $team->infodot_team_uuid)['entitled'] ?? null) === false)
             ->values();
     }
