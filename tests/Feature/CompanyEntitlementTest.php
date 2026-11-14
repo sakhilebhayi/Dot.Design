@@ -92,6 +92,11 @@ class CompanyEntitlementTest extends TestCase
 
         $user->unsetRelation('teams');
 
+        // The header's platform switcher (shared Dot UI) reads the same InfoDot endpoint under its own cache key. These tests
+        // count and sequence the ENTITLEMENT check's requests, so the switcher's answer is parked as a recent failure: it then
+        // asks nothing and the counts below stay the entitlement check's own. The switcher has its own tests (DotUiHeaderTest).
+        Cache::put('infodot:platforms:design:'.strtolower($uuid), ['ok' => false, 'personal' => false, 'rows' => []], 3600);
+
         if ($current) {
             $user->switchTeam($team);
         }

@@ -74,11 +74,11 @@ function start() {
     function paintToolbar() {
         const focused = document.activeElement && document.activeElement.id;
         clear(toolbar);
-        searchInput = h('input', { id: 'tpl-search', class: 'lt-input', type: 'search', placeholder: 'Search, for example bakery or sale', 'aria-label': 'Search templates', value: state.q, autocomplete: 'off', maxlength: '80' });
+        searchInput = h('input', { id: 'tpl-search', class: 'dsr-filter', type: 'search', placeholder: 'Search, for example bakery or sale', 'aria-label': 'Search templates', value: state.q, autocomplete: 'off', maxlength: '80' });
         const doSearch = debounce(() => { go(withFilter(state, 'q', searchInput.value.trim()), { replace: true, keepFocus: true }); }, 350);
         searchInput.addEventListener('input', doSearch);
         searchInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); doSearch.flush(); } });
-        toolbar.append(h('div', { class: 'cf-toolbar__search lt-input-wrap' }, icon('search'), searchInput));
+        toolbar.append(h('div', { class: 'cf-toolbar__search' }, searchInput));
 
         const f = state.filters;
         const filterRow = h('div', { class: 'cf-filters', id: 'tpl-filters' },

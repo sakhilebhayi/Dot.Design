@@ -358,6 +358,8 @@ class CreateFlowTest extends TestCase
             foreach ($scripts[1] as $attrs) {
                 $this->assertMatchesRegularExpression('#\bsrc=|type="application/json"#', $attrs, 'only external-file or JSON data scripts');
             }
+            // The platform switcher's links to InfoDot are anchors a person follows, not something the page loads.
+            $html = preg_replace('#(<a\b[^>]*?)\bhref="'.preg_quote(rtrim((string) config('ecosystem.platforms.infodot.url'), '/'), '#').'/[^"]*"#', '$1', $html);
             preg_match_all('#(?:src|href)="(https?://[^"]+)"#i', $html, $urls);
             foreach ($urls[1] as $found) {
                 $this->assertSame(parse_url(config('app.url'), PHP_URL_HOST), parse_url($found, PHP_URL_HOST), "{$found} is not on this site");

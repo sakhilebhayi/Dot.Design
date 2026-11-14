@@ -162,7 +162,7 @@ class LandingExperienceTest extends TestCase
         $this->assertEqualsCanonicalizing(['1080', '1350'], array_values(array_unique($figures[0])));
     }
 
-    public function test_the_way_back_to_infodot_comes_from_the_ecosystem_config(): void
+    public function test_the_way_to_infodot_comes_from_the_ecosystem_config_through_the_switcher(): void
     {
         $this->assertSame('https://infodot.co.za', config('ecosystem.platforms.infodot.url'));
 
@@ -171,8 +171,10 @@ class LandingExperienceTest extends TestCase
 
         $html = $this->actingAs($user)->get('/dashboard')->assertOk()->getContent();
 
-        $this->assertMatchesRegularExpression('#<a href="https://infodot\.example\.test/home">.*?InfoDot</a>#s', $html);
-        $this->assertMatchesRegularExpression('#<a href="https://infodot\.example\.test/platforms">.*?Platforms</a>#s', $html);
+        // The interim two-link back nav is gone: the shared platform switcher in the header is the way to InfoDot and its platforms.
+        $this->assertStringNotContainsString('lt-arrive__back', $html);
+        $this->assertStringContainsString('data-dsw', $html);
+        $this->assertStringContainsString('href="https://infodot.example.test/platforms"', $html);
     }
 
     public function test_the_platform_list_holds_only_current_platforms(): void

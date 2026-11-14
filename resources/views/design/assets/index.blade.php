@@ -44,7 +44,7 @@
 
         <div class="as-main">
             <div class="lt-toolbar as-toolbar" role="search">
-                <div class="lt-toolbar__search"><div class="lt-input-wrap"><x-ds.icon name="search" /><input type="search" class="lt-input" data-f="q" placeholder="Search by name" aria-label="Search pictures by name" maxlength="100" autocomplete="off"></div></div>
+                <div class="lt-toolbar__search"><x-dot.filter-search name="q" id="as-search" data-f="q" placeholder="Search by name" label="Search pictures by name" maxlength="100" /></div>
                 <div class="lt-toolbar__filters">
                     <label class="as-filter"><span class="lt-sr">Type</span><select class="lt-select" data-f="type" aria-label="Type"><option value="">Any type</option><option value="png">PNG</option><option value="jpeg">JPEG</option><option value="webp">WebP</option></select></label>
                     <label class="as-filter"><span class="lt-sr">Where it is used</span><select class="lt-select" data-f="used" aria-label="Used or unused"><option value="">Used or not</option><option value="used">Used in a design</option><option value="unused">Not used yet</option></select></label>

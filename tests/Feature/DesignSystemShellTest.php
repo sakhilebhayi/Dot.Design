@@ -177,8 +177,8 @@ class DesignSystemShellTest extends TestCase
             $this->assertStringNotContainsString($host, $html, "{$path} must work offline but mentions {$host}");
         }
 
-        // The way back to InfoDot (Home) is a link a person follows, not something the page loads, so an <a> may point there.
-        $html = preg_replace('#<a href="'.preg_quote(rtrim((string) config('ecosystem.platforms.infodot.url'), '/'), '#').'/(?:home|platforms)"#', '<a', $html);
+        // The way to InfoDot (the platform switcher's links) is a link a person follows, not something the page loads, so an <a> may point there.
+        $html = preg_replace('#(<a\b[^>]*?)\bhref="'.preg_quote(rtrim((string) config('ecosystem.platforms.infodot.url'), '/'), '#').'/[^"]*"#', '$1', $html);
 
         preg_match_all('#(?:src|href)="(https?://[^"]+)"#i', $html, $matches);
         $own = parse_url(config('app.url'), PHP_URL_HOST) ?: 'localhost';

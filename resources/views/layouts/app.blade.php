@@ -22,6 +22,12 @@
     <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('apple-touch-icon.png') }}">
     <link rel="preload" href="{{ asset('fonts/ui/atkinson-hyperlegible-next-latin-wght.woff2') }}" as="font" type="font/woff2" crossorigin>
     <script src="{{ asset('js/ds-theme.js') }}"></script>
+    {{-- Shared Dot UI (platform switcher, search/filter styles), served from this site's own public/dot-ui ('self' only: no inline style or script). Loaded before the app CSS so the host mapping in shell.css wins. --}}
+    <link rel="stylesheet" href="{{ asset('dot-ui/css/dot-fonts.css') }}">
+    <link rel="stylesheet" href="{{ asset('dot-ui/css/dot-tokens.css') }}">
+    <link rel="stylesheet" href="{{ asset('dot-ui/css/dot-search.css') }}">
+    <link rel="stylesheet" href="{{ asset('dot-ui/css/dot-switcher-fonts.css') }}">
+    <link rel="stylesheet" href="{{ asset('dot-ui/css/dot-switcher.css') }}">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     {{-- No @livewireStyles / @livewireScripts here: Livewire (83 KB with Alpine) is only needed by the Jetstream account and team pages, and it injects its own assets into a page that holds a Livewire component. Every other page was waiting for it before its own script could run. --}}
     @stack('head')
@@ -34,8 +40,7 @@
     <div class="lt-shell">
         <aside class="lt-rail" aria-label="Dot.Design">
             <a href="{{ route('dashboard') }}" class="lt-brand" aria-label="Dot.Design, home">
-                <span class="lt-mark" role="img" aria-label="Dot.Design mark"></span>
-                <span class="lt-brand__name">Dot.Design</span>
+                <x-ds.logo class="lt-brand__logo" loading="eager" />
             </a>
 
             @if ($hasTeams && $team)
@@ -102,11 +107,13 @@
         <div class="lt-sheet">
             <header class="lt-topbar">
                 <a href="{{ route('dashboard') }}" class="lt-brand" aria-label="Dot.Design, home">
-                    <span class="lt-mark" role="img" aria-label="Dot.Design mark"></span>
-                    <span class="lt-brand__name">Dot.Design</span>
+                    <x-ds.logo class="lt-brand__logo" loading="eager" />
                 </a>
                 <div class="lt-topbar__end">
-                    <button type="button" class="lt-icon-btn" data-theme-toggle aria-pressed="false" aria-label="Switch theme">
+                    @if ($user)
+                        <x-dot.switcher platform="design" :company="$team?->infodot_team_uuid" :company-name="$team?->name" logos="/dot-ui/img/platforms" />
+                    @endif
+                    <button type="button" class="lt-icon-btn lt-topbar__theme" data-theme-toggle aria-pressed="false" aria-label="Switch theme">
                         <span data-theme-icon="light"><x-ds.icon name="sun" /></span>
                         <span data-theme-icon="dark" hidden><x-ds.icon name="moon" /></span>
                     </button>
@@ -159,6 +166,7 @@
     </x-ds.dialog>
 
     <x-ds.toast />
+    <script src="{{ asset('dot-ui/js/dot-switcher.js') }}" defer></script>
     @stack('modals')
 </body>
 </html>
