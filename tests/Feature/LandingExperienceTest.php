@@ -77,17 +77,16 @@ class LandingExperienceTest extends TestCase
 
         $response = $this->actingAs($user)->get('/dashboard')->assertOk();
 
-        $response->assertSee('Make it look like your business.');
-        $response->assertSee('Welcome, '.strtok($user->name, ' ').'.');
+        // R-51: the page states what is true now; the marketing headline and the welcome line are gone.
+        $response->assertDontSee('Make it look like your business.');
+        $response->assertDontSee('Welcome, ');
+        $response->assertSee('Nothing on the table yet.');
         $response->assertSee('images/logo.png', false);
         $response->assertSee('images/logo-light.png', false);
-        $response->assertSee('alt="Dot.Design"', false);
+        // The logo lives in the rail (and the phone bar) as the home link; it is named by the link, not repeated in the page.
+        $response->assertSee('aria-label="Dot.Design, home"', false);
 
-        if ($as === 'none') {
-            $response->assertDontSee('This is the studio for');
-        } else {
-            $response->assertSee('This is the studio for Mokoena Bakery.');
-        }
+        $response->assertDontSee('This is the studio for');
     }
 
     #[DataProvider('arrivals')]
@@ -100,7 +99,9 @@ class LandingExperienceTest extends TestCase
 
         $this->assertCount(1, $marked, 'The landing must carry exactly one primary action.');
         $this->assertSame(1, preg_match('/href="([^"]+)"/', $marked[0], $href));
-        $this->assertSame(route('design.start'), html_entity_decode($href[1]));
+        // The primary action is chosen for the role: creators start a design; a reviewer (no Create) is never offered it.
+        $expected = $as === 'viewer' ? route('design.projects.index') : route('design.start');
+        $this->assertSame($expected, html_entity_decode($href[1]));
 
         // Only the marked action is drawn as a filled primary button; every other button on the page is a quieter variant.
         preg_match_all('/class="([^"]*\blt-btn\b[^"]*)"/', $html, $buttons);
@@ -130,7 +131,7 @@ class LandingExperienceTest extends TestCase
         $this->assertStringContainsString('No brand kit yet.', $html);
         $this->assertStringContainsString('No assets yet.', $html);
         $this->assertStringNotContainsString('Recent designs', $html);
-        $this->assertSame(0, preg_match_all('/<a [^>]*class="lt-contact\b/', $html), 'No design tile may be drawn when there are no designs.');
+        $this->assertSame(0, preg_match_all('/<tr [^>]*data-name=/', $html), 'No ledger row may be drawn when there are no designs.');
         $this->assertCount(1, $this->primaryActions($html));
     }
 
@@ -146,20 +147,20 @@ class LandingExperienceTest extends TestCase
         $html = $this->actingAs($user)->get('/dashboard')->assertOk()->getContent();
 
         foreach (['Winter menu', 'Opening hours', 'Loyalty card'] as $name) {
-            $this->assertSame(1, substr_count($html, '>'.$name.'<'), $name.' should appear once.');
+            $this->assertSame(1, preg_match_all('/<a [^>]*data-design="\d+"[^>]*>'.preg_quote($name, '/').'<\/a>/', $html), $name.' should be listed once in the ledger.');
         }
         $this->assertStringNotContainsString('Somebody elses flyer', $html);
         $this->assertStringNotContainsString('data-empty-state', $html);
-        // One tile per seeded design: the latest as the proof, the other two on the strip. Nothing else is counted or drawn.
-        $this->assertSame(3, preg_match_all('/<a [^>]*class="lt-contact\b/', $html));
-        $this->assertSame(1, substr_count($html, 'lt-contact--proof'));
+        // One ledger row per seeded design and nothing else is drawn.
+        $this->assertSame(3, preg_match_all('/<tr [^>]*data-name=/', $html));
 
-        // The page states no totals: besides the time of the last edit, the only figures in the landing block are the real size
-        // of the latest design.
+        // The arrival states live counts only, taken from the rows: the headline carries no figure for three plain drafts, and
+        // the sub line names the real count.
         $this->assertSame(1, preg_match('/<header class="lt-arrive">(.*?)<\/header>/s', $html, $arrive));
         $text = html_entity_decode(strip_tags(preg_replace('/<img\b[^>]*>/', '', $arrive[1])), ENT_QUOTES);
-        preg_match_all('/\d+/', preg_replace('/Edited [^\n]*/', '', $text), $figures);
-        $this->assertEqualsCanonicalizing(['1080', '1350'], array_values(array_unique($figures[0])));
+        $this->assertStringContainsString('Nothing is waiting on you.', $text);
+        preg_match_all('/\d+/', $text, $figures);
+        $this->assertSame(['3'], array_values(array_unique($figures[0])));
     }
 
     public function test_the_way_to_infodot_comes_from_the_ecosystem_config_through_the_switcher(): void

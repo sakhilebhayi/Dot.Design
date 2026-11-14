@@ -13,9 +13,8 @@ use App\Http\Controllers\TokenConsumptionRecordController;
 use App\Http\Controllers\TokenSetController;
 use App\Http\Middleware\EnsureCompanyEntitled;
 use App\Http\Middleware\RefuseBearerTokens;
-use App\Models\DesignAsset;
-use App\Models\DesignCanvas;
-use App\Models\DesignProject;
+use App\Support\Ui\HomeSummary;
+use Illuminate\Http\Request;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Str;
@@ -67,32 +66,13 @@ Route::middleware([
     // R-50: the studio is for companies that hold Dot.Design. Everything outside this group is never checked.
     EnsureCompanyEntitled::class,
 ])->group(function () {
-    Route::get('/dashboard', function () {
-        // DesignProject and DesignAsset apply their workspace scope
-        // (see app/Models/Concerns/HasUserScope.php), so every query below
-        // is already scoped to the authenticated user at the model level --
-        // the explicit where('user_id', ...) calls this closure used to
-        // carry are redundant and were removed. DesignCanvas has no user_id
-        // column of its own, so whereHas('project') still needs to touch
-        // the project relation, but that relation query is itself scoped
-        // by DesignProject's own global scope.
-        $totalProjects = DesignProject::count();
-        $recentProjects = DesignProject::where('created_at', '>=', now()->subDays(30))->count();
-        $totalCanvases = DesignCanvas::whereHas('project')->count();
-        $totalAssets = DesignAsset::count();
+    Route::get('/dashboard', function (Request $request) {
+        // DesignProject and DesignAsset apply their workspace scope (app/Models/Concerns/HasWorkspaceScope.php), so every
+        // query HomeSummary runs is already limited to what the signed-in person can see. R-51: one bounded read per list
+        // (twelve ledger rows, five waiting rows), grouped counts instead of loading every design.
+        $user = $request->user();
 
-        $projects = DesignProject::withCount(['canvases'])
-            ->latest()
-            ->get();
-
-        $recentAssets = DesignAsset::latest()
-            ->limit(8)
-            ->get();
-
-        return view('dashboard', compact(
-            'totalProjects', 'recentProjects', 'totalCanvases',
-            'totalAssets', 'projects', 'recentAssets'
-        ));
+        return view('dashboard', ['home' => HomeSummary::build($user, $user->currentTeam?->id, $request->query('design'))]);
     })->name('dashboard');
 
     // Canvas / AI-creation tool domain -- previously had no per-ID routes at

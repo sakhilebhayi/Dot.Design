@@ -109,6 +109,7 @@
                 <a href="{{ route('dashboard') }}" class="lt-brand" aria-label="Dot.Design, home">
                     <x-ds.logo class="lt-brand__logo" loading="eager" />
                 </a>
+                @if ($barTitle = request()->attributes->get('bar_title'))<p class="lt-topbar__title">{{ $barTitle }}</p>@endif
                 <div class="lt-topbar__end">
                     @if ($user)
                         <x-dot.switcher platform="design" :company="$team?->infodot_team_uuid" :company-name="$team?->name" logos="/dot-ui/img/platforms" />
