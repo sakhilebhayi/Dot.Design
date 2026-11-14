@@ -8,3 +8,4 @@ import './ds/view.js';
 import './ds/progress.js';
 import './ds/landing.js';
 import './ds/milestone.js';
+import './ds/home.js';

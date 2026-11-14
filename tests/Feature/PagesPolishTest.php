@@ -36,11 +36,14 @@ class PagesPolishTest extends TestCase
         $project = $this->project($user);
         $project->forceFill(['thumbnail_path' => 'thumbnails/'.$project->id.'.png', 'thumbnail_updated_at' => now()])->save();
 
-        foreach (['/dashboard', route('design.start')] as $url) {
-            $page = $this->get($url)->assertOk();
-            $page->assertSee('lt-contact__stage', false);
-            $page->assertSee(route('design.projects.thumbnail.show', $project), false);
-        }
+        // The home ledger and the Start page both draw the real saved thumbnail; Start still uses the shared tile.
+        $home = $this->get('/dashboard')->assertOk();
+        $home->assertSee('lt-ledger__thumb', false);
+        $home->assertSee(route('design.projects.thumbnail.show', $project), false);
+
+        $start = $this->get(route('design.start'))->assertOk();
+        $start->assertSee('lt-contact__stage', false);
+        $start->assertSee(route('design.projects.thumbnail.show', $project), false);
     }
 
     public function test_brand_update_list_counts_match_the_review_and_name_unused_kit_changes(): void
