@@ -83,8 +83,9 @@ class PerfBudgetTest extends TestCase
 
         $count = $this->queries(fn () => $this->actingAs($user)->getJson(route('design.templates.facets'))->assertOk()->assertJsonPath('total', 30));
 
-        // session user, the two grouped counts, and whatever the auth layer reads: never a row per template.
-        $this->assertLessThanOrEqual(5, $count);
+        // session user, the two grouped counts, whatever the auth layer reads, and (R-50) the entitlement check's one
+        // primary-key read of the current workspace: never a row per template.
+        $this->assertLessThanOrEqual(6, $count);
     }
 
     public function test_a_known_column_is_not_asked_of_the_catalogue_twice(): void

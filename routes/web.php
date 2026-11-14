@@ -11,6 +11,7 @@ use App\Http\Controllers\DesignProjectController;
 use App\Http\Controllers\DesignTokenController;
 use App\Http\Controllers\TokenConsumptionRecordController;
 use App\Http\Controllers\TokenSetController;
+use App\Http\Middleware\EnsureCompanyEntitled;
 use App\Http\Middleware\RefuseBearerTokens;
 use App\Models\DesignAsset;
 use App\Models\DesignCanvas;
@@ -63,6 +64,8 @@ Route::middleware([
     'auth:sanctum',
     config('jetstream.auth_session'),
     'verified',
+    // R-50: the studio is for companies that hold Dot.Design. Everything outside this group is never checked.
+    EnsureCompanyEntitled::class,
 ])->group(function () {
     Route::get('/dashboard', function () {
         // DesignProject and DesignAsset apply their workspace scope

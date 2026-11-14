@@ -9,7 +9,7 @@ use Illuminate\Database\Seeder;
 /**
  * Seeds a handful of real starter tokens and example components for the
  * design-token/component-library domain (MVP scaffold), plus consumption
- * records for the ~20 Dot Ecosystem platforms (from Dot.Brain's
+ * records for the Dot Ecosystem platforms (from Dot.Brain's
  * brain.platforms.md registry), all pinned to version 0 as placeholders.
  */
 class DesignSystemSeeder extends Seeder
@@ -18,8 +18,8 @@ class DesignSystemSeeder extends Seeder
      * Platform IDs from Dot.Brain's brain.platforms.md §2 registry.
      */
     private const PLATFORMS = [
-        'dot-brain', 'dot-memory', 'dot-analytics', 'dot-pulse', 'dot-plug',
-        'dot-mines', 'dot-notify', 'dot-billing', 'dot-charts', 'dot-farms',
+        'dot-brain', 'dot-memory', 'dot-analytics', 'dot-pulse',
+        'dot-mines', 'dot-notify', 'dot-charts',
         'dot-hr', 'dot-dopemine', 'dot-emall', 'dot-ehail', 'dot-agents',
         'dot-auction', 'dot-central', 'dot-projects', 'dot-tasks',
         'dot-design', 'dot-finance',

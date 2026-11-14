@@ -30,7 +30,9 @@
         $signedIn = false;
         try { $signedIn = auth()->check(); } catch (\Throwable $e) { /* maintenance mode and early failures have no session */ }
         $destinations = [];
-        if ($signedIn) {
+        if ($hideNext ?? false) {
+            // A page that must not point back into the studio (the company does not hold the platform) names its own next steps.
+        } elseif ($signedIn) {
             foreach ([['design.projects.index', 'Your designs'], ['design.templates.index', 'Templates'], ['design.brand.index', 'Brand']] as [$routeName, $label]) {
                 if (Route::has($routeName)) { $destinations[] = ['url' => route($routeName), 'label' => $label]; }
             }
@@ -60,6 +62,8 @@
             <div class="lt-form__actions">
                 @yield('actions')
             </div>
+
+            @yield('after')
 
             @if (! empty($destinations))
                 <nav aria-label="Other places to go" class="lt-errorpage__next">

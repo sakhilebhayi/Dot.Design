@@ -3,19 +3,62 @@
     $team = $user?->currentTeam;
     $formats = \App\Support\Ui\StartFormats::all();
     $createRoute = route('design.start');
-    $recent = $projects->sortByDesc(fn ($p) => $p->updated_at?->getTimestamp() ?? 0)->take(8)->values();
+    $recent = $projects->sortByDesc(fn ($p) => $p->updated_at?->getTimestamp() ?? 0)->take(9)->values();
+    // The newest design is the proof on the table; the strip below holds the ones before it.
+    $latest = $recent->first();
+    $earlier = $recent->slice(1)->values();
     $brand = \App\Support\Ui\BrandStatus::for($user);
     $brandRoute = collect(['design.brand.index', 'brand.index', 'design.brand-kits.index'])->first(fn ($name) => \Illuminate\Support\Facades\Route::has($name));
     $assetRoute = collect(['design.assets.index', 'assets.index'])->first(fn ($name) => \Illuminate\Support\Facades\Route::has($name));
     $brandUpdated = \App\Support\Ui\ProjectCard::brandUpdatedIds($recent);
     $milestone = app(\App\Support\Ui\Milestones::class)->pending($user);
+    $firstName = trim((string) \Illuminate\Support\Str::of((string) $user?->name)->trim()->before(' '));
+    $infodot = rtrim((string) config('ecosystem.platforms.infodot.url'), '/');
+    request()->attributes->set('page_title', 'Home'); // the browser tab keeps the name the navigation uses
 @endphp
 <x-app-layout>
 <div class="lt-page">
 
-    <x-ds.page-header title="Home" :sub="now()->format('l j F').($team ? ', '.$team->name : '')">
-        <x-ds.button :href="$createRoute" icon="plus">New design</x-ds.button>
-    </x-ds.page-header>
+    {{-- The arrival: the real logo, a welcome from the signed-in person and their workspace, what the studio is for, and the one
+         primary action of this page. Everything else on the page is secondary and looks it. --}}
+    <header class="lt-arrive">
+        <div class="lt-arrive__top">
+            <x-ds.logo class="lt-arrive__logo" alt="Dot.Design" loading="eager" />
+            @if ($infodot !== '')
+                <nav class="lt-arrive__back" aria-label="Dot ecosystem">
+                    <a href="{{ $infodot }}/home"><x-ds.icon name="arrow-left" size="sm" />InfoDot</a>
+                    <a href="{{ $infodot }}/platforms"><x-ds.icon name="layout-grid" size="sm" />Platforms</a>
+                </nav>
+            @endif
+        </div>
+
+        <div class="lt-arrive__table">
+            <div class="lt-arrive__text">
+                <h1 class="lt-display lt-arrive__title">Make it look like your business.</h1>
+                <p class="lt-arrive__welcome">Welcome{{ $firstName !== '' ? ', '.$firstName : '' }}.@if ($team) This is the studio for {{ $team->name }}.@endif</p>
+                <p class="lt-arrive__lead">Posters, social posts, flyers and cards, drawn at their true size and kept in your own colours and type.</p>
+                <div class="lt-arrive__action">
+                    <x-ds.button :href="$createRoute" icon="plus" size="lg" data-primary-action>Start a design</x-ds.button>
+                </div>
+            </div>
+
+            <div class="lt-arrive__proof">
+                @if ($latest)
+                    <h2 class="lt-sr">Your latest design</h2>
+                    <x-ds.design-tile :project="$latest" :brand-updated="in_array($latest->id, $brandUpdated, true)" class="lt-contact--proof" />
+                @else
+                    <div class="lt-contact lt-contact--proof" data-empty-state>
+                        <span class="lt-contact__stage"><x-ds.frame :width="4" :height="5" class="lt-crop"><span class="lt-arrive__mark" aria-hidden="true"><x-ds.icon name="registration" size="lg" /></span></x-ds.frame></span>
+                        <div class="lt-contact__meta">
+                            <h2 class="lt-contact__name">Nothing on the table yet</h2>
+                            <p class="lt-arrive__empty">Your first design will sit here at its true proportions. <a href="{{ route('design.templates.index') }}">Start from a template</a> if you would rather not begin with a blank page.</p>
+                        </div>
+                    </div>
+                @endif
+            </div>
+        </div>
+        <div class="lt-ruler" aria-hidden="true"></div>
+    </header>
 
     <x-ds.milestone :milestone="$milestone" />
 
@@ -32,25 +75,24 @@
         <div class="lt-ruler lt-start__rule" aria-hidden="true"></div>
     </section>
 
-    <div class="lt-home lt-home--split lt-section">
+    <div @class(['lt-home', 'lt-home--split' => $latest, 'lt-section'])>
+        @if ($latest)
         <section aria-labelledby="recent-title">
             <div class="lt-section__head">
                 <h2 id="recent-title" class="lt-section__title">Recent designs</h2>
-                @if ($projects->isNotEmpty())<a href="{{ route('design.projects.index') }}" class="lt-small" style="text-decoration: underline; text-underline-offset: 0.2em;">View all designs</a>@endif
+                <a href="{{ route('design.projects.index') }}" class="lt-small lt-arrive__more">View all designs</a>
             </div>
-            @if ($recent->isEmpty())
-                <x-ds.empty title="Nothing on the table yet">
-                    Choose a size above and your first design will appear here, at its true proportions.
-                    <x-slot name="actions"><x-ds.button :href="$createRoute" icon="plus">Start a design</x-ds.button><x-ds.button :href="route('design.templates.index')" variant="ghost">Start from a template</x-ds.button></x-slot>
-                </x-ds.empty>
+            @if ($earlier->isEmpty())
+                <p class="lt-small">Your latest design is on the table above. The ones before it will line up here.</p>
             @else
                 <div class="lt-contacts">
-                    @foreach ($recent as $project)
+                    @foreach ($earlier as $project)
                         <x-ds.design-tile :project="$project" :brand-updated="in_array($project->id, $brandUpdated, true)" />
                     @endforeach
                 </div>
             @endif
         </section>
+        @endif
 
         <aside class="lt-side" aria-label="Brand, assets and activity">
             <section aria-labelledby="brand-title">
