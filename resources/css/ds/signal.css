@@ -30,7 +30,7 @@
 .lt-milestone__seal svg { width: 1.25rem; height: 1.25rem; stroke-width: 2.5; }
 .lt-milestone__text { flex: 1 1 18rem; min-width: 0; display: grid; gap: 2px; }
 .lt-milestone__text .lt-small { color: var(--lt-ink); } /* full ink: grey text on a tinted ground reads dull */
-.lt-milestone__title { font-family: var(--lt-font-display); font-weight: 600; font-size: var(--lt-text-lg); letter-spacing: -0.015em; line-height: 1.2; }
+.lt-milestone__title { font-family: var(--lt-font-display); font-weight: 600; font-size: var(--lt-text-lg); letter-spacing: var(--dot-text-h3-ls); line-height: 1.2; }
 /* the proof sheet's crop marks close in around the message once */
 .lt-milestone::before {
     content: ""; position: absolute; inset: -7px; z-index: -1; pointer-events: none; --m: var(--lt-ink-3);

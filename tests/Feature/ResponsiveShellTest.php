@@ -61,7 +61,7 @@ class ResponsiveShellTest extends TestCase
     {
         $html = $this->actingAs($this->signedInUser())->get(route('dashboard'))->getContent();
 
-        $this->assertStringContainsString('<a class="lt-skip" href="#main">', $html);
+        $this->assertStringContainsString('<a class="dh-skip skip-link" href="#main">', $html);
         $this->assertStringContainsString('<main id="main"', $html);
     }
 
@@ -80,11 +80,11 @@ class ResponsiveShellTest extends TestCase
         $html = $this->actingAs($this->signedInUser())->get(route('dashboard'))->getContent();
 
         $this->assertStringContainsString('class="lt-tabbar" aria-label="Main"', $html);
-        $this->assertStringContainsString('data-lt-dialog-open="more-sheet"', $html);
-        $this->assertStringContainsString('<dialog id="more-sheet"', $html);
-        // the theme controls are real buttons with names
-        $this->assertStringContainsString('data-theme-set="dark"', $html);
-        $this->assertStringContainsString('aria-label="Switch theme"', $html);
+        // "More" opens the shared drawer (the header's menu button opens the same one): destinations, workspace, account, theme
+        $this->assertMatchesRegularExpression('#<button type="button" class="lt-tab-item" data-dh-menu-button aria-controls="dh-drawer"#', $html);
+        $this->assertStringContainsString('id="dh-drawer"', $html);
+        $this->assertStringContainsString('data-dh-theme-set="dark"', $html);
+        $this->assertStringNotContainsString('more-sheet', $html, 'the old More dialog is gone: one menu, not two');
     }
 
     public function test_the_token_set_consumers_table_scrolls_inside_its_own_wrapper(): void
@@ -162,7 +162,7 @@ class ResponsiveShellTest extends TestCase
     private function assertShellHooks(TestResponse $response): void
     {
         $response->assertSee('class="lt-rail"', false);
-        $response->assertSee('class="lt-topbar"', false);
+        $response->assertSee('data-dh', false);
         $response->assertSee('class="lt-tabbar"', false);
         $response->assertSee('id="main"', false);
     }

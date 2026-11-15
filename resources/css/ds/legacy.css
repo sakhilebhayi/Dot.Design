@@ -52,7 +52,6 @@ select.dot-input { appearance: auto; }
 .card-grid { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fill, minmax(min(var(--card-min, 260px), 100%), 1fr)); }
 .kpi-grid { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr)); margin-bottom: 2.25rem; }
 .form-grid-3 { display: grid; gap: 1rem; grid-template-columns: repeat(3, minmax(0, 1fr)); }
-.table-scroll { overflow-x: auto; max-width: 100%; }
 .table-scroll > table { min-width: 34rem; }
 .table-scroll:focus-visible { outline: 2px solid var(--lt-focus); outline-offset: 2px; }
 @media (max-width: 559.98px) { .form-grid-3 { grid-template-columns: minmax(0, 1fr); } .page { padding: 1.25rem var(--lt-space-4) 2rem; } }

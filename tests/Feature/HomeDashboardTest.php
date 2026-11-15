@@ -230,9 +230,11 @@ class HomeDashboardTest extends TestCase
         [, $owner] = $this->workspace();
         $html = $this->actingAs($owner)->get('/dashboard')->assertOk()->getContent();
 
-        $this->assertStringContainsString('<p class="lt-topbar__title">Home</p>', $html);
+        // the page's short title sits in the shared header's status slot (desktop only; the phone bar has no room for it)
+        $this->assertMatchesRegularExpression('#<div class="dh-status" data-dh-status>\s*<span class="dh-status__text lt-barstatus">Home</span>#', $html);
         $this->assertSame(1, preg_match('/<header class="lt-arrive">(.*?)<\/header>/s', $html, $arrive));
         $this->assertStringNotContainsString('logo', $arrive[1]);
+        $this->assertSame(1, substr_count($html, 'class="dh-logo-day"'), 'and one logo on the whole page: the header\'s');
     }
 
     public function test_every_motion_rule_has_a_reduced_motion_removal(): void

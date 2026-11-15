@@ -13,10 +13,10 @@
 
 /* top bar */
 .sv-bar { display: flex; align-items: center; gap: var(--lt-space-4); padding: var(--lt-space-3) var(--lt-space-5); background: var(--lt-panel); border-bottom: 1px solid var(--lt-rule); }
-.sv-brand { display: inline-flex; align-items: center; gap: var(--lt-space-2); font-family: var(--lt-font-display); font-weight: 700; letter-spacing: -0.02em; color: var(--lt-ink); white-space: nowrap; }
+.sv-brand { display: inline-flex; align-items: center; gap: var(--lt-space-2); font-family: var(--lt-font-display); font-weight: 700; letter-spacing: var(--dot-text-h3-ls); color: var(--lt-ink); white-space: nowrap; }
 .sv-brand .lt-mark { width: 1.75rem; height: 1.75rem; background-size: 78.75px auto; background-position: -17px -9.6px; }
 .sv-title { min-width: 0; flex: 1; display: grid; gap: 1px; }
-.sv-title h1 { font: 600 var(--lt-text-xl)/1.2 var(--lt-font-display); letter-spacing: -0.015em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sv-title h1 { font: 600 var(--lt-text-xl)/1.2 var(--lt-font-display); letter-spacing: var(--dot-text-h2-ls); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .sv-title p { font-size: var(--lt-text-xs); color: var(--lt-ink-3); }
 .sv-theme { display: inline-flex; align-items: center; gap: var(--lt-space-2); min-height: 2.25rem; padding: 0 var(--lt-space-3); border: 1px solid var(--lt-edge); border-radius: var(--lt-radius-2); background: var(--lt-panel); color: var(--lt-ink-2); font-size: var(--lt-text-sm); }
 .sv-theme:hover { background: var(--lt-panel-sunk); color: var(--lt-ink); }
@@ -75,7 +75,7 @@
 .sv-comment { padding: var(--lt-space-5); background: var(--lt-panel); display: grid; gap: var(--lt-space-4); align-content: start; border-top: 1px solid var(--lt-rule); }
 .js .sv-comment[hidden] { display: grid !important; }
 @media (min-width: 62rem) { .sv-comment { border-top: 0; border-left: 1px solid var(--lt-rule); height: calc(100dvh - 3.75rem - 2.25rem); overflow-y: auto; } }
-.sv-comment h2 { font: 600 var(--lt-text-lg)/1.3 var(--lt-font-display); letter-spacing: -0.01em; }
+.sv-comment h2 { font: 600 var(--lt-text-lg)/1.3 var(--lt-font-display); letter-spacing: var(--dot-text-h3-ls); }
 .sv-comment form { display: grid; gap: var(--lt-space-3); }
 .sv-hint { font-size: var(--lt-text-xs); color: var(--lt-ink-3); line-height: 1.5; }
 .sv-count { font-size: var(--lt-text-xs); color: var(--lt-ink-3); text-align: right; }
@@ -102,7 +102,7 @@
 /* the neutral page */
 .sv--gone { align-items: center; justify-content: center; padding: var(--lt-space-5); }
 .sv-gone { max-width: 28rem; display: grid; gap: var(--lt-space-3); justify-items: start; padding: var(--lt-space-6); background: var(--lt-panel); border-radius: var(--lt-radius-3); box-shadow: 0 0 0 1px var(--lt-rule-strong); }
-.sv-gone h1 { font: 600 var(--lt-text-2xl)/1.12 var(--lt-font-display); letter-spacing: -0.02em; text-wrap: balance; }
+.sv-gone h1 { font: 600 var(--lt-text-2xl)/1.12 var(--lt-font-display); letter-spacing: var(--dot-text-h1-ls); text-wrap: balance; }
 .sv-gone p { color: var(--lt-ink-2); font-size: var(--lt-text-md); line-height: 1.55; }
 
 @media (max-width: 40rem) {

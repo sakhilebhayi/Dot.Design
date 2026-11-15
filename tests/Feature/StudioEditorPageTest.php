@@ -180,16 +180,21 @@ class StudioEditorPageTest extends TestCase
         $this->assertDoesNotMatchRegularExpression('/\son[a-z]+\s*=\s*"/i', $html, 'no inline event handlers');
         $this->assertStringNotContainsString('eval(', $html);
 
-        preg_match_all('#(?:src|href)="(https?://[^"]+)"#i', $html, $urls);
+        preg_match_all('#\b(src|href)="(https?://[^"]+)"#i', $html, $urls, PREG_SET_ORDER);
         $app = parse_url(config('app.url'), PHP_URL_HOST);
-        foreach ($urls[1] as $url) {
-            $this->assertContains(parse_url($url, PHP_URL_HOST), [$app, '127.0.0.1', 'localhost', 'localhost:5173', '[::1]', 'dot-design.test'], 'only own hosts: '.$url);
+        foreach ($urls as [, $attr, $url]) {
+            $host = parse_url($url, PHP_URL_HOST);
+            // The one outside address on the page is the platform switcher's no-script link to InfoDot's platform list (an href, never a loaded file).
+            if (strtolower($attr) === 'href' && str_ends_with((string) $host, 'infodot.co.za') && str_ends_with((string) parse_url($url, PHP_URL_PATH), '/platforms')) {
+                continue;
+            }
+            $this->assertContains($host, [$app, '127.0.0.1', 'localhost', 'localhost:5173', '[::1]', 'dot-design.test'], 'only own hosts: '.$url);
         }
         foreach (['cdn.', 'googleapis', 'gstatic', 'unpkg', 'jsdelivr', 'cloudflare'] as $host) {
             $this->assertStringNotContainsString($host, $html);
         }
         $this->assertStringContainsString('id="studio-app"', $html);
-        $this->assertStringContainsString('class="lt-skip"', $html, 'a skip link');
+        $this->assertStringContainsString('class="dh-skip skip-link"', $html, 'a skip link');
     }
 
     public function test_hostile_text_in_a_design_cannot_close_the_data_block(): void

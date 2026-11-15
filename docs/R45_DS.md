@@ -10,7 +10,7 @@ A print studio's light table. Quiet cool paper-and-ink chrome around a neutral, 
 - `resources/js/ds/`: `theme`, `menu`, `dialog`, `tabs`, `toast`, `view`, `progress`, `landing`, `legacy-icons`. `public/js/ds-theme.js` runs in `<head>` before paint.
 - `resources/views/components/ds/`: `icon`, `button`, `icon-button`, `chip`, `swatch`, `frame`, `format-chip`, `field`, `select`, `tabs` + `tabpanel`, `link-tabs`, `panel`, `empty`, `toast` (the region + flash), `menu` + `menu-item`, `dialog`, `tooltip`, `kbd`, `status-line`, `progress`, `tag`, `avatar`, `stat-line`, `page-header`. Icons: `components/ds/icons/*.svg` (133, Lucide ISC + 5 drawn; `App\Support\Ui\Icons`).
 - PHP: `App\Support\Ui\Navigation` (route-aware destinations), `StartFormats` (`?format=` keys), `DesignListing` (search/filter/sort), `BrandStatus` (honest brand line), `Icons`.
-- Fonts: `public/fonts/ui/` (Bricolage Grotesque for display, Atkinson Hyperlegible Next for UI, OFL, latin, `font-display: swap`; the UI face is preloaded).
+- Fonts: Roboto from dot-ui (`public/dot-ui/fonts/roboto/`, OFL, variable weight, `font-display: swap`; the latin file is preloaded). R-52 replaced Bricolage Grotesque and Atkinson Hyperlegible Next; the content fonts in `public/fonts/design/` are the user's own type and are unchanged.
 
 ## Contract for other agents
 - Use tokens (`var(--lt-ink)`, `--lt-panel`, `--lt-stage`, `--lt-accent`, `--lt-radius-1..3`, `--lt-space-1..8`, `--lt-font-ui|display|mono`, `--lt-ease`, `--lt-dur-1..3`) and `<x-ds.*>`; never a literal colour or font. Design pages always sit on `--lt-paper`; text drawn on a page uses `--lt-paper-ink`.

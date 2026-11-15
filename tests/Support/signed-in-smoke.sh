@@ -177,6 +177,7 @@ get "/design/brand" 200 "<main"
 get "/design/brand/updates" 200 "<main"
 get "/design/assets" 200 "<main"
 get "/design/review" 200 "<main"
+get "/design/search?q=smoke" 200 "data-search-page"
 get "/design/reviews" 200 ""
 get "/design/activity/log" 200 "<main"
 get "/design/studio-settings" 200 "<main"
@@ -201,6 +202,7 @@ get "/design/brief/flow" 200 '"' "${J[@]}"
 get "/design/studio/elements" 200 '"' "${J[@]}"
 get "/design/assets" 200 '"' "${J[@]}"
 get "/design/brand/kits" 200 '"' "${J[@]}"
+get "/design/search?q=smoke" 200 '"groups"' "${J[@]}"
 get "/design/projects/$PID/versions" 200 '"' "${J[@]}"
 get "/design/projects/$PID/comments" 200 'Smoke test comment' "${J[@]}"
 get "/design/projects/$PID/shares" 200 '"' "${J[@]}"
@@ -221,7 +223,7 @@ for A in $ASSETS; do
   code=$(curl -s --max-time 30 -o "$BODY" -w '%{http_code}' "$BASE/build/$A")
   [ "$code" = "200" ] && [ -s "$BODY" ] && pass "/build/$A $code" || fail "/build/$A answered $code"
 done
-for F in fonts/design/inter/inter-400.woff2 fonts/design/fraunces/fraunces-400.woff2 $(cd public && ls fonts/ui/*.woff2 2>/dev/null); do
+for F in fonts/design/inter/inter-400.woff2 fonts/design/fraunces/fraunces-400.woff2 $(cd public && ls dot-ui/fonts/roboto/*.woff2 2>/dev/null); do
   code=$(curl -s --max-time 30 -o "$BODY" -w '%{http_code}' "$BASE/$F")
   [ "$code" = "200" ] && [ "$(head -c4 "$BODY")" = "wOF2" ] && pass "/$F is a woff2 font" || fail "/$F answered $code or is not a woff2 file"
 done

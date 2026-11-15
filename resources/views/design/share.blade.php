@@ -5,7 +5,7 @@
     $sentence = $count.' '.($count === 1 ? 'page' : 'pages').'. Shared with you to look at'.($canComment ? ' and comment on' : '').'.';
 @endphp
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="dot-roboto">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -14,7 +14,7 @@
     <meta name="color-scheme" content="light dark">
     <title>{{ $name }} | Dot.Design</title>
     <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('favicon-32x32.png') }}">
-    <link rel="preload" href="{{ asset('fonts/ui/atkinson-hyperlegible-next-latin-wght.woff2') }}" as="font" type="font/woff2" crossorigin>
+    @include('partials.ui-head')
     <script src="{{ asset('js/ds-theme.js') }}"></script>
     @vite(['resources/css/pages/share.css', 'resources/js/studio/pages/share-viewer.js'])
 </head>

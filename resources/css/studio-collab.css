@@ -58,7 +58,7 @@
 .cb-empty__title { margin: 0; font: 600 var(--lt-text-md)/1.3 var(--lt-font-ui); }
 .cb-empty__text { margin: 0; max-width: 38ch; font-size: var(--lt-text-sm); line-height: 1.5; color: var(--lt-ink-2); }
 
-.cb-h { margin: 0; font: 600 var(--lt-text-lg)/1.3 var(--lt-font-display); letter-spacing: -0.01em; }
+.cb-h { margin: 0; font: 600 var(--lt-text-lg)/1.3 var(--lt-font-display); letter-spacing: var(--dot-text-h3-ls); }
 .cb-h--sub { font-size: var(--lt-text-md); font-family: var(--lt-font-ui); margin-top: var(--lt-space-2); }
 
 /* ---- share dialog ---------------------------------------------------------------------------------------- */

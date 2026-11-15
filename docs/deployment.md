@@ -54,7 +54,7 @@ Do these in order. The pipeline updates a live install; it does not create the h
 
 ### The docroot and the static folders
 
-The application's `public/` folder holds files the browser fetches directly: `build/` (the hashed CSS and JS), **`fonts/ui/`** (2 interface fonts), **`fonts/design/`** (55 editor font files, 1.3 MB), `images/`, `js/` and the icons and `robots.txt` in the root. On this host the document root may serve **copies** of these rather than the app's own `public/` (Dot.Doc 404'd its assets for days that way; InfoDot and the Dopemine pilot hit the same trap). The pipeline therefore keeps them in step, for **every** top-level entry of `public/` except `index.php`, `.htaccess`, `hot`, `storage` and the build folders (so a static folder added later needs no workflow change):
+The application's `public/` folder holds files the browser fetches directly: `build/` (the hashed CSS and JS), **`dot-ui/`** (the shared header, search, switcher and the Roboto interface font; R-52 replaced the old `fonts/ui/`), **`fonts/design/`** (55 editor font files, 1.3 MB), `images/`, `js/` and the icons and `robots.txt` in the root. On this host the document root may serve **copies** of these rather than the app's own `public/` (Dot.Doc 404'd its assets for days that way; InfoDot and the Dopemine pilot hit the same trap). The pipeline therefore keeps them in step, for **every** top-level entry of `public/` except `index.php`, `.htaccess`, `hot`, `storage` and the build folders (so a static folder added later needs no workflow change):
 
 | In the docroot | What the pipeline does |
 |---|---|

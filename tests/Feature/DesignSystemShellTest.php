@@ -119,12 +119,15 @@ class DesignSystemShellTest extends TestCase
     {
         $html = $this->actingAs($this->user())->get(route('dashboard'))->getContent();
 
-        $this->assertMatchesRegularExpression('/<html lang="[a-z-]+">/', $html, 'the server never writes data-theme; the visitor choice or the system does');
+        $this->assertMatchesRegularExpression('/<html lang="[a-z-]+" class="dot-roboto"[^>]*>/', $html, 'the server never writes data-theme; the visitor choice or the system does');
         $this->assertStringContainsString('<meta name="color-scheme" content="light dark">', $html);
         $this->assertStringContainsString('js/ds-theme.js', $html);
         $this->assertLessThan(strpos($html, '<body'), strpos($html, 'js/ds-theme.js'), 'the theme script runs in <head>, before first paint');
-        foreach (['light', 'system', 'dark'] as $choice) {
-            $this->assertStringContainsString('data-theme-set="'.$choice.'"', $html);
+        $this->assertStringNotContainsString('<html lang="en" class="dot-roboto" data-theme', $html);
+        // the choice (light, dark, system) is in the shared account menu, stored under this platform's own key
+        $this->assertStringContainsString('data-dh-theme-key="dot-design-theme"', $html);
+        foreach (['light', 'dark', 'system'] as $choice) {
+            $this->assertStringContainsString('data-dh-theme-set="'.$choice.'"', $html);
         }
     }
 
@@ -236,7 +239,7 @@ class DesignSystemShellTest extends TestCase
         $html = $response->getContent();
         $this->assertSame(1, substr_count($html, '<h1'), "{$path} needs exactly one h1");
         $this->assertStringContainsString('<main', $html);
-        $this->assertStringContainsString('class="lt-skip"', $html);
+        $this->assertMatchesRegularExpression('/class="(dh-skip skip-link|lt-skip)"/', $html, 'a skip link: the shared header\'s on signed-in pages, the guest layout\'s elsewhere');
         $this->assertStringNotContainsString('material-symbols', strtolower($html), 'icons are inline SVG now');
     }
 

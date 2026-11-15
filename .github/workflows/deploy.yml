@@ -649,7 +649,7 @@ jobs:
           # ---- fonts and the other static folders: prove the DOCROOT serves them (not just the app folder)
           # A real font answers 200, is not an HTML page, and starts with the woff2 magic bytes.
           FONTS="/fonts/design/inter/inter-400.woff2"
-          for F in $(cd public && ls fonts/ui/*.woff2 2>/dev/null); do FONTS="$FONTS /$F"; done
+          for F in $(cd public && ls dot-ui/fonts/roboto/*.woff2 2>/dev/null); do FONTS="$FONTS /$F"; done
           for F in $FONTS; do
             CODE=$(curl -s --max-time 30 -D "$WORK/h" -o "$WORK/f" -w '%{http_code}' "$SITE_URL$F" || true)
             CT=$(grep -i '^content-type:' "$WORK/h" | tail -1 | tr -d '\r' | tr '[:upper:]' '[:lower:]')

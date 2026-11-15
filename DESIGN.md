@@ -53,45 +53,45 @@ colors:
   dark-btn-ink: "#14181C"
 typography:
   display:
-    fontFamily: Bricolage Grotesque
-    fontSize: 5.25rem
+    fontFamily: Roboto
+    fontSize: 4.75rem
     fontWeight: 600
-    lineHeight: 0.98
-    letterSpacing: -0.035em
+    lineHeight: 1.05
+    letterSpacing: -0.02em
   h1:
-    fontFamily: Bricolage Grotesque
+    fontFamily: Roboto
     fontSize: 1.75rem
     fontWeight: 600
     lineHeight: 1.12
     letterSpacing: -0.02em
   h2:
-    fontFamily: Bricolage Grotesque
+    fontFamily: Roboto
     fontSize: 1.25rem
     fontWeight: 600
     lineHeight: 1.2
     letterSpacing: -0.015em
   h3:
-    fontFamily: Atkinson Hyperlegible Next
+    fontFamily: Roboto
     fontSize: 1rem
     fontWeight: 600
     lineHeight: 1.3
   body:
-    fontFamily: Atkinson Hyperlegible Next
+    fontFamily: Roboto
     fontSize: 0.875rem
     fontWeight: 400
     lineHeight: 1.5
   small:
-    fontFamily: Atkinson Hyperlegible Next
+    fontFamily: Roboto
     fontSize: 0.8125rem
     fontWeight: 400
     lineHeight: 1.5
   meta:
-    fontFamily: Atkinson Hyperlegible Next
+    fontFamily: Roboto
     fontSize: 0.75rem
     fontWeight: 400
     lineHeight: 1.5
   label:
-    fontFamily: Atkinson Hyperlegible Next
+    fontFamily: Roboto
     fontSize: 0.8125rem
     fontWeight: 600
     lineHeight: 1.4
@@ -326,11 +326,12 @@ Contrast, measured numerically against every surface the token sits on (light, t
 
 ## Typography
 
-Two families, self-hosted as latin-subset woff2 in `public/fonts/ui/` with `font-display: swap`, and neither is used by another Dot platform.
+One family, Roboto (R-52, the typeface of every Dot platform), self-hosted from the shared dot-ui package (`public/dot-ui/fonts/roboto/`, variable weight, latin and latin-ext, `font-display: swap`, a metric-matched fallback so the swap does not move the page). The Light Table keeps its three names (`--lt-font-ui`, `--lt-font-display`, `--lt-font-mono`) and aliases them to dot-ui's `--dot-font-sans` and `--dot-font-mono`, so a rule keeps its role and the face is decided in one place.
 
-- **Bricolage Grotesque** (display): page titles, section titles, the landing headline. Weight 600, tight tracking (-0.015em to -0.035em), balanced wrapping.
-- **Atkinson Hyperlegible Next** (UI and body): everything else. Drawn by the Braille Institute for legibility, with deliberately distinct letterforms (a clear I, l and 1, an open 0 and O), which suits a product whose users are checking prices, phone numbers and dates in the work they are about to print. 14px is the working size in the app, 16px or more for reading on the landing page. Figures use tabular numerals wherever they align.
+- **Display roles** (page titles, section titles, the landing headline): Roboto 600 with the shared tracking tokens (`--dot-text-display-ls` -0.02em down to `--dot-text-h3-ls` -0.005em by size). The old Bricolage tracking of -0.035em was tuned for a narrower face and is gone: Roboto is wider, and the landing headline is capped at 4.75rem so it still sets on three lines at 1440px.
+- **UI and body**: everything else, 14px as the working size in the app, 16px or more for reading on the landing page, 16px in every field on a phone so the browser does not zoom. Figures use tabular numerals wherever they align.
 - **System monospace** only for key caps and exact values (a hex code, a dimension readout). No monospace as decoration.
+- **Not UI, left alone on purpose:** the 18 content families in `public/fonts/design/` are the user's own choice of type on their designs (the canvas, the brand-kit pickers and specimens), and the `dd-*` faces the landing artwork is drawn in.
 
 Labels, table heads and tags are sentence case at a readable size, never tracked capitals. No eyebrows above headings. One h1 per page.
 
