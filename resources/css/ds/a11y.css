@@ -171,6 +171,9 @@ html, .lt-main, .lt-shell { scroll-padding-top: calc(var(--dot-header-offset, 3.
     :root .lt-waitrows__main a, :root .lt-ledger__nm a, :root .lt-arrive__more, :root .lt-contact__chips a, :root .br-pref__name, :root .lt-section__head a, :root .br-kit__alert {
         display: inline-block; box-sizing: border-box; min-height: 2.75rem; min-width: 2.75rem; padding-block: 0.78rem; margin-block: -0.78rem; }
     :root .lt-waitrows__main a, :root .lt-ledger__nm a { display: block; }
+    :root .lt-check { min-height: 2.75rem; }
+    :root .st-zoom__btn { min-height: 2.75rem; min-width: 2.75rem; }
+    :root .st-mode__btn { min-height: 2.75rem; min-width: 2.75rem; }
     :root .lt-nav__item { min-height: 2.75rem; } /* the rail a tablet shows (861 to 1024px) is a finger's, not a mouse's */
     :root .lt-ledger th { height: 2.75rem; }
     :root .lt-ledger th button { min-height: 2.75rem; min-width: 2.75rem; }
