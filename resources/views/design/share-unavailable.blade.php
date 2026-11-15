@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="dot-roboto">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -7,6 +7,7 @@
     <meta name="color-scheme" content="light dark">
     <title>Link not available | Dot.Design</title>
     <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('favicon-32x32.png') }}">
+    @include('partials.ui-head')
     <script src="{{ asset('js/ds-theme.js') }}"></script>
     @vite(['resources/css/pages/share.css'])
 </head>

@@ -10,7 +10,7 @@
     $kitColours = [['#145a3c', 'Main colour'], ['#d4572a', 'Second colour'], ['#f0a030', 'Highlight colour'], ['#1f2933', 'Neutral']];
 @endphp
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="dot-roboto">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -20,7 +20,7 @@
     <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('favicon-32x32.png') }}">
     <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('favicon-16x16.png') }}">
     <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('apple-touch-icon.png') }}">
-    <link rel="preload" href="{{ asset('fonts/ui/bricolage-grotesque-latin-wght.woff2') }}" as="font" type="font/woff2" crossorigin>
+    @include('partials.ui-head')
     <script src="{{ asset('js/ds-theme.js') }}"></script>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>

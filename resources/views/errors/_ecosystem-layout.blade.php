@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="dot-roboto">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -12,6 +12,7 @@
             @break
         @endif
     @endforeach
+    @include('partials.ui-head')
     <script src="{{ asset('js/ds-theme.js') }}"></script>
     @php
         // Error pages must render even if the asset build is missing, so only ask Vite for entries the manifest has.

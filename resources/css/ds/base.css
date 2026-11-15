@@ -39,9 +39,9 @@ body {
 html { overflow-x: clip; }
 
 /* type roles */
-.lt-display { font-family: var(--lt-font-display); font-weight: 600; letter-spacing: -0.025em; line-height: 1.02; text-wrap: balance; }
-.lt-h1 { font-family: var(--lt-font-display); font-weight: 600; font-size: var(--lt-text-2xl); letter-spacing: -0.02em; line-height: 1.12; text-wrap: balance; }
-.lt-h2 { font-family: var(--lt-font-display); font-weight: 600; font-size: var(--lt-text-xl); letter-spacing: -0.015em; line-height: 1.2; text-wrap: balance; }
+.lt-display { font-family: var(--lt-font-display); font-weight: 600; letter-spacing: var(--dot-text-display-ls); line-height: 1.05; text-wrap: balance; }
+.lt-h1 { font-family: var(--lt-font-display); font-weight: 600; font-size: var(--lt-text-2xl); letter-spacing: var(--dot-text-h1-ls); line-height: 1.12; text-wrap: balance; }
+.lt-h2 { font-family: var(--lt-font-display); font-weight: 600; font-size: var(--lt-text-xl); letter-spacing: var(--dot-text-h2-ls); line-height: 1.2; text-wrap: balance; }
 .lt-h3 { font-weight: 600; font-size: var(--lt-text-lg); line-height: 1.3; }
 .lt-body { font-size: var(--lt-text-md); }
 .lt-small { font-size: var(--lt-text-sm); color: var(--lt-ink-2); }
@@ -72,7 +72,8 @@ input[type="checkbox"], input[type="radio"] { accent-color: var(--lt-accent); } 
 .lt-sr { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
 
 /* the one authored motion: pages arrive, menus open. Everything else is feedback. */
-@keyframes lt-rise { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+/* R-52 perf: the page rises 6px but is never transparent. An opacity-0 first keyframe kept the whole page (the heading, the LCP element) invisible until the main thread was free to start the animation, which on a busy phone was seconds after the text had arrived. */
+@keyframes lt-rise { from { transform: translateY(6px); } to { transform: none; } }
 @keyframes lt-spin { to { transform: rotate(360deg); } }
 @keyframes lt-sheen { to { background-position: -200% 0; } }
 @keyframes lt-breathe { 0%, 100% { opacity: 0.35; } 50% { opacity: 1; } }

@@ -483,19 +483,19 @@ class DesignPreflight extends Command
             $absent === [] && $files !== [] ? count($files).' self-hosted font files present' : ($files === [] ? 'No fonts are configured.' : count($absent).' missing, first: '.$absent[0]),
         );
 
+        // The interface face is Roboto, shipped by dot-ui (public/dot-ui/css/dot-roboto.css names the files by relative URL).
         $uiMissing = [];
         $uiRefs = [];
+        $robotoCss = public_path('dot-ui/css/dot-roboto.css');
 
-        foreach (File::allFiles(resource_path('css')) as $css) {
-            if (preg_match_all('#/fonts/ui/[A-Za-z0-9._-]+\.woff2#', (string) file_get_contents($css->getPathname()), $m)) {
-                foreach ($m[0] as $ref) {
-                    $uiRefs[$ref] = true;
-                }
+        if (is_file($robotoCss) && preg_match_all('#url\(["\']?\.\./(fonts/roboto/[A-Za-z0-9._-]+\.woff2)["\']?\)#', (string) file_get_contents($robotoCss), $m)) {
+            foreach ($m[1] as $ref) {
+                $uiRefs['dot-ui/'.$ref] = true;
             }
         }
 
         foreach (array_keys($uiRefs) as $ref) {
-            if (! is_file(public_path(ltrim($ref, '/')))) {
+            if (! is_file(public_path($ref))) {
                 $uiMissing[] = $ref;
             }
         }
@@ -504,7 +504,7 @@ class DesignPreflight extends Command
             $uiRefs !== [] && $uiMissing === [] ? self::PASS : self::FAIL,
             'Frontend',
             'Interface fonts',
-            $uiRefs === [] ? 'The stylesheets reference no interface fonts under /fonts/ui.' : ($uiMissing === [] ? count($uiRefs).' files referenced by the stylesheets are present' : 'Missing: '.implode(', ', $uiMissing)),
+            $uiRefs === [] ? 'public/dot-ui/css/dot-roboto.css names no Roboto files.' : ($uiMissing === [] ? count($uiRefs).' Roboto files named by dot-roboto.css are present' : 'Missing: '.implode(', ', $uiMissing)),
         );
     }
 
