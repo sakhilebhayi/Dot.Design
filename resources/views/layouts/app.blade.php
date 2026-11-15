@@ -18,18 +18,11 @@
     <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('favicon-32x32.png') }}">
     <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('favicon-16x16.png') }}">
     <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('apple-touch-icon.png') }}">
-    @include('partials.ui-head')
+    @include('partials.ui-head', ['header' => true])
     <script src="{{ asset('js/ds-theme.js') }}"></script>
     {{-- Shared Dot UI (header, search, platform switcher), served from this site's own public/dot-ui ('self' only: no inline style or script). Loaded before the app CSS so the host mapping in shell.css wins. --}}
-    <link rel="stylesheet" href="{{ asset('dot-ui/css/dot-tokens.css') }}">
-    <link rel="stylesheet" href="{{ asset('dot-ui/css/dot-search.css') }}">
-    <link rel="stylesheet" href="{{ asset('dot-ui/css/dot-switcher.css') }}">
-    <link rel="stylesheet" href="{{ asset('dot-ui/css/dot-header.css') }}">
-    {{-- Deferred scripts run in document order: dot-ui first, so the app's own search wiring (resources/js/ds/header-search.js) finds DotSearchResults. --}}
-    <script src="{{ asset('dot-ui/js/dot-search.js') }}" defer></script>
-    <script src="{{ asset('dot-ui/js/dot-search-results.js') }}" defer></script>
-    <script src="{{ asset('dot-ui/js/dot-switcher.js') }}" defer></script>
-    <script src="{{ asset('dot-ui/js/dot-nav.js') }}" defer></script>
+    {{-- dot-ui's stylesheet is linked from partials.ui-head (first stylesheet). One script: this host calls DotSearchResults.attach() (resources/js/ds/header-search.js), so it links the full bundle, not the core one with the lazy results controller. --}}
+    <script src="{{ asset('dot-ui/js/dot-ui.min.js') }}" defer></script>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     {{-- No @livewireStyles / @livewireScripts here: Livewire (83 KB with Alpine) is only needed by the Jetstream account and team pages, and it injects its own assets into a page that holds a Livewire component. Every other page was waiting for it before its own script could run. --}}
     @stack('head')

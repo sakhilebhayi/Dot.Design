@@ -16,7 +16,7 @@
     drawer-title="Menu">
     <x-slot:brand>
         <img class="dh-logo-day" src="{{ asset('images/logo.png') }}" alt="" width="1181" height="886" decoding="async" fetchpriority="high">
-        <img class="dh-logo-night" src="{{ asset('images/logo-light.png') }}" alt="" width="1181" height="886" decoding="async">
+        <img class="dh-logo-night" src="{{ asset('images/logo-light.png') }}" alt="" width="1181" height="886" loading="lazy" decoding="async">
     </x-slot:brand>
     @if ($barTitle !== '')
         <x-slot:status><span class="dh-status__text lt-barstatus">{{ $barTitle }}</span></x-slot:status>

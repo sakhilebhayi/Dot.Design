@@ -294,9 +294,13 @@ class DotUiHeaderTest extends TestCase
         $response = $this->actingAs($this->memberOf(self::ACME, 'Acme Ltd'))->get('/dashboard')->assertOk();
         $html = $response->getContent();
 
-        foreach (['css/dot-roboto.css', 'css/dot-type.css', 'css/dot-tokens.css', 'css/dot-search.css', 'css/dot-switcher.css', 'css/dot-header.css', 'js/dot-switcher.js', 'js/dot-search.js', 'js/dot-search-results.js', 'js/dot-nav.js'] as $asset) {
+        foreach (['css/dot-ui.min.css', 'js/dot-ui.min.js'] as $asset) {
             $this->assertStringContainsString(asset('dot-ui/'.$asset), $html, $asset.' is linked from this site');
             $this->assertFileExists(public_path('dot-ui/'.$asset));
+        }
+        // dot-ui 0.6.1: the six stylesheets and four scripts are inside the two bundles, not linked one by one.
+        foreach (['css/dot-roboto.css', 'css/dot-type.css', 'css/dot-tokens.css', 'css/dot-search.css', 'css/dot-switcher.css', 'css/dot-header.css', 'js/dot-switcher.js', 'js/dot-search.js', 'js/dot-search-results.js', 'js/dot-nav.js'] as $inside) {
+            $this->assertStringNotContainsString(asset('dot-ui/'.$inside), $html, $inside.' is inside the bundle');
         }
 
         foreach (glob(public_path('dot-ui/css/*.css')) as $css) {

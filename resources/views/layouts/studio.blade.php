@@ -8,17 +8,11 @@
     <title>@yield('title', 'Design') | Dot.Design</title>
     <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('favicon-32x32.png') }}">
     <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('favicon-16x16.png') }}">
-    @include('partials.ui-head')
+    @include('partials.ui-head', ['header' => true])
     <script src="{{ asset('js/ds-theme.js') }}"></script>
     {{-- The shared Dot UI header (logo, search, Dot Apps, reviews bell, account) sits above the editor, as on every other page. --}}
-    <link rel="stylesheet" href="{{ asset('dot-ui/css/dot-tokens.css') }}">
-    <link rel="stylesheet" href="{{ asset('dot-ui/css/dot-search.css') }}">
-    <link rel="stylesheet" href="{{ asset('dot-ui/css/dot-switcher.css') }}">
-    <link rel="stylesheet" href="{{ asset('dot-ui/css/dot-header.css') }}">
-    <script src="{{ asset('dot-ui/js/dot-search.js') }}" defer></script>
-    <script src="{{ asset('dot-ui/js/dot-search-results.js') }}" defer></script>
-    <script src="{{ asset('dot-ui/js/dot-switcher.js') }}" defer></script>
-    <script src="{{ asset('dot-ui/js/dot-nav.js') }}" defer></script>
+    {{-- dot-ui's stylesheet is linked from partials.ui-head (first stylesheet). One script: this host calls DotSearchResults.attach() (resources/js/ds/header-search.js), so it links the full bundle, not the core one with the lazy results controller. --}}
+    <script src="{{ asset('dot-ui/js/dot-ui.min.js') }}" defer></script>
     @vite(['resources/css/studio.css', 'resources/js/studio/main.js', 'resources/js/ds/header-search.js'])
 </head>
 <body class="st-body">

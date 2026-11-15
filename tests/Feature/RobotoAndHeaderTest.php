@@ -53,8 +53,14 @@ class RobotoAndHeaderTest extends TestCase
         foreach ($pages as $name => $response) {
             $html = $response->assertOk()->getContent();
             $this->assertMatchesRegularExpression('/<html[^>]*\bclass="[^"]*\bdot-roboto\b/', $html, "{$name}: class=dot-roboto on <html>");
-            $this->assertStringContainsString(asset('dot-ui/css/dot-roboto.css'), $html, "{$name}: Roboto's @font-face");
-            $this->assertStringContainsString(asset('dot-ui/css/dot-type.css'), $html, "{$name}: the shared type scale");
+            // dot-ui 0.6.1: a page with the shared header links the one minified bundle (Roboto, type scale and header CSS); every other page links
+            // the two small minified files it needs.
+            if (in_array($name, ['app', 'studio'], true)) {
+                $this->assertStringContainsString(asset('dot-ui/css/dot-ui.min.css'), $html, "{$name}: Roboto's @font-face, the type scale and the header, in one file");
+            } else {
+                $this->assertStringContainsString(asset('dot-ui/css/dot-roboto.min.css'), $html, "{$name}: Roboto's @font-face");
+                $this->assertStringContainsString(asset('dot-ui/css/dot-type.min.css'), $html, "{$name}: the shared type scale");
+            }
             $this->assertStringContainsString('dot-ui/fonts/roboto/roboto-latin-wght-normal.woff2', $html, "{$name}: the one font the first paint needs is preloaded");
             $this->assertStringNotContainsString('atkinson', strtolower($html), $name);
             $this->assertStringNotContainsString('bricolage', strtolower($html), $name);
@@ -283,7 +289,7 @@ class RobotoAndHeaderTest extends TestCase
 
         $this->assertLessThan(strpos($html, 'id="studio-app"'), strpos($html, '<header class="dh'), 'the header sits above the editor');
         $this->assertStringContainsString('id="studio-boot"', $html);
-        $this->assertStringContainsString(asset('dot-ui/js/dot-nav.js'), $html);
+        $this->assertStringContainsString(asset('dot-ui/js/dot-ui.min.js'), $html);
         $this->assertStringContainsString('data-dh-theme-key="dot-design-theme"', $html);
     }
 
