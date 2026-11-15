@@ -68,12 +68,11 @@ class DesignHonestyTest extends TestCase
 
         $html = $this->actingAs($user)->get('/dashboard')->assertOk()->getContent();
 
-        // "View all designs" on the recent section is a real link (only shown when there is something to view); the two that
-        // pointed at href="#" (assets, AI log) are gone.
+        // "All designs" on the ledger is a real link; the two that pointed at href="#" (assets, AI log) are gone.
         $this->assertStringNotContainsString('View log', $html);
         $this->assertStringNotContainsString('No assets uploaded yet', $html);
-        $this->assertDoesNotMatchRegularExpression('/<a[^>]+href="#"[^>]*>(?:(?!<\/a>).)*View/s', $html);
-        $this->assertSame(1, substr_count($html, 'View all'));
+        $this->assertDoesNotMatchRegularExpression('/<a[^>]+href="#"[^>]*>(?:(?!<\/a>).)*(?:View|All designs)/s', $html);
+        $this->assertSame(1, substr_count($html, 'All designs'));
     }
 
     public function test_dashboard_does_not_show_mock_provider_activity_at_all(): void

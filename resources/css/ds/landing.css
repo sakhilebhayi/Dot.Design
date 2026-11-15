@@ -9,12 +9,13 @@
 .lp-nav__links { display: flex; align-items: center; gap: var(--lt-space-2); }
 .lp-nav__link { padding: 0 var(--lt-space-3); min-height: 2.75rem; display: inline-flex; align-items: center; color: var(--lt-ink-2); font-weight: 500; border-radius: var(--lt-radius-2); }
 .lp-nav__link:hover { color: var(--lt-ink); background: var(--lt-panel-sunk); }
-@media (max-width: 40rem) { .lp-nav__link--hide { display: none; } }
+/* :root outranks the 44px rule in a11y.css (:root .lp-nav__link), which was keeping both text links on a 320px bar, wrapped to three lines */
+@media (max-width: 40rem) { :root .lp-nav__link--hide { display: none; } }
 
 /* hero: copy left, table right. Fits 1280x800 without scrolling. */
 .lp-hero { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--lt-space-7) var(--lt-space-7); padding-block: var(--lt-space-6) var(--lt-space-8); align-items: center; }
 @media (min-width: 64rem) { .lp-hero { grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); min-height: calc(100svh - 7.5rem); padding-block: var(--lt-space-5) var(--lt-space-7); } }
-.lp-h1 { font-family: var(--lt-font-display); font-weight: 600; font-size: clamp(2.75rem, 7.2vw, 5.25rem); letter-spacing: -0.035em; line-height: 0.98; text-wrap: balance; overflow-wrap: break-word; min-width: 0; }
+.lp-h1 { font-family: var(--lt-font-display); font-weight: 600; font-size: clamp(2.5rem, 6.4vw, 4.75rem); letter-spacing: var(--dot-text-display-ls); line-height: 1.05; text-wrap: balance; overflow-wrap: break-word; min-width: 0; }
 .lp-lede { margin-top: var(--lt-space-5); font-size: clamp(1.0625rem, 1.5vw, 1.25rem); line-height: 1.5; color: var(--lt-ink-2); max-width: 34rem; }
 .lp-actions { display: flex; flex-wrap: wrap; gap: var(--lt-space-3); margin-top: var(--lt-space-6); align-items: center; }
 
@@ -43,7 +44,7 @@
 /* sections */
 .lp-section { padding-block: var(--lt-space-8); }
 .lp-section--sunk { background: var(--lt-ground); }
-.lp-h2 { font-family: var(--lt-font-display); font-weight: 600; font-size: clamp(1.875rem, 4vw, 3rem); letter-spacing: -0.03em; line-height: 1.04; text-wrap: balance; max-width: 22ch; overflow-wrap: break-word; }
+.lp-h2 { font-family: var(--lt-font-display); font-weight: 600; font-size: clamp(1.875rem, 4vw, 3rem); letter-spacing: var(--dot-text-display-ls); line-height: 1.04; text-wrap: balance; max-width: 22ch; overflow-wrap: break-word; }
 .lp-intro { margin-top: var(--lt-space-4); color: var(--lt-ink-2); font-size: 1.0625rem; line-height: 1.55; max-width: 40rem; }
 .lp-split { display: grid; gap: var(--lt-space-7); grid-template-columns: minmax(0, 1fr); align-items: start; }
 @media (min-width: 60rem) { .lp-split { grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); gap: var(--lt-space-8); } }
@@ -53,7 +54,7 @@
 @media (min-width: 48rem) { .lp-steps { grid-template-columns: repeat(5, minmax(0, 1fr)); } }
 .lp-step { position: relative; padding-top: var(--lt-space-5); border-top: 1px solid var(--lt-ink); min-width: 0; }
 .lp-step::before { content: ""; position: absolute; left: 0; top: -5px; width: 9px; height: 9px; background: var(--lt-ink); border-radius: 50%; }
-.lp-step h3 { font-family: var(--lt-font-display); font-weight: 600; font-size: 1.25rem; letter-spacing: -0.015em; line-height: 1.15; }
+.lp-step h3 { font-family: var(--lt-font-display); font-weight: 600; font-size: 1.25rem; letter-spacing: var(--dot-text-h2-ls); line-height: 1.15; }
 .lp-step p { margin-top: var(--lt-space-2); color: var(--lt-ink-2); font-size: var(--lt-text-md); line-height: 1.5; }
 
 /* set your brand once: the same real template before and after an example kit, on the stage */
@@ -83,7 +84,7 @@
 .lp-pair { margin-top: var(--lt-space-7); display: grid; gap: var(--lt-space-6); grid-template-columns: minmax(0, 1fr); }
 @media (min-width: 48rem) { .lp-pair { grid-template-columns: 1fr 1fr; } }
 .lp-mode { background: var(--lt-panel); padding: var(--lt-space-6); display: grid; gap: var(--lt-space-3); align-content: start; box-shadow: 0 0 0 1px var(--lt-rule-strong); }
-.lp-mode h3 { font-family: var(--lt-font-display); font-weight: 600; font-size: 1.75rem; letter-spacing: -0.02em; }
+.lp-mode h3 { font-family: var(--lt-font-display); font-weight: 600; font-size: 1.75rem; letter-spacing: var(--dot-text-h1-ls); }
 .lp-mode p { color: var(--lt-ink-2); line-height: 1.55; }
 .lp-note { margin-top: var(--lt-space-5); color: var(--lt-ink-2); max-width: 40rem; }
 
@@ -91,7 +92,7 @@
 .lp-facts { display: grid; gap: 0; }
 .lp-fact { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--lt-space-2); padding-block: var(--lt-space-5); border-top: 1px solid var(--lt-rule-strong); }
 .lp-fact:last-child { border-bottom: 1px solid var(--lt-rule-strong); }
-.lp-fact h3 { font-family: var(--lt-font-display); font-weight: 600; font-size: 1.375rem; letter-spacing: -0.015em; }
+.lp-fact h3 { font-family: var(--lt-font-display); font-weight: 600; font-size: 1.375rem; letter-spacing: var(--dot-text-h2-ls); }
 .lp-fact p { color: var(--lt-ink-2); line-height: 1.55; max-width: 44rem; }
 
 /* close */

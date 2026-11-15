@@ -1,0 +1,45 @@
+/* The shared Dot UI (dot-ui) on the Light Table: the host token mapping for the header, the search and the platform switcher.
+   Imported by app.css (the shell) and studio.css (the editor), so both draw the same bar.
+   Mapped on :root so it follows the light, dark and system themes of the Light Table tokens. The bar is the sheet's own colour;
+   the search pill and the switcher panel keep InfoDot's look (cream pill, paper sheet); the filter and dropdown surfaces follow the studio. */
+:root {
+    --dh-bg: var(--lt-panel);
+    --dh-ink: var(--lt-ink);
+    --dh-ink-2: var(--lt-ink-2);
+    --dh-rule: var(--lt-rule-strong);
+    --dh-hover: var(--lt-panel-sunk);
+    --dh-accent: var(--lt-accent);
+    --dh-focus: var(--lt-focus);
+    --dh-avatar-bg: var(--lt-btn);
+    --dh-avatar-ink: var(--lt-btn-ink);
+    --dh-badge-bg: var(--lt-signal);
+    --dh-badge-ink: var(--lt-signal-ink);
+    --dh-logo-h: 44px;
+    --dh-search-w: clamp(280px, 30vw, 600px);
+    --lt-bar-h: var(--dot-header-h, 3.25rem);
+    --dsr-panel: var(--lt-panel);
+    --dsr-hover: var(--lt-panel-sunk);
+    --dsr-rule: var(--lt-rule);
+    --dsr-rule-strong: var(--lt-rule-strong);
+    --dsr-text: var(--lt-ink);
+    --dsr-text-2: var(--lt-ink-2);
+    --dsr-text-3: var(--lt-ink-3);
+    --dsr-radius-panel: var(--lt-radius-2);
+    --dsr-filter-radius: var(--lt-radius-2);
+    --dsr-filter-bg: var(--lt-panel);
+    --dsr-filter-ink: var(--lt-ink);
+    --dsr-filter-placeholder: var(--lt-ink-3);
+    --dsr-filter-border: var(--lt-rule-strong);
+    --dsr-filter-border-hover: var(--lt-ink-3);
+    --dsr-filter-border-focus: var(--lt-ink);
+    /* a sticky bar of a page sits under the header, never behind it */
+    --lt-top: var(--dot-header-offset, 3.5rem);
+}
+.dh .dsw {
+    --dsw-btn-ink: var(--lt-ink-2);
+    --dsw-btn-border: var(--lt-rule-strong);
+    --dsw-btn-bg-hover: var(--lt-panel-sunk);
+    --dsw-focus: var(--lt-focus);
+    --dsw-radius: var(--lt-radius-2);
+}
+

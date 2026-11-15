@@ -232,7 +232,7 @@ function tile(a) {
     const box = el('input', { type: 'checkbox', checked: selected, 'aria-label': `Select ${a.name}`, onchange: () => { if (box.checked) state.selected.add(a.id); else state.selected.delete(a.id); renderBulk(); node.classList.toggle('is-selected', box.checked); root.querySelector('.as-grid').classList.toggle('as-selecting', state.selected.size > 0); } });
     const node = el('div', { class: 'as-tile' + (selected ? ' is-selected' : ''), role: 'listitem', draggable: 'true', 'data-id': a.id }, [
         el('button', { type: 'button', class: 'as-tile__open', 'aria-label': `Open details of ${a.name}`, onclick: () => openDetail({ asset: a, boot, state, onChanged: refresh, onDeleted: refresh }) }),
-        el('div', { class: 'as-tile__check' }, box),
+        el('label', { class: 'as-tile__check' }, box), // a label, so the 44px touch area is the control's own
         el('div', { class: 'as-tile__pic' }, el('img', { src: a.preview_url || a.url, alt: a.name, loading: 'lazy', width: a.width || 128, height: a.height || 128 })),
         el('div', { class: 'as-tile__meta' }, [
             el('span', { class: 'as-tile__name', text: a.name, title: a.name }),

@@ -158,6 +158,26 @@
 }
 
 /* ---- 5. focus is never hidden behind the fixed phone bars (WCAG 2.2, 2.4.11) ------------------------------------------------ */
-@media (max-width: 56rem) {
-    html, .lt-main, .lt-shell { scroll-padding-top: calc(var(--lt-bar-h, 3.25rem) + 0.75rem); scroll-padding-bottom: calc(var(--lt-tabbar-h, 3.5rem) + env(safe-area-inset-bottom) + 0.75rem); }
+html, .lt-main, .lt-shell { scroll-padding-top: calc(var(--dot-header-offset, 3.5rem) + 0.75rem); }
+@media (max-width: 53.75rem) {
+    html, .lt-main, .lt-shell { scroll-padding-top: calc(var(--dot-header-offset, 3.25rem) + 0.75rem); scroll-padding-bottom: calc(var(--lt-tabbar-h, 3.5rem) + env(safe-area-inset-bottom) + 0.75rem); }
+}
+
+/* ---- R-52: tap targets of links and controls that sit inside a row or a line of text ---------------------------------------------
+   A row link that is stretched over its whole row by an ::after is a 56px target to a finger, but only its text line to a tool that
+   measures the element, and a plain "link in a sentence" is a 17px line. Up to 1024px wide and on touch the element itself is 44px
+   tall: padding adds the height and an equal negative margin takes it back, so nothing moves and the rows keep their rhythm. */
+@media (pointer: coarse), (max-width: 64rem) {
+    :root .lt-waitrows__main a, :root .lt-ledger__nm a, :root .lt-arrive__more, :root .lt-contact__chips a, :root .br-pref__name, :root .lt-section__head a, :root .br-kit__alert {
+        display: inline-block; box-sizing: border-box; min-height: 2.75rem; min-width: 2.75rem; padding-block: 0.78rem; margin-block: -0.78rem; }
+    :root .lt-waitrows__main a, :root .lt-ledger__nm a { display: block; }
+    :root .lt-check { min-height: 2.75rem; }
+    :root .st-zoom__btn { min-height: 2.75rem; min-width: 2.75rem; }
+    :root .st-mode__btn { min-height: 2.75rem; min-width: 2.75rem; }
+    :root .lt-nav__item { min-height: 2.75rem; } /* the rail a tablet shows (861 to 1024px) is a finger's, not a mouse's */
+    :root .lt-ledger th { height: 2.75rem; }
+    :root .lt-ledger th button { min-height: 2.75rem; min-width: 2.75rem; }
+    :root .as-tile__check { width: 2.75rem; height: 2.75rem; top: 0; left: 0; background: transparent; box-shadow: none; border-radius: 0; cursor: pointer; }
+    :root .as-tile__check input { width: 1.375rem; height: 1.375rem; background-color: var(--lt-panel); }
+    :root .lt-errorpage__next a { display: inline-flex; align-items: center; justify-content: center; min-height: 2.75rem; min-width: 2.75rem; }
 }

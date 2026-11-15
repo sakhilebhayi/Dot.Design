@@ -64,12 +64,14 @@ class DesignPreflightTest extends TestCase
             }
         }
 
-        foreach (File::allFiles(resource_path('css')) as $css) {
-            if (preg_match_all('#/fonts/ui/[A-Za-z0-9._-]+\.woff2#', File::get($css->getPathname()), $m)) {
-                foreach ($m[0] as $ref) {
-                    File::ensureDirectoryExists(dirname($dir.$ref));
-                    File::put($dir.$ref, 'x');
-                }
+        // The interface face is Roboto from dot-ui: the stylesheet and the files it names.
+        File::ensureDirectoryExists($dir.'/dot-ui/css');
+        File::copy(public_path('dot-ui/css/dot-roboto.css'), $dir.'/dot-ui/css/dot-roboto.css');
+
+        foreach (File::allFiles(public_path('dot-ui/fonts/roboto')) as $font) {
+            if (str_ends_with($font->getFilename(), '.woff2')) {
+                File::ensureDirectoryExists($dir.'/dot-ui/fonts/roboto');
+                File::put($dir.'/dot-ui/fonts/roboto/'.$font->getFilename(), 'x');
             }
         }
     }

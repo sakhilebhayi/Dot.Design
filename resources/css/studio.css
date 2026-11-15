@@ -8,6 +8,7 @@
 @import './ds/vocab.css';
 @import './ds/components.css';
 @import './ds/a11y.css';
+@import './ds/dot-ui.css';
 
 .st-html, .st-body { height: 100%; overflow: hidden; background: var(--lt-ground); }
 .st-body { overscroll-behavior: none; }
@@ -16,7 +17,7 @@
     /* the warm yellow of the Dot.Design mark, for moments only (a confirmed save, a first design, an approval): a fill, never text */
     --st-warm: #f4b81c; --st-warm-wash: #fdf1cc; --st-warm-ink: #14181c;
     --st-top-h: 3.25rem; --st-rail-w: 5.25rem; --st-left-w: 19.5rem; --st-right-w: 19rem;
-    position: fixed; inset: 0 0 var(--st-kb, 0px) 0; display: grid;
+    position: fixed; inset: var(--dot-header-offset, 0px) 0 var(--st-kb, 0px) 0; display: grid;
     padding-left: env(safe-area-inset-left); padding-right: env(safe-area-inset-right); box-sizing: border-box;
     grid-template-columns: var(--st-rail-w) minmax(0, var(--st-left-w)) minmax(0, 1fr) var(--st-right-w);
     grid-template-rows: auto auto minmax(0, 1fr) auto;
@@ -37,10 +38,10 @@
 
 /* ---- top bar ------------------------------------------------------------------------------------ */
 .st-top { grid-area: top; display: flex; align-items: center; gap: var(--lt-space-2); min-height: var(--st-top-h); padding: 0 var(--lt-space-3); background: var(--lt-panel); box-shadow: 0 1px 0 var(--lt-rule-strong); position: relative; z-index: 5; min-width: 0; }
-.st-top { padding-top: env(safe-area-inset-top); min-height: calc(var(--st-top-h) + env(safe-area-inset-top)); }
+/* the shared header above owns the top safe-area inset; the editor bar sits under it */
 .st-top__name { display: flex; align-items: center; gap: var(--lt-space-2); min-width: 0; flex: 0 1 18rem; }
 .st-name__wrap { position: relative; min-width: 4rem; max-width: 100%; display: inline-grid; }
-.st-name__size, .st-name { grid-area: 1 / 1; font: inherit; font-family: var(--lt-font-display); font-weight: 600; font-size: var(--lt-text-lg); letter-spacing: -0.01em; padding: 0.3rem 0.5rem; white-space: pre; }
+.st-name__size, .st-name { grid-area: 1 / 1; font: inherit; font-family: var(--lt-font-display); font-weight: 600; font-size: var(--lt-text-lg); letter-spacing: var(--dot-text-h3-ls); padding: 0.3rem 0.5rem; white-space: pre; }
 .st-name__size { visibility: hidden; max-width: 22rem; overflow: hidden; }
 .st-name { width: 100%; min-width: 0; color: var(--lt-ink); background: transparent; border: 1px solid transparent; border-radius: var(--lt-radius-2); text-overflow: ellipsis; }
 .st-name:hover:not(:read-only) { background: var(--lt-panel-sunk); }
@@ -121,7 +122,7 @@
 .st-left { grid-area: left; box-shadow: 1px 0 0 var(--lt-rule-strong); }
 .st-right { grid-area: right; box-shadow: -1px 0 0 var(--lt-rule-strong); }
 .st-panel__head { display: flex; align-items: center; justify-content: space-between; gap: var(--lt-space-2); padding: 0 var(--lt-space-2) 0 var(--lt-space-4); min-height: 2.75rem; flex: none; position: relative; }
-.st-panel__title { font-family: var(--lt-font-display); font-weight: 600; font-size: var(--lt-text-lg); letter-spacing: -0.01em; }
+.st-panel__title { font-family: var(--lt-font-display); font-weight: 600; font-size: var(--lt-text-lg); letter-spacing: var(--dot-text-h3-ls); }
 .st-sheet__grip { display: none; }
 .st-panel__body { flex: 1 1 auto; min-height: 0; overflow-y: auto; overflow-x: hidden; padding: 0 var(--lt-space-4) var(--lt-space-6); overscroll-behavior: contain; }
 .st-pane[hidden] { display: none; }
@@ -708,6 +709,26 @@ button.st-layer__fold:hover { color: var(--lt-ink); background: var(--lt-panel);
     .st-toasts { bottom: var(--lt-space-3); left: auto; width: min(22rem, 50vw); }
     .st-coach { height: 2.25rem; }
     .st-stagewrap[data-coach="1"] .st-stage { top: 2.25rem; }
+}
+
+/* ---- R-52: the shared header above the editor, and a deliberate phone toolbar ------------------------------------------------
+   Design editing on a phone is limited by nature (small canvas, no precise pointer): the phone bar is view first and holds only
+   what is essential: back, the name, the save state, undo and redo, and More (which also holds Download and everything else).
+   At 320px that is five 44px controls and a name that truncates, instead of a name field running under the save chip. */
+@media (max-width: 47.9375rem) {
+    .st-top__name { flex: 1 1 0; min-width: 3rem; }
+    .st-name__wrap { min-width: 0; width: 100%; }
+    .st-top__name .lt-tag { display: none; }
+    .st-save-live { flex: none; }
+}
+@media (max-width: 22.5rem) { .st-top__primary { display: none; } }
+/* the full-screen preview owns the whole screen; so does a phone on its side (there the header would take a quarter of the height) */
+html:has(.st-app.is-preview) .dh { display: none; }
+.st-app.is-preview { inset-block-start: 0; }
+@media (max-height: 30rem) and (max-width: 64rem) {
+    .dh, .dh-drawer { display: none; }
+    .st-app { inset-block-start: 0; }
+    .st-top { padding-top: env(safe-area-inset-top); }
 }
 
 @media (prefers-reduced-motion: reduce) {

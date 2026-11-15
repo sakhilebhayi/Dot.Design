@@ -25,6 +25,8 @@ export default defineConfig({
                 'resources/js/studio/pages/brand-updates.js',
                 'resources/js/studio/pages/assets.js',
                 'resources/js/studio/pages/settings.js',
+                // R-52: the header search wiring, also loaded by the editor layout
+                'resources/js/ds/header-search.js',
             ],
             refresh: true,
         }),

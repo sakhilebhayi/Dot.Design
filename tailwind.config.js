@@ -1,4 +1,6 @@
 import typography from '@tailwindcss/typography';
+// Roboto and the shared type scale (font-sans, font-mono, text-dot-*): dot-ui is the one source, this host only adds its colours.
+import dotPreset from './dot-ui/tailwind/tailwind-preset.cjs';
 
 /**
  * Tailwind 3 is still built (Jetstream's Livewire forms and the older pages use utility classes), but The Light Table owns the look:
@@ -11,6 +13,7 @@ const token = (name) => `var(--lt-${name})`;
 
 /** @type {import('tailwindcss').Config} */
 export default {
+    presets: [dotPreset],
     content: [
         './resources/views/**/*.blade.php',
         './app/View/**/*.php',

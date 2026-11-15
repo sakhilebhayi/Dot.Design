@@ -28,7 +28,7 @@ class DashboardTest extends TestCase
         $response = $this->actingAs($user)->get('/dashboard');
 
         $response->assertOk();
-        $response->assertSee('Start something');
+        $response->assertSee('Start a design');
     }
 
     public function test_authenticated_user_with_no_team_can_still_view_the_dashboard(): void
@@ -46,7 +46,7 @@ class DashboardTest extends TestCase
         $response = $this->actingAs($user)->get('/dashboard');
 
         $response->assertOk();
-        $response->assertSee('Start something');
+        $response->assertSee('Start a design');
     }
 
     public function test_dashboard_reflects_the_authenticated_users_own_data_only(): void
@@ -99,7 +99,9 @@ class DashboardTest extends TestCase
         $response->assertDontSee('Other Users Banner');
         // R-45: the dashboard has no AI-generation count and no mock-AI block (nothing links to the old image driver any more).
         $response->assertDontSee('Image requests');
-        $response->assertDontSee('placeholder', false);
+        // (the header's search box has a placeholder attribute, so look for placeholder CONTENT, not the word)
+        $response->assertDontSee('placeholder data', false);
+        $response->assertDontSee('Placeholder', false);
     }
 
     public function test_the_dashboard_never_shows_an_ai_generation_block_even_when_logs_exist(): void
