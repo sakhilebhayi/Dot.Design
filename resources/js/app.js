@@ -9,3 +9,4 @@ import './ds/progress.js';
 import './ds/landing.js';
 import './ds/milestone.js';
 import './ds/home.js';
+import './ds/header-search.js';

@@ -44,7 +44,7 @@ class A11yPagesTest extends TestCase
         $this->assertMatchesRegularExpression('#<html lang="[a-z-]+"#', $html, 'the language is declared');
         $this->assertSame(1, preg_match_all('#<h1[\s>]#', $html), "$route has exactly one h1");
         $this->assertMatchesRegularExpression('#<main\b[^>]*id="main"#', $html, 'a main landmark the skip link points at');
-        $this->assertStringContainsString('class="lt-skip" href="#main"', $html, 'a skip link');
+        $this->assertStringContainsString('class="dh-skip skip-link" href="#main"', $html, 'a skip link');
         preg_match('#<title>(.*?)</title>#s', $html, $m);
         $title = trim(html_entity_decode($m[1] ?? ''));
         $this->assertNotSame('Dot.Design', $title, "$route must say which page it is in the <title>");
@@ -89,7 +89,7 @@ class A11yPagesTest extends TestCase
         $html = $this->actingAs($user)->get(route('design.projects.show', $project))->assertOk()->getContent();
 
         $this->assertStringContainsString('<title>Spring flyer | Dot.Design</title>', $html);
-        $this->assertStringContainsString('class="lt-skip" href="#st-stage"', $html, 'the skip link goes to the canvas');
+        $this->assertStringContainsString('class="dh-skip skip-link" href="#st-stage"', $html, 'the skip link goes to the canvas');
         $this->assertMatchesRegularExpression('#<html lang="[a-z-]+"#', $html);
     }
 

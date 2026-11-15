@@ -9,6 +9,7 @@ use App\Http\Controllers\DesignCanvasController;
 use App\Http\Controllers\DesignCanvasExportController;
 use App\Http\Controllers\DesignProjectController;
 use App\Http\Controllers\DesignTokenController;
+use App\Http\Controllers\Studio\SearchController;
 use App\Http\Controllers\TokenConsumptionRecordController;
 use App\Http\Controllers\TokenSetController;
 use App\Http\Middleware\EnsureCompanyEntitled;
@@ -84,6 +85,9 @@ Route::middleware([
     // routes, otherwise it's swallowed by {project}'s implicit route-model
     // binding.
     Route::prefix('design')->name('design.')->group(function () {
+        // R-52: the header search (JSON for the dropdown, the full results page for a browser). Scoped like every list.
+        Route::get('search', SearchController::class)->middleware('throttle:60,1')->name('search');
+
         Route::get('projects', [DesignProjectController::class, 'index'])->name('projects.index');
         Route::get('projects/create', [DesignProjectController::class, 'create'])->name('projects.create');
         Route::post('projects', [DesignProjectController::class, 'store'])->name('projects.store');

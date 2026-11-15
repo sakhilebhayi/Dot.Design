@@ -41,7 +41,7 @@ Limits you will hit: a page save is at most 1.4 MB on the wire and 1 MB of norma
 ## Routes
 
 <!-- BEGIN GENERATED: routes -->
-163 routes, generated from `php artisan route:list --json` by `php scripts/ops/generate-docs.php`. Framework routes (Livewire, Sanctum, two-factor, the signed local-disk route) are left out. "signed in" means the session guard plus a verified email; every JSON route answers JSON errors (`App\Http\Middleware\JsonApi`).
+164 routes, generated from `php artisan route:list --json` by `php scripts/ops/generate-docs.php`. Framework routes (Livewire, Sanctum, two-factor, the signed local-disk route) are left out. "signed in" means the session guard plus a verified email; every JSON route answers JSON errors (`App\Http\Middleware\JsonApi`).
 
 #### Projects, pages, history, sharing, review
 
@@ -221,6 +221,7 @@ Limits you will hit: a page save is at most 1.4 MB on the wire and 1 MB of norma
 | POST | `/design/milestones/{key}` | `design.milestones.seen` | signed in |  | `Studio\MilestoneController@seen` |
 | GET | `/design/review` | `design.reviews.index` | signed in |  | `Studio\ReviewInboxController@index` |
 | GET | `/design/reviews` | `design.reviews.inbox` | signed in |  | `Studio\ReviewController@inbox` |
+| GET | `/design/search` | `design.search` | signed in | `throttle:60,1` | `Studio\SearchController` |
 | GET | `/design/settings` | `design.settings.show` | signed in |  | `Studio\SettingsController@show` |
 | PUT | `/design/settings` | `design.settings.update` | signed in |  | `Studio\SettingsController@update` |
 | GET | `/design/settings/my-data` | `design.settings.my-data` | signed in | `throttle:design-exports` | `Studio\MyDataController@download` |

@@ -88,15 +88,16 @@ class DotUiHeaderTest extends TestCase
 
     // ── The header: no search was invented, the logo is the original file ───
 
-    public function test_the_header_has_no_search_pill_because_the_platform_has_no_header_search(): void
+    public function test_the_header_carries_the_one_search_pill_inside_the_shared_header(): void
     {
         $this->fakeInfoDot([self::url(self::ACME) => Http::response(self::body(self::ACME))]);
 
         $html = $this->actingAs($this->memberOf(self::ACME, 'Acme Ltd'))->get('/dashboard')->assertOk()->getContent();
 
-        $this->assertStringNotContainsString('dsr-input', $html);
-        $this->assertStringNotContainsString('class="dsr"', $html);
-        $this->assertStringNotContainsString('role="search"', $html);
+        $this->assertSame(1, preg_match_all('/<input[^>]*\bclass="dsr-input"/', $html), 'one pill, in the header');
+        $this->assertSame(1, preg_match('#<header class="dh[^"]*" id="dh" data-dh>(.*?)</header>#s', $html, $header));
+        $this->assertStringContainsString('class="dh-search"', $header[1]);
+        $this->assertMatchesRegularExpression('#<form[^>]*role="search"[^>]*action="'.preg_quote(route('design.search'), '#').'"#', $header[1].'');
     }
 
     public function test_the_brand_is_the_original_logo_file_not_a_cropped_mark_or_typed_name(): void
@@ -104,11 +105,14 @@ class DotUiHeaderTest extends TestCase
         $this->fakeInfoDot([self::url(self::ACME) => Http::response(self::body(self::ACME))]);
 
         $html = $this->actingAs($this->memberOf(self::ACME, 'Acme Ltd'))->get('/dashboard')->assertOk()->getContent();
-        $shell = substr($html, (int) strpos($html, 'class="lt-shell"'), (int) strpos($html, 'id="main"') - (int) strpos($html, 'class="lt-shell"'));
+        $shell = substr($html, (int) strpos($html, '<header class="dh'), (int) strpos($html, 'id="main"') - (int) strpos($html, '<header class="dh'));
 
         $this->assertStringNotContainsString('lt-mark', $shell);
         $this->assertStringNotContainsString('lt-brand__name', $shell);
-        $this->assertSame(2, substr_count($shell, 'class="lt-logo lt-brand__logo"'), 'the rail and the phone bar each show the logo');
+        // one logo above the fold: the header's (a day file and a night file, CSS shows one); the rail no longer repeats it
+        $this->assertSame(1, substr_count($shell, 'class="dh-logo-day"'), 'one logo in the header');
+        $this->assertSame(1, substr_count($shell, 'class="dh-logo-night"'));
+        $this->assertStringNotContainsString('lt-brand__logo', $shell, 'the rail does not show the logo a second time');
         $this->assertStringContainsString(asset('images/logo.png'), $shell);
         $this->assertStringContainsString(asset('images/logo-light.png'), $shell, 'the light-lettering file for dark themes');
         $this->assertSame(md5_file(public_path('images/logo.png')), 'cf4492d777c500bf9e93d4ce526aa02b', 'public/images/logo.png is byte-identical to the owner file dot.logos8.png');
@@ -130,7 +134,7 @@ class DotUiHeaderTest extends TestCase
         $this->assertMatchesRegularExpression('/<input[^>]*\btype="search"[^>]*\bname="q"[^>]*\bvalue="Zeta"/', $html);
         $this->assertStringContainsString('aria-label="Search designs"', $html);
         $this->assertStringContainsString('placeholder="Search designs"', $html);
-        $this->assertStringNotContainsString('class="dsr-input"', $html, 'in-page filters are never the pill');
+        $this->assertSame(1, preg_match_all('/<input[^>]*\bclass="dsr-input"/', $html), 'in-page filters are never the pill: the only pill on the page is the header\'s');
     }
 
     public function test_the_designs_search_finds_by_name_and_never_shows_another_companys_designs(): void
@@ -290,7 +294,7 @@ class DotUiHeaderTest extends TestCase
         $response = $this->actingAs($this->memberOf(self::ACME, 'Acme Ltd'))->get('/dashboard')->assertOk();
         $html = $response->getContent();
 
-        foreach (['css/dot-fonts.css', 'css/dot-tokens.css', 'css/dot-search.css', 'css/dot-switcher-fonts.css', 'css/dot-switcher.css', 'js/dot-switcher.js'] as $asset) {
+        foreach (['css/dot-roboto.css', 'css/dot-type.css', 'css/dot-tokens.css', 'css/dot-search.css', 'css/dot-switcher.css', 'css/dot-header.css', 'js/dot-switcher.js', 'js/dot-search.js', 'js/dot-search-results.js', 'js/dot-nav.js'] as $asset) {
             $this->assertStringContainsString(asset('dot-ui/'.$asset), $html, $asset.' is linked from this site');
             $this->assertFileExists(public_path('dot-ui/'.$asset));
         }
