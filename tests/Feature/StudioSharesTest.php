@@ -4,16 +4,12 @@ namespace Tests\Feature;
 
 use App\Events\DesignCommentAdded;
 use App\Events\DesignShared;
-use App\Http\Middleware\PublicShareHeaders;
 use App\Models\DesignActivity;
 use App\Models\DesignAsset;
 use App\Models\DesignComment;
-use App\Models\DesignProject;
 use App\Models\DesignShare;
-use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Schema;
@@ -35,7 +31,7 @@ class StudioSharesTest extends TestCase
         Storage::fake('design_assets');
     }
 
-    /** @return array{0: DesignProject, 1: string, 2: DesignShare, 3: User} */
+    /** @return array{0: \App\Models\DesignProject, 1: string, 2: DesignShare, 3: \App\Models\User} */
     private function shared(string $permission = 'view', array $extra = [])
     {
         $user = $this->person();
@@ -49,7 +45,7 @@ class StudioSharesTest extends TestCase
 
     private function logout(): void
     {
-        Auth::forgetGuards();
+        \Illuminate\Support\Facades\Auth::forgetGuards();
     }
 
     // ------------------------------------------------------------------ creating
@@ -327,7 +323,7 @@ class StudioSharesTest extends TestCase
                 $this->assertStringNotContainsString('VerifyCsrfToken', $class, $name);
                 $this->assertStringNotContainsString('ShareErrorsFromSession', $class, $name);
             }
-            $this->assertContains(PublicShareHeaders::class, $middleware, $name);
+            $this->assertContains(\App\Http\Middleware\PublicShareHeaders::class, $middleware, $name);
         }
     }
 

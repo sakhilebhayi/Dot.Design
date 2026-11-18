@@ -7,7 +7,6 @@ use App\Models\DesignProject;
 use App\Services\Design\BrandKitService;
 use App\Services\Design\BriefFlow;
 use App\Services\Design\Formats;
-use App\Support\Ui\ProjectCard;
 use App\Support\Ui\StartScreen;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -37,7 +36,7 @@ class StartController extends Controller
             'groups' => $formats->grouped(),
             'preset' => $preset,
             'recent' => $recent,
-            'brandUpdated' => ProjectCard::brandUpdatedIds($recent),
+            'brandUpdated' => \App\Support\Ui\ProjectCard::brandUpdatedIds($recent),
             'assistant' => StartScreen::assistantEnabled(),
             'limits' => $start->sizeLimits(),
             'fonts' => $start->fontManifest(),

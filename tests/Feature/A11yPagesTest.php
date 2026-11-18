@@ -6,7 +6,6 @@ use App\Models\DesignProject;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use PHPUnit\Framework\Attributes\DataProvider;
-use Symfony\Component\HttpKernel\Exception\HttpException;
 use Tests\TestCase;
 
 /**
@@ -97,7 +96,7 @@ class A11yPagesTest extends TestCase
     #[DataProvider('errorCodes')]
     public function test_an_error_page_says_what_happened_in_a_heading_and_the_title(int $code): void
     {
-        $html = view("errors.$code", ['exception' => new HttpException($code)])->render();
+        $html = view("errors.$code", ['exception' => new \Symfony\Component\HttpKernel\Exception\HttpException($code)])->render();
         $this->assertSame(1, preg_match_all('#<h1[\s>]#', $html));
         $this->assertMatchesRegularExpression('#<main\b#', $html);
         $this->assertMatchesRegularExpression("#<title>$code: [^<]+ \| Dot\.Design</title>#", $html);
@@ -116,7 +115,6 @@ class A11yPagesTest extends TestCase
             $this->assertDoesNotMatchRegularExpression('/[\x{2013}\x{2014}]/u', file_get_contents($file), basename($file));
         }
     }
-
     public function test_a_failed_sign_in_ties_the_error_to_the_field(): void
     {
         $html = $this->from('/login')->followingRedirects()->post('/login', ['email' => 'nobody@example.test', 'password' => 'wrong-password'])->getContent();

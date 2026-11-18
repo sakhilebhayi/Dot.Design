@@ -4,7 +4,6 @@ namespace Tests\Feature;
 
 use App\Models\DesignActivity;
 use App\Models\DesignCanvas;
-use App\Models\DesignReview;
 use App\Models\DesignVersion;
 use App\Services\Design\VersionService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -196,6 +195,6 @@ class StudioVersionsTest extends TestCase
         $this->actingAs($w['editor'])->postJson(route('design.projects.versions.restore', [$project, $version]))->assertOk();
 
         $this->assertSame('draft', $project->fresh()->status);
-        $this->assertSame('stale', DesignReview::find($review)->status->value);
+        $this->assertSame('stale', \App\Models\DesignReview::find($review)->status->value);
     }
 }

@@ -7,7 +7,6 @@ use App\Events\DesignReviewRequested;
 use App\Models\DesignActivity;
 use App\Models\DesignReview;
 use App\Models\DesignVersion;
-use App\Models\Team;
 use App\Support\Design\ReviewStatus;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Event;
@@ -103,7 +102,7 @@ class StudioReviewsTest extends TestCase
         $review = DesignReview::firstOrFail();
 
         // A colleague joins the workspace after the request was made.
-        $team = Team::where('user_id', $user->id)->firstOrFail();
+        $team = \App\Models\Team::where('user_id', $user->id)->firstOrFail();
         $this->join($team, $this->person(), 'editor');
 
         $this->decide('approve', $user, $project, $review)->assertForbidden();
