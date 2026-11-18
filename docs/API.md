@@ -41,7 +41,7 @@ Limits you will hit: a page save is at most 1.4 MB on the wire and 1 MB of norma
 ## Routes
 
 <!-- BEGIN GENERATED: routes -->
-164 routes, generated from `php artisan route:list --json` by `php scripts/ops/generate-docs.php`. Framework routes (Livewire, Sanctum, two-factor, the signed local-disk route) are left out. "signed in" means the session guard plus a verified email; every JSON route answers JSON errors (`App\Http\Middleware\JsonApi`).
+172 routes, generated from `php artisan route:list --json` by `php scripts/ops/generate-docs.php`. Framework routes (Livewire, Sanctum, two-factor, the signed local-disk route) are left out. "signed in" means the session guard plus a verified email; every JSON route answers JSON errors (`App\Http\Middleware\JsonApi`).
 
 #### Projects, pages, history, sharing, review
 
@@ -124,6 +124,14 @@ Limits you will hit: a page save is at most 1.4 MB on the wire and 1 MB of norma
 | ANY | `/register` | `register` | public |  | `Illuminate\Routing\RedirectController` |
 | POST | `/reset-password` | `password.update` | public |  | `Laravel\Fortify\Http\Controllers\NewPasswordController@store` |
 | GET | `/reset-password/{token}` | `password.reset` | public |  | `Laravel\Fortify\Http\Controllers\NewPasswordController@create` |
+| POST | `/sso/backchannel-logout` | `dotsso.backchannel` | public | `throttle:120,1,dotsso-backchannel` | `Dot\SsoClient\Http\Controllers\BackchannelLogoutController` |
+| GET | `/sso/callback` | `dotsso.callback` | public | `throttle:60,1,dotsso-callback` | `Dot\SsoClient\Http\Controllers\SsoController@callback` |
+| GET | `/sso/claim` | `dotsso.claim` | public |  | `Dot\SsoClient\Http\Controllers\ClaimController@show` |
+| POST | `/sso/claim` | `dotsso.claim.verify` | public | `throttle:20,1,dotsso-claim` | `Dot\SsoClient\Http\Controllers\ClaimController@verify` |
+| POST | `/sso/claim/cancel` | `dotsso.claim.cancel` | public |  | `Dot\SsoClient\Http\Controllers\ClaimController@cancel` |
+| POST | `/sso/claim/resend` | `dotsso.claim.resend` | public | `throttle:6,1,dotsso-resend` | `Dot\SsoClient\Http\Controllers\ClaimController@resend` |
+| GET | `/sso/login` | `dotsso.login` | public | `throttle:60,1,dotsso-login` | `Dot\SsoClient\Http\Controllers\SsoController@login` |
+| POST | `/sso/logout` | `dotsso.logout` | public |  | `Dot\SsoClient\Http\Controllers\SsoController@logout` |
 | GET | `/team-invitations/{invitation}` | `team-invitations.accept` | signed in |  | `Laravel\Jetstream\Http\Controllers\TeamInvitationController@accept` |
 | GET | `/teams/create` | `teams.create` | signed in |  | `Laravel\Jetstream\Http\Controllers\Livewire\TeamController@create` |
 | GET | `/teams/{team}` | `teams.show` | signed in |  | `Laravel\Jetstream\Http\Controllers\Livewire\TeamController@show` |

@@ -38,7 +38,7 @@
                 if (Route::has($routeName)) { $destinations[] = ['url' => route($routeName), 'label' => $label]; }
             }
         } elseif (Route::has('login')) {
-            $destinations[] = ['url' => route('login'), 'label' => 'Log in'];
+            $destinations[] = ['url' => \App\Support\CentralSignIn::login(), 'label' => 'Log in'];
         }
     @endphp
     @if (! empty($viteEntries))
