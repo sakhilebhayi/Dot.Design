@@ -127,3 +127,6 @@ a.lt-contact:hover .lt-contact__stage .lt-frame, a.lt-contact:focus-visible .lt-
 .sr-row:hover { background: var(--lt-panel-sunk); }
 .sr-row__label { min-width: 0; font-weight: 500; overflow-wrap: anywhere; }
 .sr-row__tag { flex: none; max-width: 40%; text-align: right; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* R-54 claim page: the six-digit code reads as figures, spaced, in the same 44px control as every Light Table input. */
+.lt-claim__code { letter-spacing: 0.35em; font-variant-numeric: tabular-nums; font-size: var(--lt-text-xl, 1.25rem); text-align: center; }

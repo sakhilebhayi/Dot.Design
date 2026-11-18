@@ -8,6 +8,7 @@ use App\Providers\StudioBackendServiceProvider;
 use App\Providers\StudioBrandServiceProvider;
 use App\Providers\StudioBusinessServiceProvider;
 use App\Providers\StudioIntegrationsServiceProvider;
+use Dot\SsoClient\DotSsoServiceProvider;
 
 return [
     AppServiceProvider::class,
@@ -18,4 +19,5 @@ return [
     StudioBackendServiceProvider::class,
     StudioAiServiceProvider::class,
     StudioBrandServiceProvider::class,
+    DotSsoServiceProvider::class,
 ];

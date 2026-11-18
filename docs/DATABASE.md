@@ -23,7 +23,7 @@ Checked 2026-11-09 on PostgreSQL 16 with 2,000 projects, 2,666 pages, 500 assets
 ## Tables
 
 <!-- BEGIN GENERATED: schema -->
-29 tables, read from the migrations (run on a throw-away SQLite database) by `php scripts/ops/generate-docs.php`. A trailing `?` means nullable. Framework tables (cache, sessions, jobs, failed_jobs, password resets, personal access tokens, migrations) are left out. Types are SQLite's names, normalised: `text` also stands for every `json` column (PostgreSQL keeps `json`), `integer` is `bigint`/`integer`/`smallint` on PostgreSQL, `boolean` and `timestamp` are the same on both.
+31 tables, read from the migrations (run on a throw-away SQLite database) by `php scripts/ops/generate-docs.php`. A trailing `?` means nullable. Framework tables (cache, sessions, jobs, failed_jobs, password resets, personal access tokens, migrations) are left out. Types are SQLite's names, normalised: `text` also stands for every `json` column (PostgreSQL keeps `json`), `integer` is `bigint`/`integer`/`smallint` on PostgreSQL, `boolean` and `timestamp` are the same on both.
 
 - **`ai_generation_logs`**: id integer, user_id integer, design_project_id integer?, prompt text, result_url varchar?, provider varchar, tokens_used integer?, created_at timestamp?, updated_at timestamp?
   - foreign keys: design_project_id -> design_projects.id on delete set null; user_id -> users.id on delete cascade
@@ -88,6 +88,10 @@ Checked 2026-11-09 on PostgreSQL 16 with 2,000 projects, 2,666 pages, 500 assets
 - **`design_versions`**: id integer, design_project_id integer, user_id integer?, kind varchar, label varchar?, pages text, bytes integer, created_at timestamp
   - indexes: (design_project_id, created_at); (design_project_id, kind, created_at); (user_id)
   - foreign keys: design_project_id -> design_projects.id on delete cascade; user_id -> users.id on delete set null
+- **`dotsso_claims`**: id integer, claim_id varchar, user_key varchar, email varchar, sub varchar, code_hash varchar, attempts integer, expires_at timestamp, consumed_at timestamp?, created_at timestamp?, updated_at timestamp?
+  - indexes: (email); unique (claim_id)
+- **`dotsso_revocations`**: id integer, sub varchar, revoked_at_ms integer, created_at timestamp?, updated_at timestamp?
+  - indexes: (sub)
 - **`team_invitations`**: id integer, team_id integer, email varchar, role varchar?, created_at timestamp?, updated_at timestamp?
   - indexes: unique (team_id, email)
   - foreign keys: team_id -> teams.id on delete cascade
@@ -103,10 +107,10 @@ Checked 2026-11-09 on PostgreSQL 16 with 2,000 projects, 2,666 pages, 500 assets
   - foreign keys: token_set_id -> token_sets.id on delete cascade
 - **`token_sets`**: id integer, name varchar, slug varchar, description text?, version integer, created_at timestamp?, updated_at timestamp?
   - indexes: unique (slug)
-- **`users`**: id integer, name varchar, email varchar, email_verified_at timestamp?, password varchar, remember_token varchar?, current_team_id integer?, profile_photo_path varchar?, created_at timestamp?, updated_at timestamp?, two_factor_secret text?, two_factor_recovery_codes text?, two_factor_confirmed_at timestamp?, is_platform_operator boolean
-  - indexes: unique (email)
+- **`users`**: id integer, name varchar, email varchar, email_verified_at timestamp?, password varchar, remember_token varchar?, current_team_id integer?, profile_photo_path varchar?, created_at timestamp?, updated_at timestamp?, two_factor_secret text?, two_factor_recovery_codes text?, two_factor_confirmed_at timestamp?, is_platform_operator boolean, infodot_user_uuid varchar?
+  - indexes: unique (email); unique (infodot_user_uuid)
 
-#### Migration files (33)
+#### Migration files (34)
 
 - `0001_01_01_000000_create_users_table`
 - `0001_01_01_000001_create_cache_table`
@@ -141,4 +145,5 @@ Checked 2026-11-09 on PostgreSQL 16 with 2,000 projects, 2,666 pages, 500 assets
 - `2026_11_10_300000_create_design_ai_proposals_table`
 - `2026_11_11_900000_create_design_asset_folders_table`
 - `2026_11_12_100000_create_design_milestones_table`
+- `2026_11_18_000001_add_infodot_user_uuid_to_users`
 <!-- END GENERATED: schema -->

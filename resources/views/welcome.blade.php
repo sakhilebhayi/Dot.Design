@@ -2,8 +2,10 @@
     $formats = \App\Support\Ui\StartFormats::all();
     $first = $formats[0];
     $isGuest = ! auth()->check();
-    $hrefFor = fn (array $f) => $isGuest ? route('login') : route('design.projects.create').'?format='.$f['key'];
-    $primaryHref = $isGuest ? route('login') : route('dashboard');
+    // A guest who picks a size keeps the choice: the create page is behind sign-in, so the sign-in remembers it and returns there.
+    $hrefFor = fn (array $f) => route('design.projects.create').'?format='.$f['key'];
+    $primaryHref = $isGuest ? \App\Support\CentralSignIn::login() : route('dashboard');
+    $centralOn = \App\Support\CentralSignIn::active();
     // The artwork is real: library templates drawn by the editor's own renderer (see scripts/landing/build-art.mjs).
     $art = \App\Support\Ui\LandingArt::manifest();
     $heroMeta = $art[$first['key']] ?? null;
@@ -39,6 +41,7 @@
                 <a href="#limits" class="lp-nav__link lp-nav__link--hide">What it does not do</a>
                 @if (Route::has('login'))
                     <x-ds.button :href="$primaryHref" variant="secondary" size="sm">{{ $isGuest ? 'Log in' : 'Open Home' }}</x-ds.button>
+                    @if ($centralOn && $isGuest)<x-ds.button :href="\App\Support\CentralSignIn::register('')" size="sm">Create account</x-ds.button>@endif
                 @endif
             </div>
         </nav>
@@ -185,7 +188,8 @@
                 <a href="{{ route('policy.show') }}">Privacy</a>
                 <a href="{{ route('cookies') }}">Cookies</a>
                 <a href="{{ route('terms.show') }}">Terms</a>
-                @if (Route::has('login') && $isGuest)<a href="{{ route('login') }}">Log in</a>@endif
+                @if (Route::has('login') && $isGuest)<a href="{{ \App\Support\CentralSignIn::login() }}">Log in</a>@endif
+                @if ($centralOn && $isGuest)<a href="{{ \App\Support\CentralSignIn::register('') }}">Create account</a>@endif
             </nav>
             <p class="lt-meta">&copy; {{ date('Y') }} Dot.Design</p>
         </div>

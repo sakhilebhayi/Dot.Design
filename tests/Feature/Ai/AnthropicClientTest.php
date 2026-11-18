@@ -6,7 +6,7 @@ use App\Services\Design\Assistant\AnthropicClient;
 use App\Services\Design\Assistant\Exceptions\AssistantFailed;
 use App\Services\Design\Assistant\Exceptions\AssistantUnavailable;
 use App\Services\Design\Assistant\Prompts;
-use Illuminate\Http\Client\ConnectionException;
+use App\Services\Design\Assistant\ToolCall;
 use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
@@ -48,7 +48,7 @@ class AnthropicClientTest extends TestCase
         ];
     }
 
-    private function ask(): \App\Services\Design\Assistant\ToolCall
+    private function ask(): ToolCall
     {
         return (new AnthropicClient)->callTool('system text', 'user text', $this->tool(), 'copy');
     }

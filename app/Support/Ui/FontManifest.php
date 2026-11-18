@@ -2,6 +2,8 @@
 
 namespace App\Support\Ui;
 
+use Illuminate\Support\Str;
+
 /**
  * The font list the browser needs, read from config/design_fonts.php: key, label, category, weights and the URLs of the
  * self-hosted files. The Brand Studio and the editor load these lazily through the engine's font module.
@@ -19,7 +21,7 @@ class FontManifest
             }
         }
 
-        return \Illuminate\Support\Str::headline($key);
+        return Str::headline($key);
     }
 
     /** @return list<array<string, mixed>> */

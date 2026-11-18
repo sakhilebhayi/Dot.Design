@@ -4,12 +4,15 @@ namespace App\Http\Controllers\Auth;
 
 use App\Actions\Ecosystem\ProvisionUserFromInfoDot;
 use App\Actions\Ecosystem\SyncTeamsFromInfoDot;
+use App\Exceptions\ClaimRequired;
 use App\Http\Controllers\Controller;
 use App\Http\Middleware\EnsureCompanyEntitled;
 use App\Models\User;
 use App\Services\InfoDot\IdentityClient;
 use App\Services\InfoDot\InfoDotUnavailable;
+use App\Support\CentralSignIn;
 use App\Support\EntitlementRefusal;
+use Dot\SsoClient\Support\ClaimService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -22,7 +25,7 @@ class EcosystemAuthController extends Controller
     /** A GET (an old link with the token in the URL) is not honoured: the token is never read. */
     public function legacy(): RedirectResponse
     {
-        return redirect()->to('/login');
+        return redirect()->to(CentralSignIn::login());
     }
 
     /**
@@ -101,7 +104,21 @@ class EcosystemAuthController extends Controller
         } elseif ($infoDot->enabled()) {
             // Production gives each Dot app its own database, so InfoDot's token is
             // not in ours: ask InfoDot to prove it.
-            $user = $this->userFromInfoDot($plainToken, $infoDot, $provision, $syncTeams);
+            try {
+                $user = $this->userFromInfoDot($plainToken, $infoDot, $provision, $syncTeams);
+            } catch (ClaimRequired $claim) {
+                // R-54: an unverified or unlinked local account holds this address. Its password is NOT replaced; the person
+                // proves the address with a code first (the shared package's claim flow).
+                $raw = $request->post('redirect');
+
+                return app(ClaimService::class)->begin(
+                    $request,
+                    $claim->user,
+                    $claim->claims,
+                    $this->safePath($raw) !== null ? (string) $raw : null,
+                    '',
+                );
+            }
 
             if ($user instanceof EntitlementRefusal) {
                 // InfoDot vouched for the person, but none of their companies holds this platform: nobody is signed in,
