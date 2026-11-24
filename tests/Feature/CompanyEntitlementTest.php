@@ -11,6 +11,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\Factory;
 use Illuminate\Http\Client\Request;
+use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -601,6 +602,130 @@ class CompanyEntitlementTest extends TestCase
         $this->get('/dashboard')->assertStatus(403)->assertDontSee('Globex Holdings');
 
         Http::assertSentCount(2);
+    }
+
+    // ---------------------------------------------------------------- R-61 availability contract
+
+    /** This platform's row with InfoDot's availability fields (omit them to play an older InfoDot). */
+    private static function row(bool $entitled, array $extra = []): array
+    {
+        $body = self::holds(self::ACME, $entitled, $entitled ? 'active' : 'suspended');
+
+        foreach ($body['platforms'] as &$platform) {
+            if ($platform['key'] === 'design') {
+                $platform = array_merge($platform, $extra);
+            }
+        }
+
+        return $body;
+    }
+
+    public function test_r61_switched_off_is_503_even_when_the_company_holds_it_and_nothing_changes(): void
+    {
+        Http::fake([self::readUrl(self::ACME) => Http::response(self::row(true, ['available' => false, 'message' => 'Back at 14:00.']))]);
+
+        $user = $this->memberOf(self::ACME);
+        $project = DesignProject::create(['user_id' => $user->id, 'name' => 'Kept', 'type' => 'poster', 'width' => 800, 'height' => 600, 'unit' => 'px']);
+        $this->actingAs($user);
+
+        $this->get('/dashboard')->assertStatus(503)->assertSee('Back at 14:00.')->assertHeader('Retry-After', '60')
+            ->assertHeader('Cache-Control', 'no-store, private');
+        $this->putJson('/design/projects/'.$project->id, ['name' => 'Changed'])->assertStatus(503)
+            ->assertJsonPath('reason', 'platform_unavailable')->assertJsonPath('message', 'Back at 14:00.');
+
+        $this->assertSame('Kept', DesignProject::withoutGlobalScopes()->find($project->id)->name);
+        $this->assertAuthenticated();
+    }
+
+    public function test_r61_switched_off_comes_before_the_not_held_check(): void
+    {
+        Http::fake([self::readUrl(self::ACME) => Http::response(self::row(false, ['available' => false, 'message' => 'Maintenance.']))]);
+
+        $this->actingAs($this->memberOf(self::ACME))->get('/dashboard')->assertStatus(503)->assertSee('Maintenance.');
+    }
+
+    public function test_r61_livewire_requests_get_a_real_json_503(): void
+    {
+        Http::fake([self::readUrl(self::ACME) => Http::response(self::row(true, ['available' => false]))]);
+
+        $this->actingAs($this->memberOf(self::ACME));
+        $request = \Illuminate\Http\Request::create('/livewire/update', 'POST', server: ['HTTP_X_LIVEWIRE' => 'true']);
+        $request->setUserResolver(fn () => auth()->user());
+
+        try {
+            app(EnsureCompanyEntitled::class)->handle($request, fn () => response('ran'));
+            $this->fail('the component must not run');
+        } catch (HttpResponseException $e) {
+            $this->assertSame(503, $e->getResponse()->getStatusCode());
+            $this->assertSame('platform_unavailable', json_decode($e->getResponse()->getContent(), true)['reason']);
+        }
+    }
+
+    public function test_r61_back_on_within_a_minute(): void
+    {
+        Http::fake([self::readUrl(self::ACME) => Http::sequence()
+            ->push(self::row(true, ['available' => false]))
+            ->push(self::row(true, ['available' => true]))]);
+
+        $this->actingAs($this->memberOf(self::ACME));
+
+        $this->get('/dashboard')->assertStatus(503);
+        $this->travel(CompanyEntitlement::KEEP_ANSWER + 1)->seconds();
+        $this->get('/dashboard')->assertOk();
+    }
+
+    public function test_r61_an_older_infodot_without_the_fields_is_not_a_switch_off(): void
+    {
+        Http::fake([self::readUrl(self::ACME) => Http::response(self::holds(self::ACME, true, 'active'))]);
+
+        $this->actingAs($this->memberOf(self::ACME))->get('/dashboard')->assertOk();
+    }
+
+    public function test_r61_only_an_exact_false_switches_off(): void
+    {
+        Http::fake([self::readUrl(self::ACME) => Http::response(self::row(true, ['available' => 'false']))]);
+
+        $this->actingAs($this->memberOf(self::ACME))->get('/dashboard')->assertOk();
+    }
+
+    public function test_r61_an_outage_keeps_the_last_answer_for_six_hours_then_carries_on(): void
+    {
+        Http::fake([self::readUrl(self::ACME) => Http::sequence()
+            ->push(self::row(true, ['available' => false, 'message' => 'Down.']))
+            ->push('Server Error', 500)]);
+
+        $this->actingAs($this->memberOf(self::ACME));
+
+        $this->get('/dashboard')->assertStatus(503);
+        $this->travel(CompanyEntitlement::KEEP_ANSWER + 1)->seconds();
+        $this->get('/dashboard')->assertStatus(503)->assertSee('Down.');
+
+        $this->travel(CompanyEntitlement::KEEP_LAST_KNOWN + 1)->seconds();
+        Http::fake([self::readUrl(self::ACME) => Http::response('Server Error', 500)]);
+        $this->get('/dashboard')->assertOk();
+    }
+
+    public function test_r61_available_stays_available_through_an_outage(): void
+    {
+        Http::fake([self::readUrl(self::ACME) => Http::sequence()
+            ->push(self::row(true, ['available' => true]))
+            ->push('', 503)]);
+
+        $this->actingAs($this->memberOf(self::ACME));
+
+        $this->get('/dashboard')->assertOk();
+        $this->travel(CompanyEntitlement::KEEP_ANSWER + 1)->seconds();
+        $this->get('/dashboard')->assertOk();
+    }
+
+    public function test_r61_the_exempt_routes_are_not_blocked_while_off(): void
+    {
+        Http::fake([self::readUrl(self::ACME) => Http::response(self::row(true, ['available' => false]))]);
+
+        $this->actingAs($this->memberOf(self::ACME));
+
+        $this->get('/up')->assertOk();
+        $this->get('/cookies')->assertOk();
     }
 
     protected function tearDown(): void

@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Services\InfoDot\CompanyEntitlement;
 use App\Support\EntitlementRefusal;
 use Closure;
+use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -17,6 +18,10 @@ use Symfony\Component\HttpFoundation\Response;
  * Refuses only on InfoDot's explicit "no". An unknown answer of any kind lets the request through unchanged, so an
  * outage or a misconfiguration never locks a paying company out. A workspace that is not linked to an InfoDot company
  * (a personal workspace) is not asked about: sign-in already decided whether the person may come in.
+ *
+ * R-61: when InfoDot has switched Dot.Design off (maintenance, unavailable) signed-in requests get a 503 with InfoDot's
+ * message, ahead of the company check. Nothing is deleted and nobody is signed out. The last clear answer is used for up
+ * to six hours when InfoDot cannot be reached; with none, the request carries on.
  *
  * It sits on the signed-in route group only. Sign-in and sign-out, the handoff receiver, the health check, webhooks,
  * the public share and review links, the legal pages, and Jetstream's own account pages (profile, workspace settings,
@@ -64,6 +69,18 @@ class EnsureCompanyEntitled
         }
 
         $verdict = $this->entitlement->verdict((string) $uuid);
+
+        // R-61: a platform InfoDot has switched off is off for everyone, whatever the company holds. Checked first.
+        // Livewire discards a non-redirect response from middleware, so its requests get a real JSON 503 (abort).
+        if ($verdict !== null && ($verdict['available'] ?? true) === false) {
+            $message = $verdict['message'] ?? null;
+
+            if ($request->expectsJson() || $request->headers->has('X-Livewire') || $request->is('livewire/*', 'livewire-*/*')) {
+                throw new HttpResponseException(response()->json(['message' => $message ?? 'Dot.Design is temporarily unavailable.', 'reason' => 'platform_unavailable'], 503, ['Retry-After' => '60', 'Cache-Control' => 'no-store, private']));
+            }
+
+            return response()->view('errors.platform-unavailable', ['message' => $message], 503, ['Retry-After' => '60', 'Cache-Control' => 'no-store, private']);
+        }
 
         if ($verdict === null || $verdict['entitled'] === true) {
             return $next($request);
