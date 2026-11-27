@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use App\Listeners\LogSecurityEvents;
+use App\Support\EssentialCron;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Foundation\Events\DiagnosingHealth;
 use Illuminate\Http\Request;
@@ -25,12 +27,14 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        EssentialCron::listen();
+
         // /up answered 200 whenever PHP booted, even with the database down. The framework dispatches DiagnosingHealth
         // before it renders the page: a failing query turns the answer into a 500 (the exception text is never shown).
         Event::listen(DiagnosingHealth::class, fn () => DB::select('select 1'));
 
         // Sign-in, lockout and credential-change lines for incident response (docs/R45_PRIVACY.md).
-        Event::subscribe(\App\Listeners\LogSecurityEvents::class);
+        Event::subscribe(LogSecurityEvents::class);
 
         // Per user (falling back to IP), answered as JSON because the only
         // caller is the editor's fetch() upload.
